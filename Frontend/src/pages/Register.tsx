@@ -65,23 +65,15 @@ const Register = () => {
       }
     }
     if (step === 2) {
-      if (!escolaridade || !disciplina) {
+      if (!escolaridade) {
         toast({
-          title: "Preencha todos os campos.",
+          title: "Selecione sua escolaridade.",
           variant: "destructive",
         });
         return;
       }
-      // Salva escolaridade e disciplina favorita para uso da IA
-      localStorage.setItem('userEducationalLevel', escolaridade);
-      localStorage.setItem('userPreferredSubject', disciplina);
-      // Aqui você pode salvar os dados do usuário
-      // Exemplo: enviar para backend ou salvar localmente
-      toast({
-        title: "Cadastro realizado!",
-        description: "Bem-vindo ao EdGame!",
-      });
-      navigate("/dashboard");
+      setStep(step + 1);
+      return;
     }
     setStep(step + 1);
   };
