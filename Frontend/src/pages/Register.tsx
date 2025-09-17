@@ -165,6 +165,8 @@ const Register = () => {
                   <option value="basico">Básico</option>
                   <option value="fundamental">Ensino Fundamental</option>
                   <option value="medio">Ensino Médio</option>
+                  <option value="medio">Superior</option>
+
                 </select>
               </div>
               <Button type="submit" className="w-full bg-gradient-growth">Avançar</Button>

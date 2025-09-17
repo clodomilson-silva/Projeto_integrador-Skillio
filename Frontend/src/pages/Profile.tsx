@@ -145,7 +145,7 @@ const Profile = () => {
               </Avatar>
               
               <h2 className="text-2xl font-bold mb-2">{userStats.name}</h2>
-              <p className="text-muted-foreground mb-4">{userStats.email}</p>
+              <p style={{ color: "white" }}  className="text-muted-foreground mb-4">{userStats.email}</p>
               
               <div className="flex justify-center items-center space-x-2 mb-4">
                 <Star className="h-5 w-5 text-warning" />

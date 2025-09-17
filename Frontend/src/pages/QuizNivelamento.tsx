@@ -15,13 +15,13 @@ type PerguntaQuiz = {
 // Integração Gemini
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+const API_KEY = import.meta.env.VITE_GOOGLE_GENERATIVE_LANGUAGE_API_KEY || "";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-async function gerarPerguntasGemini(): Promise<PerguntaQuiz[]> {
+async function gerarPerguntasGemini(escolaridade: string): Promise<PerguntaQuiz[]> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const prompt = `Gere 10 perguntas de múltipla escolha para um quiz de nivelamento. Para cada pergunta, retorne no formato JSON:
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const prompt = `Gere 20 perguntas de múltipla escolha para um quiz de nivelamento para um estudante com nível de escolaridade "${escolaridade}", abrangendo as seguintes áreas: conhecimentos gerais, matemática, português, geografia, história, inglês e lógica. Para cada pergunta, retorne no formato JSON:
     {
       "pergunta": "texto da pergunta",
       "alternativas": ["alternativa1", "alternativa2", "alternativa3", "alternativa4"],
@@ -31,14 +31,24 @@ async function gerarPerguntasGemini(): Promise<PerguntaQuiz[]> {
     Retorne um array JSON apenas, sem explicações.`;
     const result = await model.generateContent(prompt);
     const text = result.response.text();
+
     // Tenta extrair JSON do texto retornado
-    const match = text.match(/\[.*\]/s);
-    if (match) {
-      const arr = JSON.parse(match[0]);
-      return arr;
+    try {
+        const jsonMatch = text.match(/```(?:json)?\n([\s\S]*?)\n```/);
+        if (jsonMatch && jsonMatch[1]) {
+          return JSON.parse(jsonMatch[1]);
+        } else {
+          // Tenta fazer o parse do texto diretamente se não houver markdown
+          return JSON.parse(text);
+        }
+    } catch(e) {
+        console.error("Erro ao fazer parse do JSON da resposta da IA:", e);
+        console.error("Resposta recebida:", text);
+        return [];
     }
-    return [];
+
   } catch (e) {
+    console.error("Erro ao gerar perguntas com a IA:", e);
     return [];
   }
 }
@@ -49,20 +59,47 @@ const QuizNivelamento = () => {
   const [finalizado, setFinalizado] = useState(false);
   const [perguntasNivelamento, setPerguntasNivelamento] = useState<PerguntaQuiz[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
+      const escolaridadeValue = localStorage.getItem('userEducationalLevel') || 'medio';
+      const escolaridadeMap: { [key: string]: string } = {
+          basico: 'Nível Básico',
+          fundamental: 'Ensino Fundamental',
+          medio: 'Ensino Médio'
+      };
+      const escolaridadePrompt = escolaridadeMap[escolaridadeValue] || 'Ensino Médio';
+
       setCarregando(true);
-      const perguntas = await gerarPerguntasGemini();
-      setPerguntasNivelamento(perguntas.length ? perguntas : [
-        {
-          pergunta: "Qual é o resultado de 15 × 8?",
-          alternativas: ["120", "140", "110", "130"],
-          resposta: 0,
-          area: "Matemática"
-        },
-      ]);
+      setErro(null);
+      const perguntas = await gerarPerguntasGemini(escolaridadePrompt);
+      if (perguntas.length > 0) {
+        setPerguntasNivelamento(perguntas);
+      } else {
+        setErro("Não foi possível gerar as perguntas com a IA. Verifique sua chave de API e a conexão. Usando perguntas de exemplo.");
+        setPerguntasNivelamento([
+          {
+            pergunta: "Qual é a capital do Brasil?",
+            alternativas: ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"],
+            resposta: 2,
+            area: "Geografia"
+          },
+          {
+            pergunta: "Qual é o tempo verbal passado de 'read'?",
+            alternativas: ["read", "red", "readed", "reading"],
+            resposta: 0,
+            area: "Inglês"
+          },
+          {
+            pergunta: "Qual o resultado de 5 + 3 * 2?",
+            alternativas: ["16", "11", "13", "10"],
+            resposta: 1,
+            area: "Matemática"
+          }
+        ]);
+      }
       setCarregando(false);
     })();
   }, []);
@@ -92,6 +129,12 @@ const QuizNivelamento = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="p-8 max-w-lg w-full shadow-elevated">
+        {erro && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong className="font-bold">Erro!</strong>
+            <span className="block sm:inline"> {erro}</span>
+          </div>
+        )}
         {carregando ? (
           <div className="text-center py-12">
             <span className="text-lg font-semibold">Gerando perguntas por IA...</span>
@@ -126,6 +169,7 @@ const QuizNivelamento = () => {
       </Card>
     </div>
   );
+
 };
 
 export default QuizNivelamento;

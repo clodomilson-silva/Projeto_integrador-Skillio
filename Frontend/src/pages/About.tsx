@@ -67,7 +67,7 @@ const About = () => {
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Sobre o{" "}
               <span className="bg-gradient-primary bg-clip-text text-transparent">
-                EdGame
+                Skillio
               </span>
             </h1>
             

@@ -314,7 +314,7 @@ const Game = () => {
                     disabled={showResult || isPaused}
                   >
                     <span className="font-bold mr-4">
-                      {String.fromCharCode(65 + index)})
+                      {String.fromCharCode(65 + index)}
                     </span>
                     {option}
                   </Button>
