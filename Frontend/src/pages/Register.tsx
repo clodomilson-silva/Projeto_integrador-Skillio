@@ -90,7 +90,7 @@ const Register = () => {
     window.dispatchEvent(new Event('user-auth-changed'));
     toast({
       title: "Conta criada com sucesso!",
-      description: "Bem-vindo ao EdGame! Sua conta foi criada.",
+      description: "Bem vindo ao Skillio! Sua conta foi criada.",
     });
     navigate("/quiz-nivelamento");
   };
