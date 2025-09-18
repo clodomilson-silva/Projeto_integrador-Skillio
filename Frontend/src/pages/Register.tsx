@@ -1,8 +1,14 @@
 import { useState } from "react";
 import EducacaoParticles from "@/components/EducacaoParticles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Link, useNavigate } from "react-router-dom";
+import { BookOpen, Eye, EyeOff, User, ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
 // Novo componente para termos e condições
-
-
 export const TermosCondicoes = () => (
   <div className="mb-4">
     <p className="text-sm text-muted-foreground">
@@ -11,13 +17,6 @@ export const TermosCondicoes = () => (
     </p>
   </div>
 );
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, Eye, EyeOff, User } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -78,6 +77,10 @@ const Register = () => {
     setStep(step + 1);
   };
 
+  const handleVoltar = () => {
+    setStep(step - 1);
+  };
+
   const handleCadastro = () => {
     // Simulação de cadastro
     localStorage.setItem('userName', name);
@@ -108,12 +111,22 @@ const Register = () => {
             Criar Conta
           </h1>
           <p className="text-muted-foreground mt-2">
-            Junte-se ao EdGame e comece a aprender
+            Junte-se ao Skillio e comece a aprender
           </p>
         </div>
-        <Card className="p-6 shadow-elevated bg-card/80 backdrop-blur-sm border-border/50">
+        <Card className="p-6 shadow-elevated bg-card/80 backdrop-blur-sm border-border/50 relative">
+          {step > 1 && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleVoltar}
+              className="absolute top-4  left-4 z-50 bg-background/80 hover:bg-background/90"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
           {step === 1 && (
-            <form className="space-y-6" onSubmit={e => {e.preventDefault(); handleAvancar();}}>
+            <form className="space-y-6 pt-10" onSubmit={e => {e.preventDefault(); handleAvancar();}}>
               
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-foreground">Nome </Label>
@@ -158,7 +171,7 @@ const Register = () => {
             </form>
           )}
           {step === 2 && (
-            <form className="space-y-6" onSubmit={e => {e.preventDefault(); handleAvancar();}}>
+            <form className="space-y-6 pt-10" onSubmit={e => {e.preventDefault(); handleAvancar();}}>
               <div className="space-y-2">
                 <Label htmlFor="escolaridade" className="text-foreground">Escolaridade</Label>
                 <select id="escolaridade" value={escolaridade} onChange={e => setEscolaridade(e.target.value)} className="bg-background/50 border border-border/50 focus:border-primary rounded-md px-3 py-2 w-full text-foreground">
@@ -174,7 +187,7 @@ const Register = () => {
             </form>
           )}
           {step === 3 && (
-            <form className="space-y-6" onSubmit={e => {e.preventDefault(); handleAvancar();}}>
+            <form className="space-y-6 pt-10" onSubmit={e => {e.preventDefault(); handleAvancar();}}>
               <div className="space-y-2">
                 <Label htmlFor="disciplina" className="text-foreground">Disciplina/Área preferida</Label>
                 <Input id="disciplina" type="text" value={disciplina} onChange={e => setDisciplina(e.target.value)} placeholder="Digite sua disciplina preferida" className="bg-background/50 border-border/50 focus:border-primary" list="sugestoes" />
@@ -186,7 +199,7 @@ const Register = () => {
             </form>
           )}
           {step === 4 && (
-            <form className="space-y-6" onSubmit={e => {e.preventDefault(); handleCadastro();}}>
+            <form className="space-y-6 pt-10" onSubmit={e => {e.preventDefault(); handleCadastro();}}>
               <div className="space-y-2">
                 <Label htmlFor="foto" className="text-foreground">Foto de perfil</Label>
                 <Input id="foto" type="file" accept="image/*" onChange={e => setFoto(e.target.files?.[0] ? URL.createObjectURL(e.target.files[0]) : null)} />

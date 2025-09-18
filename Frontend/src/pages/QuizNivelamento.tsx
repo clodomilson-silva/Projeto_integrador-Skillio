@@ -141,7 +141,7 @@ const QuizNivelamento = () => {
   const [errorStreak, setErrorStreak] = useState(0);
   const [maxErrorStreak, setMaxErrorStreak] = useState(0);
 
-  const [dadosGrafico, setDadosGrafico] = useState<any[]>([]);
+  const [dadosGrafico, setDadosGrafico] = useState<DadosGrafico>([]);
 
   const navigate = useNavigate();
   const { toast } = useToast();
