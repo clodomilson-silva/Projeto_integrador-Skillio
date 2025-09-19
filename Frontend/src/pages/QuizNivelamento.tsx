@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useAchievements } from "@/hooks/useAchievements";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Star, Target, Award, TrendingUp, TrendingDown, SkipForward } from 'lucide-react';
 import Markdown from 'react-markdown';
@@ -293,15 +292,7 @@ const QuizNivelamento = () => {
       }));
       setDadosGrafico(dadosParaGrafico);
 
-      const XP_POR_ACERTO = 10;
-      const xpGanhos = acertos * XP_POR_ACERTO;
-      const xpAtual = parseInt(localStorage.getItem('userXP') || '0', 10);
-      const novoXP = xpAtual + xpGanhos;
-      localStorage.setItem('userXP', novoXP.toString());
-
-      checkAndUnlockAchievements({ newXp: novoXP, quizzesCompleted: 1, correctAnswers: acertos, totalAnswers: total });
-
-      toast({ title: "Quiz Finalizado!", description: `Você ganhou ${xpGanhos} XP.` });
+      completeQuiz();
 
       (async () => {
         setGerandoPlano(true);
