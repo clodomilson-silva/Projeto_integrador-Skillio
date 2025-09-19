@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, Eye, EyeOff, User, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, User, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatedDatePicker } from "@/components/ui/AnimatedDatePicker";
 
 // Novo componente para termos e condições
 export const TermosCondicoes = () => (
@@ -28,6 +29,8 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [escolaridade, setEscolaridade] = useState("");
+  const [dataNascimento, setDataNascimento] = useState<Date>();
+  const [profissao, setProfissao] = useState("");
   const [foco, setFoco] = useState("");
   const [foto, setFoto] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -64,9 +67,9 @@ const Register = () => {
       }
     }
     if (step === 2) {
-      if (!escolaridade) {
+      if (!escolaridade || !dataNascimento) {
         toast({
-          title: "Selecione sua escolaridade.",
+          title: "Preencha sua escolaridade e data de nascimento.",
           variant: "destructive",
         });
         return;
@@ -86,6 +89,8 @@ const Register = () => {
     localStorage.setItem('userName', name);
     localStorage.setItem('userEmail', email);
     localStorage.setItem('userEducationalLevel', escolaridade);
+    localStorage.setItem('userBirthDate', dataNascimento ? dataNascimento.toISOString() : '');
+    localStorage.setItem('userProfession', profissao);
     localStorage.setItem('userFocus', foco);
     window.dispatchEvent(new Event('user-auth-changed'));
     toast({
@@ -179,9 +184,21 @@ const Register = () => {
                   <option value="basico">Básico</option>
                   <option value="fundamental">Ensino Fundamental</option>
                   <option value="medio">Ensino Médio</option>
-                  <option value="medio">Superior</option>
-
+                  <option value="superior">Superior</option>
                 </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">Data de Nascimento</Label>
+                <AnimatedDatePicker
+                    date={dataNascimento}
+                    onSelect={setDataNascimento}
+                    minYear={1950}
+                    maxYear={new Date().getFullYear()}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profissao" className="text-foreground">Profissão <span className="text-muted-foreground">(Opcional)</span></Label>
+                <Input id="profissao" type="text" value={profissao} onChange={e => setProfissao(e.target.value)} placeholder="Sua profissão" className="bg-background/50 border-border/50 focus:border-primary" />
               </div>
               <Button type="submit" className="w-full bg-gradient-growth">Avançar</Button>
             </form>
