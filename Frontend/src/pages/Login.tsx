@@ -25,6 +25,7 @@ const Login = () => {
       return;
     }
     // Simulação de login
+    console.log("Setting userEmail in localStorage:", email);
     localStorage.setItem('userEmail', email);
     window.dispatchEvent(new Event('user-auth-changed'));
     toast({
@@ -45,7 +46,7 @@ const Login = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Entrar no EdGame
+            Entrar no Skillio
           </h1>
           <p className="text-muted-foreground mt-2">
             Acesse sua conta e continue aprendendo

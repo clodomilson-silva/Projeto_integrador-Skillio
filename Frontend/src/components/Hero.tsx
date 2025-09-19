@@ -53,7 +53,7 @@ const Hero = () => {
               <img 
                 src={mascot} 
                 alt="EdGame Mascot" 
-                className="w-64 h-64 mx-auto mb-6 object-contain"
+                className="w-75 h-75 mx-auto mb-6 object-contain"
               />
               <div className="space-y-4">
                 <Link to="/ranking">
