@@ -155,7 +155,12 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        <Button size="lg" className="bg-gradient-knowledge shadow-glow w-full sm:w-auto" onClick={handleNextExercise}>Próximo Exercício</Button>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <Link to="/study-plan" className="w-full sm:w-auto">
+            <Button size="lg" variant="outline" className="w-full">Meu Plano de Estudo</Button>
+          </Link>
+          <Button size="lg" className="bg-gradient-knowledge shadow-glow w-full sm:w-auto" onClick={handleNextExercise}>Próximo Exercício</Button>
+        </div>
       </header>
 
       <main className="flex flex-col gap-8">

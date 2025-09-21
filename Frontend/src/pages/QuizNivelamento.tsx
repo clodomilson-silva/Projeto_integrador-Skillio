@@ -310,6 +310,7 @@ const QuizNivelamento = () => {
 
         if (planoResponse) {
           setPlanoDeEstudoGerado(planoResponse.planMarkdown);
+          localStorage.setItem('studyPlanMarkdown', planoResponse.planMarkdown);
           localStorage.setItem('studyPlan', JSON.stringify(planoResponse.priorityAreas));
           
           if (planoResponse.priorityAreas && planoResponse.priorityAreas.length > 0) {

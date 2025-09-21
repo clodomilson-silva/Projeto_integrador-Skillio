@@ -22,6 +22,7 @@ import Footer from "@/components/Footer";
 import Suporte from "./pages/Suporte";
 import Lesson from "./pages/Lesson";
 import EditProfile from "./pages/EditProfile";
+import StudyPlan from "./pages/StudyPlan";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/quiz-nivelamento" element={<QuizNivelamento />} />
               <Route path="/suporte" element={<Suporte />} />
+              <Route path="/study-plan" element={<StudyPlan />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
