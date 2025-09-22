@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { useGamification } from '@/hooks/useGamification';
+import { trilhaPrincipal } from '@/data/trilhaPrincipal';
 
 const StudyPlan = () => {
   const [plan, setPlan] = useState('');
-  const [isRefazerAtivo, setIsRefazerAtivo] = useState(false); // Lógica de ativação a ser implementada
+  const [isRefazerAtivo, setIsRefazerAtivo] = useState(false);
   const navigate = useNavigate();
+  const { level, blocosCompletos } = useGamification();
 
   useEffect(() => {
     const savedPlan = localStorage.getItem('studyPlanMarkdown');
@@ -19,15 +22,17 @@ const StudyPlan = () => {
       setPlan('Nenhum plano de estudo encontrado. Por favor, complete o quiz de nivelamento primeiro.');
     }
 
-    // TODO: Implementar a lógica para ativar o botão de refazer o nivelamento.
-    // Exemplo: verificar o nível do usuário, XP, ou data do último quiz.
-    // Por enquanto, permanece desativado.
-    // setIsRefazerAtivo(user.level > 10 && user.xp > 5000);
+    const nivelAtualData = trilhaPrincipal.find(n => n.nivel === level);
+    if (nivelAtualData) {
+      const todosBlocosCompletos = nivelAtualData.blocos.every(bloco => blocosCompletos.includes(bloco.id));
+      setIsRefazerAtivo(todosBlocosCompletos);
+    } else {
+      setIsRefazerAtivo(false);
+    }
 
-  }, []);
+  }, [level, blocosCompletos]);
 
   const handleRefazerNivelamento = () => {
-    // Adicionar lógica de confirmação se necessário
     navigate('/quiz-nivelamento');
   };
 
@@ -70,11 +75,13 @@ const StudyPlan = () => {
                         </Button>
                     </div>
                 </TooltipTrigger>
-                {!isRefazerAtivo && (
-                    <TooltipContent>
-                        <p>Continue praticando para desbloquear um novo nivelamento.</p>
-                    </TooltipContent>
-                )}
+                <TooltipContent>
+                    {isRefazerAtivo ? (
+                        <p>Parabéns! Você completou o nível e pode refazer o nivelamento para ajustar seu plano.</p>
+                    ) : (
+                        <p>Complete todos os 15 blocos do seu nível atual para refazer o nivelamento.</p>
+                    )}
+                </TooltipContent>
             </Tooltip>
         </div>
       </main>

@@ -23,6 +23,7 @@ import Suporte from "./pages/Suporte";
 import Lesson from "./pages/Lesson";
 import EditProfile from "./pages/EditProfile";
 import StudyPlan from "./pages/StudyPlan";
+import Trilha from "./pages/Trilha";
 
 const queryClient = new QueryClient();
 
@@ -37,8 +38,9 @@ const App = () => (
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/trilha" element={<Trilha />} />
               <Route path="/subjects" element={<Subjects />} />
-              <Route path="/game/:subjectId" element={<Game />} />
+              <Route path="/game/:blocoId" element={<Game />} />
               <Route path="/lesson/:subjectId" element={<Lesson />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/edit-profile" element={<EditProfile />} />

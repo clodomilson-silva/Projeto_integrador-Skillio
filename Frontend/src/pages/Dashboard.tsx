@@ -65,13 +65,7 @@ const Dashboard = () => {
   }, []);
 
   const handleNextExercise = () => {
-    const preferredSubject = localStorage.getItem('userPreferredSubject');
-    console.log('Materia preferida:', preferredSubject);
-    if (preferredSubject) {
-      navigate(`/lesson/${preferredSubject}`);
-    } else {
-      navigate('/subjects');
-    }
+    navigate('/trilha');
   };
 
   const chartData = useMemo(() => {
@@ -159,7 +153,7 @@ const Dashboard = () => {
           <Link to="/study-plan" className="w-full sm:w-auto">
             <Button size="lg" variant="outline" className="w-full">Meu Plano de Estudo</Button>
           </Link>
-          <Button size="lg" className="bg-gradient-knowledge shadow-glow w-full sm:w-auto" onClick={handleNextExercise}>Próximo Exercício</Button>
+          <Button size="lg" className="bg-gradient-knowledge shadow-glow w-full sm:w-auto" onClick={handleNextExercise}>Minha Jornada</Button>
         </div>
       </header>
 

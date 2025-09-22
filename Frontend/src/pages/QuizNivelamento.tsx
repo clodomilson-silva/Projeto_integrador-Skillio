@@ -22,6 +22,30 @@ type DadosGrafico = {
     erros: number;
   }[];
 
+// Helper function to order questions
+const orderPerguntas = (perguntas: PerguntaQuiz[], foco: string): PerguntaQuiz[] => {
+  const focoPerguntas = perguntas.filter(p => p.area.toLowerCase() === foco.toLowerCase());
+  const outrasPerguntas = perguntas.filter(p => p.area.toLowerCase() !== foco.toLowerCase());
+  const orderedPerguntas: PerguntaQuiz[] = [];
+
+  let i = 0;
+  let j = 0;
+  while (i < focoPerguntas.length || j < outrasPerguntas.length) {
+    // Adiciona 2 perguntas de foco
+    if (i < focoPerguntas.length) {
+      orderedPerguntas.push(focoPerguntas[i++]);
+    }
+    if (i < focoPerguntas.length) {
+      orderedPerguntas.push(focoPerguntas[i++]);
+    }
+    // Adiciona 1 pergunta de outra área
+    if (j < outrasPerguntas.length) {
+      orderedPerguntas.push(outrasPerguntas[j++]);
+    }
+  }
+  return orderedPerguntas;
+};
+
 // Integração Gemini
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -188,77 +212,53 @@ const QuizNivelamento = () => {
 
   useEffect(() => {
     (async () => {
+      const foco = localStorage.getItem('userFocus') || 'Conhecimentos Gerais';
+      const fallbackPerguntas = [
+          {pergunta: 'Qual animal é conhecido como o "rei da selva"?', alternativas: ['Tigre', 'Leão', 'Elefante', 'Urso'], resposta: 1, area: 'Biologia'},
+          {pergunta: 'Qual a fórmula da água?', alternativas: ['CO2', 'H2O', 'O2', 'N2'], resposta: 1, area: 'Biologia'},
+          {pergunta: 'Qual processo as plantas usam para converter luz em energia?', alternativas: ['Respiração', 'Fotossíntese', 'Transpiração', 'Digestão'], resposta: 1, area: 'Biologia'},
+          {pergunta: 'Qual a capital da França?', alternativas: ['Londres', 'Berlim', 'Madri', 'Paris'], resposta: 3, area: 'Geografia'},
+          {pergunta: 'Qual o maior continente do mundo?', alternativas: ['África', 'Europa', 'Ásia', 'América'], resposta: 2, area: 'Geografia'},
+          {pergunta: 'Qual o rio mais longo do mundo?', alternativas: ['Nilo', 'Amazonas', 'Yangtzé', 'Mississipi'], resposta: 1, area: 'Geografia'},
+          {pergunta: 'Quem escreveu "Dom Quixote"?', alternativas: ['Shakespeare', 'Cervantes', 'Dante', 'Homero'], resposta: 1, area: 'História'},
+          {pergunta: 'Em que ano começou a Segunda Guerra Mundial?', alternativas: ['1914', '1939', '1945', '1929'], resposta: 1, area: 'História'},
+          {pergunta: 'Qual civilização construiu as pirâmides de Gizé?', alternativas: ['Romana', 'Grega', 'Egípcia', 'Maia'], resposta: 2, area: 'História'},
+          {pergunta: 'O que significa a sigla "CPU" em um computador?', alternativas: ['Unidade Central de Processamento', 'Placa de Vídeo', 'Memória RAM', 'Fonte de Energia'], resposta: 0, area: 'Informática'},
+          {pergunta: 'Qual empresa desenvolveu o sistema operacional Windows?', alternativas: ['Apple', 'Google', 'Microsoft', 'Linux'], resposta: 2, area: 'Informática'},
+          {pergunta: 'O que é um "phishing"?', alternativas: ['Um tipo de vírus', 'Um ataque para roubar informações', 'Uma peça de hardware', 'Um software de edição'], resposta: 1, area: 'Informática'},
+          {pergunta: 'Qual a tradução de "book" para o português?', alternativas: ['Livro', 'Caneta', 'Mesa', 'Cadeira'], resposta: 0, area: 'Inglês'},
+          {pergunta: 'Como se diz "obrigado" em inglês?', alternativas: ['Hello', 'Goodbye', 'Thank you', 'Sorry'], resposta: 2, area: 'Inglês'},
+          {pergunta: 'O que significa "cat" em inglês?', alternativas: ['Cachorro', 'Gato', 'Pássaro', 'Peixe'], resposta: 1, area: 'Inglês'},
+          {pergunta: 'Se um trem viaja a 100 km/h, que distância ele percorre em 2 horas?', alternativas: ['100 km', '150 km', '200 km', '250 km'], resposta: 2, area: 'Lógica'},
+          {pergunta: 'Qual o próximo número na sequência: 2, 4, 6, 8, ...?', alternativas: ['9', '10', '11', '12'], resposta: 1, area: 'Lógica'},
+          {pergunta: 'Se todo A é B e todo B é C, então:', alternativas: ['Todo C é A', 'Nenhum A é C', 'Todo A é C', 'Algum A não é C'], resposta: 2, area: 'Lógica'},
+          {pergunta: 'Um pai tem o dobro da idade do filho. Juntos, eles têm 60 anos. Qual a idade do pai?', alternativas: ['30', '40', '45', '50'], resposta: 1, area: 'Lógica'},
+          {pergunta: 'Quanto é 7 multiplicado por 8?', alternativas: ['49', '54', '56', '63'], resposta: 2, area: 'Matemática'},
+          {pergunta: 'Qual o resultado de 10 - (2 + 3)?', alternativas: ['5', '6', '7', '8'], resposta: 0, area: 'Matemática'},
+          {pergunta: 'Se um círculo tem um raio de 5 cm, qual o seu diâmetro?', alternativas: ['5 cm', '10 cm', '15 cm', '25 cm'], resposta: 1, area: 'Matemática'},
+          {pergunta: 'Qual o sinônimo de "rápido"?', alternativas: ['Lento', 'Veloz', 'Grande', 'Pequeno'], resposta: 1, area: 'Português'},
+          {pergunta: 'Qual o coletivo de "cães"?', alternativas: ['Alcateia', 'Manada', 'Matilha', 'Cardume'], resposta: 2, area: 'Português'},
+          {pergunta: 'Qual a classe gramatical da palavra "bonito"?', alternativas: ['Substantivo', 'Verbo', 'Adjetivo', 'Advérbio'], resposta: 2, area: 'Português'}
+      ];
+
       if (!API_KEY) {
         setErro("API Key do Google não configurada. Verifique seu arquivo .env. Usando um quiz de exemplo.");
-        setPerguntasNivelamento([
-            {pergunta: 'Qual animal é conhecido como o "rei da selva"?', alternativas: ['Tigre', 'Leão', 'Elefante', 'Urso'], resposta: 1, area: 'Biologia'},
-            {pergunta: 'Qual a fórmula da água?', alternativas: ['CO2', 'H2O', 'O2', 'N2'], resposta: 1, area: 'Biologia'},
-            {pergunta: 'Qual processo as plantas usam para converter luz em energia?', alternativas: ['Respiração', 'Fotossíntese', 'Transpiração', 'Digestão'], resposta: 1, area: 'Biologia'},
-            {pergunta: 'Qual a capital da França?', alternativas: ['Londres', 'Berlim', 'Madri', 'Paris'], resposta: 3, area: 'Geografia'},
-            {pergunta: 'Qual o maior continente do mundo?', alternativas: ['África', 'Europa', 'Ásia', 'América'], resposta: 2, area: 'Geografia'},
-            {pergunta: 'Qual o rio mais longo do mundo?', alternativas: ['Nilo', 'Amazonas', 'Yangtzé', 'Mississipi'], resposta: 1, area: 'Geografia'},
-            {pergunta: 'Quem escreveu "Dom Quixote"?', alternativas: ['Shakespeare', 'Cervantes', 'Dante', 'Homero'], resposta: 1, area: 'História'},
-            {pergunta: 'Em que ano começou a Segunda Guerra Mundial?', alternativas: ['1914', '1939', '1945', '1929'], resposta: 1, area: 'História'},
-            {pergunta: 'Qual civilização construiu as pirâmides de Gizé?', alternativas: ['Romana', 'Grega', 'Egípcia', 'Maia'], resposta: 2, area: 'História'},
-            {pergunta: 'O que significa a sigla "CPU" em um computador?', alternativas: ['Unidade Central de Processamento', 'Placa de Vídeo', 'Memória RAM', 'Fonte de Energia'], resposta: 0, area: 'Informática'},
-            {pergunta: 'Qual empresa desenvolveu o sistema operacional Windows?', alternativas: ['Apple', 'Google', 'Microsoft', 'Linux'], resposta: 2, area: 'Informática'},
-            {pergunta: 'O que é um "phishing"?', alternativas: ['Um tipo de vírus', 'Um ataque para roubar informações', 'Uma peça de hardware', 'Um software de edição'], resposta: 1, area: 'Informática'},
-            {pergunta: 'Qual a tradução de "book" para o português?', alternativas: ['Livro', 'Caneta', 'Mesa', 'Cadeira'], resposta: 0, area: 'Inglês'},
-            {pergunta: 'Como se diz "obrigado" em inglês?', alternativas: ['Hello', 'Goodbye', 'Thank you', 'Sorry'], resposta: 2, area: 'Inglês'},
-            {pergunta: 'O que significa "cat" em inglês?', alternativas: ['Cachorro', 'Gato', 'Pássaro', 'Peixe'], resposta: 1, area: 'Inglês'},
-            {pergunta: 'Se um trem viaja a 100 km/h, que distância ele percorre em 2 horas?', alternativas: ['100 km', '150 km', '200 km', '250 km'], resposta: 2, area: 'Lógica'},
-            {pergunta: 'Qual o próximo número na sequência: 2, 4, 6, 8, ...?', alternativas: ['9', '10', '11', '12'], resposta: 1, area: 'Lógica'},
-            {pergunta: 'Se todo A é B e todo B é C, então:', alternativas: ['Todo C é A', 'Nenhum A é C', 'Todo A é C', 'Algum A não é C'], resposta: 2, area: 'Lógica'},
-            {pergunta: 'Um pai tem o dobro da idade do filho. Juntos, eles têm 60 anos. Qual a idade do pai?', alternativas: ['30', '40', '45', '50'], resposta: 1, area: 'Lógica'},
-            {pergunta: 'Quanto é 7 multiplicado por 8?', alternativas: ['49', '54', '56', '63'], resposta: 2, area: 'Matemática'},
-            {pergunta: 'Qual o resultado de 10 - (2 + 3)?', alternativas: ['5', '6', '7', '8'], resposta: 0, area: 'Matemática'},
-            {pergunta: 'Se um círculo tem um raio de 5 cm, qual o seu diâmetro?', alternativas: ['5 cm', '10 cm', '15 cm', '25 cm'], resposta: 1, area: 'Matemática'},
-            {pergunta: 'Qual o sinônimo de "rápido"?', alternativas: ['Lento', 'Veloz', 'Grande', 'Pequeno'], resposta: 1, area: 'Português'},
-            {pergunta: 'Qual o coletivo de "cães"?', alternativas: ['Alcateia', 'Manada', 'Matilha', 'Cardume'], resposta: 2, area: 'Português'},
-            {pergunta: 'Qual a classe gramatical da palavra "bonito"?', alternativas: ['Substantivo', 'Verbo', 'Adjetivo', 'Advérbio'], resposta: 2, area: 'Português'}
-        ]);
+        setPerguntasNivelamento(orderPerguntas(fallbackPerguntas, foco));
         setCarregando(false);
         return;
       }
 
       const escolaridadePrompt = getEscolaridade();
-      const foco = localStorage.getItem('userFocus') || 'Conhecimentos Gerais';
       const idade = getUserAge();
 
       setCarregando(true);
       setErro(null);
       const perguntas = await gerarPerguntasGemini(escolaridadePrompt, foco, idade);
       if (perguntas && perguntas.length > 0) { // Check for any number of questions
-        setPerguntasNivelamento(perguntas);
+        setPerguntasNivelamento(orderPerguntas(perguntas, foco));
       } else {
         setErro("Falha ao gerar perguntas com IA. Usando um quiz de exemplo.");
-        setPerguntasNivelamento([
-            {pergunta: 'Qual animal é conhecido como o "rei da selva"?', alternativas: ['Tigre', 'Leão', 'Elefante', 'Urso'], resposta: 1, area: 'Biologia'},
-            {pergunta: 'Qual a fórmula da água?', alternativas: ['CO2', 'H2O', 'O2', 'N2'], resposta: 1, area: 'Biologia'},
-            {pergunta: 'Qual processo as plantas usam para converter luz em energia?', alternativas: ['Respiração', 'Fotossíntese', 'Transpiração', 'Digestão'], resposta: 1, area: 'Biologia'},
-            {pergunta: 'Qual a capital da França?', alternativas: ['Londres', 'Berlim', 'Madri', 'Paris'], resposta: 3, area: 'Geografia'},
-            {pergunta: 'Qual o maior continente do mundo?', alternativas: ['África', 'Europa', 'Ásia', 'América'], resposta: 2, area: 'Geografia'},
-            {pergunta: 'Qual o rio mais longo do mundo?', alternativas: ['Nilo', 'Amazonas', 'Yangtzé', 'Mississipi'], resposta: 1, area: 'Geografia'},
-            {pergunta: 'Quem escreveu "Dom Quixote"?', alternativas: ['Shakespeare', 'Cervantes', 'Dante', 'Homero'], resposta: 1, area: 'História'},
-            {pergunta: 'Em que ano começou a Segunda Guerra Mundial?', alternativas: ['1914', '1939', '1945', '1929'], resposta: 1, area: 'História'},
-            {pergunta: 'Qual civilização construiu as pirâmides de Gizé?', alternativas: ['Romana', 'Grega', 'Egípcia', 'Maia'], resposta: 2, area: 'História'},
-            {pergunta: 'O que significa a sigla "CPU" em um computador?', alternativas: ['Unidade Central de Processamento', 'Placa de Vídeo', 'Memória RAM', 'Fonte de Energia'], resposta: 0, area: 'Informática'},
-            {pergunta: 'Qual empresa desenvolveu o sistema operacional Windows?', alternativas: ['Apple', 'Google', 'Microsoft', 'Linux'], resposta: 2, area: 'Informática'},
-            {pergunta: 'O que é um "phishing"?', alternativas: ['Um tipo de vírus', 'Um ataque para roubar informações', 'Uma peça de hardware', 'Um software de edição'], resposta: 1, area: 'Informática'},
-            {pergunta: 'Qual a tradução de "book" para o português?', alternativas: ['Livro', 'Caneta', 'Mesa', 'Cadeira'], resposta: 0, area: 'Inglês'},
-            {pergunta: 'Como se diz "obrigado" em inglês?', alternativas: ['Hello', 'Goodbye', 'Thank you', 'Sorry'], resposta: 2, area: 'Inglês'},
-            {pergunta: 'O que significa "cat" em inglês?', alternativas: ['Cachorro', 'Gato', 'Pássaro', 'Peixe'], resposta: 1, area: 'Inglês'},
-            {pergunta: 'Se um trem viaja a 100 km/h, que distância ele percorre em 2 horas?', alternativas: ['100 km', '150 km', '200 km', '250 km'], resposta: 2, area: 'Lógica'},
-            {pergunta: 'Qual o próximo número na sequência: 2, 4, 6, 8, ...?', alternativas: ['9', '10', '11', '12'], resposta: 1, area: 'Lógica'},
-            {pergunta: 'Se todo A é B e todo B é C, então:', alternativas: ['Todo C é A', 'Nenhum A é C', 'Todo A é C', 'Algum A não é C'], resposta: 2, area: 'Lógica'},
-            {pergunta: 'Um pai tem o dobro da idade do filho. Juntos, eles têm 60 anos. Qual a idade do pai?', alternativas: ['30', '40', '45', '50'], resposta: 1, area: 'Lógica'},
-            {pergunta: 'Quanto é 7 multiplicado por 8?', alternativas: ['49', '54', '56', '63'], resposta: 2, area: 'Matemática'},
-            {pergunta: 'Qual o resultado de 10 - (2 + 3)?', alternativas: ['5', '6', '7', '8'], resposta: 0, area: 'Matemática'},
-            {pergunta: 'Se um círculo tem um raio de 5 cm, qual o seu diâmetro?', alternativas: ['5 cm', '10 cm', '15 cm', '25 cm'], resposta: 1, area: 'Matemática'},
-            {pergunta: 'Qual o sinônimo de "rápido"?', alternativas: ['Lento', 'Veloz', 'Grande', 'Pequeno'], resposta: 1, area: 'Português'},
-            {pergunta: 'Qual o coletivo de "cães"?', alternativas: ['Alcateia', 'Manada', 'Matilha', 'Cardume'], resposta: 2, area: 'Português'},
-            {pergunta: 'Qual a classe gramatical da palavra "bonito"?', alternativas: ['Substantivo', 'Verbo', 'Adjetivo', 'Advérbio'], resposta: 2, area: 'Português'}
-        ]);
+        setPerguntasNivelamento(orderPerguntas(fallbackPerguntas, foco));
       }
       setCarregando(false);
     })();
@@ -441,7 +441,7 @@ const QuizNivelamento = () => {
 
           </CardContent>
           <div className="p-6 border-t text-center">
-             <Button size="lg" className="bg-gradient-growth" onClick={() => navigate("/Dashboard")}>Avançar</Button>
+             <Button size="lg" className="bg-gradient-growth" onClick={() => navigate("/trilha")}>Avançar</Button>
           </div>
         </Card>
       </div>
@@ -456,7 +456,7 @@ const QuizNivelamento = () => {
                 <div className="text-center">
                     <h2 className="text-2xl font-bold mb-4">Não foi possível carregar o quiz</h2>
                     <p className="text-muted-foreground">Tente novamente mais tarde.</p>
-                    <Button size="lg" className="mt-6 bg-gradient-growth" onClick={() => navigate("/Dashboard")}>Voltar ao Início</Button>
+                    <Button size="lg" className="mt-6 bg-gradient-growth" onClick={() => navigate("/trilha")}>Voltar ao Início</Button>
                 </div>
             </Card>
         </div>

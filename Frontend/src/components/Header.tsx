@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { GameCard } from "@/components/ui/game-card";
-import { BookOpen, Star, Trophy, User, Flame } from "lucide-react";
+import { BookOpen, Star, Trophy, User, Flame, Heart } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useGamification } from "@/hooks/useGamification";
@@ -11,7 +10,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLogged, setIsLogged] = useState(false);
-  const { level, xp, xpForNextLevel, progressPercentage, streak } = useGamification();
+  const { level, xp, xpForNextLevel, progressPercentage, streak, hearts } = useGamification();
 
   useEffect(() => {
     const updateLogin = () => setIsLogged(!!localStorage.getItem("userEmail"));
@@ -38,19 +37,32 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img src="/public/logoSkillio2.svg" alt="Skillio" className="h-12 w-18 rounded-md object-cover" />
+            <Link to="/">
+              <img src="/public/logoSkillio2.svg" alt="Skillio" className="h-12 w-18 rounded-md object-cover" />
+            </Link>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             {location.pathname !== "/" && <Link to="/" className="text-foreground hover:text-primary transition-colors">Início</Link>}
             {isLogged && location.pathname !== "/dashboard" && <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">Meu Desempenho</Link>}
-            <Link to="/subjects" className="text-foreground hover:text-primary transition-colors">Explorar</Link>
-            <Link to="/ranking" className="text-foreground hover:text-primary transition-colors">Ranking</Link>
-            <Link to="/about" className="text-foreground hover:text-primary transition-colors">Sobre Nós</Link>
+            {location.pathname !== "/subjects" && <Link to="/subjects" className="text-foreground hover:text-primary transition-colors">Explorar</Link>}
+            {location.pathname !== "/ranking" && <Link to="/ranking" className="text-foreground hover:text-primary transition-colors">Ranking</Link>}
+            {location.pathname !== "/about" && <Link to="/about" className="text-foreground hover:text-primary transition-colors">Sobre Nós</Link>}
           </nav>
           <div className="flex items-center space-x-2">
             {isLogged ? (
               <>
                 <div className="hidden sm:flex items-center gap-4 mr-2">
+                  {/* Hearts */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={`flex items-center gap-1 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                        <Heart className="w-4 h-4" />
+                        <span>{hearts}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{hearts} vidas restantes</p></TooltipContent>
+                  </Tooltip>
+
                   {/* Streak */}
                   {streak > 0 && (
                     <Tooltip>
@@ -63,6 +75,7 @@ const Header = () => {
                       <TooltipContent><p>{streak} dias em sequência!</p></TooltipContent>
                     </Tooltip>
                   )}
+
                   {/* Level & XP */}
                   <div className="flex items-center gap-2">
                     <Tooltip>
