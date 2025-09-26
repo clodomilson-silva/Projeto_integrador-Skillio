@@ -7,7 +7,7 @@ interface Lesson {
 }
 
 const API_KEY = import.meta.env.VITE_GOOGLE_GENERATIVE_LANGUAGE_API_KEY;
-const DEFAULT_MODEL = "gemini-pro";
+const DEFAULT_MODEL = "gemini-2.5-flash";
 
 export const useLessonAI = (
   subject: string,

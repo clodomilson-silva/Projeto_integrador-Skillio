@@ -177,6 +177,12 @@ export const useGamification = () => {
       });
   };
 
+  const resetHearts = () => {
+    const newHearts = MAX_HEARTS;
+    localStorage.setItem('userHearts', newHearts.toString()); // Save immediately
+    setStats(prev => ({ ...prev, hearts: newHearts }));
+  };
+
   const completeBlock = (blocoId: string) => {
     setStats(prevStats => {
         if (prevStats.blocosCompletos.includes(blocoId)) {
@@ -216,6 +222,7 @@ export const useGamification = () => {
     dailyQuests,
     addXp,
     loseHeart,
+    resetHearts,
     completeBlock,
     isBlockCompleted,
     completeQuest,

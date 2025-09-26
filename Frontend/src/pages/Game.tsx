@@ -24,7 +24,7 @@ const Game = () => {
   const { blocoId } = useParams<{ blocoId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addXp, completeBlock, isBlockCompleted, loseHeart, hearts } = useGamification();
+  const { addXp, completeBlock, isBlockCompleted, loseHeart, hearts, resetHearts } = useGamification();
   useTimeTracker(); // Inicia o rastreamento de tempo nesta página
 
   const trilhaBloco = trilhaPrincipal.flatMap(n => n.blocos).find(b => b.id === blocoId);
@@ -58,6 +58,8 @@ const Game = () => {
   const [showResult, setShowResult] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [mistakes, setMistakes] = useState(0);
+  const [pendingScore, setPendingScore] = useState(0);
+  const [pendingXp, setPendingXp] = useState(0);
 
   const educationalLevel = localStorage.getItem('userEducationalLevel') || 'medio';
 
@@ -83,9 +85,15 @@ const Game = () => {
     
     const isCorrect = answerIndex === questions[currentQuestion]?.correct;
     if (isCorrect) {
-      setScore(prevScore => prevScore + 10);
-      addXp(5);
-      toast({ title: "Correto! 🎉", description: `+10 Pontos, +5 XP` });
+        if (isTrailGame) {
+            setPendingScore(prev => prev + 10);
+            setPendingXp(prev => prev + 5);
+            toast({ title: "Correto! 🎉" });
+        } else {
+            setScore(prevScore => prevScore + 10);
+            addXp(5);
+            toast({ title: "Correto! 🎉", description: `+10 Pontos, +5 XP` });
+        }
     } else {
       if (isTrailGame) {
           if (answerIndex !== null && answerIndex !== -1) { // Apenas erros contam, não pulos ou tempo esgotado
@@ -112,7 +120,7 @@ const Game = () => {
         setGameOver(true);
       }
     }, 2000);
-  }, [currentQuestion, questions, addXp, toast, loseHeart, isTrailGame]);
+  }, [currentQuestion, questions, addXp, toast, loseHeart, isTrailGame, setPendingScore, setPendingXp]);
 
   useEffect(() => {
     if (timeLeft > 0 && !showResult && !gameOver && questions.length > 0) {
@@ -131,13 +139,20 @@ const Game = () => {
   }, [mistakes, isTrailGame, toast]);
 
   useEffect(() => {
-    if (gameOver && blocoId && isTrailGame) { // Only complete blocks for trail games
-      if (!isBlockCompleted(blocoId)) {
+    if (gameOver && blocoId && isTrailGame) {
+      if (mistakes < 5 && !isBlockCompleted(blocoId)) { // Player won
+        setScore(prevScore => prevScore + pendingScore);
+        addXp(pendingXp);
         completeBlock(blocoId);
-        toast({ title: "Bloco Concluído!", description: "+10 XP e conquista desbloqueada!" });
+        toast({
+          title: "Bloco Concluído!",
+          description: `Parabéns! Você ganhou +${pendingScore} Pontos e +${pendingXp} XP.`,
+        });
+      } else if (mistakes >= 5) { // Player lost
+        resetHearts();
       }
     }
-  }, [gameOver, blocoId, isTrailGame, completeBlock, isBlockCompleted, toast]);
+  }, [gameOver, blocoId, isTrailGame, completeBlock, isBlockCompleted, toast, pendingScore, pendingXp, addXp, mistakes, resetHearts]);
 
   const resetGame = () => {
       refetch();

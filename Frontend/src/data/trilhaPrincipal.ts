@@ -1,13 +1,13 @@
 export interface Bloco {
-  id: string;          // Ex: "nivel-1-foco-1"
-  tipo: 'foco' | 'bncc'; // Para diferenciar as perguntas
-  titulo: string;      // Ex: "Foco 1" ou "Revisão BNCC 1"
+  id: string;          // Ex: "level-1-focus-1"
+  tipo: 'foco' | 'bncc'; // To differentiate the questions
+  titulo: string;      // Ex: "Focus 1" or "BNCC Review 1"
 }
 
 export interface NivelTrilha {
-  nivel: number;       // O número do nível (1 a 30)
-  titulo: string;      // Ex: "Nível 1: Primeiros Passos"
-  blocos: Bloco[];     // A lista de 15 blocos
+  nivel: number;       // The level number (1 to 30)
+  titulo: string;      // Ex: "Level 1: First Steps"
+  blocos: Bloco[];     // The list of 15 blocks
 }
 
 export function gerarTrilhaPrincipal(): NivelTrilha[] {
@@ -16,7 +16,7 @@ export function gerarTrilhaPrincipal(): NivelTrilha[] {
   for (let i = 1; i <= 30; i++) {
     const nivelAtual: NivelTrilha = {
       nivel: i,
-      titulo: `Nível ${i}`,
+      titulo: `Level ${i}`,
       blocos: [],
     };
 
@@ -28,14 +28,14 @@ export function gerarTrilhaPrincipal(): NivelTrilha[] {
         nivelAtual.blocos.push({
           id: `nivel-${i}-bncc-${contadorBncc}`,
           tipo: 'bncc',
-          titulo: `Revisão BNCC ${contadorBncc}`,
+          titulo: `BNCC Review ${contadorBncc}`,
         });
         contadorBncc++;
       } else {
         nivelAtual.blocos.push({
           id: `nivel-${i}-foco-${contadorFoco}`,
           tipo: 'foco',
-          titulo: `Foco ${contadorFoco}`,
+          titulo: `Focus ${contadorFoco}`,
         });
         contadorFoco++;
       }

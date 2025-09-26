@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTimeTracker } from '@/hooks/useTimeTracker';
 import { motion, useScroll, useSpring } from "framer-motion";
 
-// Componente para o visual do bloco circular com efeito 3D
+// Component for the circular block visual with 3D effect
 const BlocoCircular = ({ status, tipo, hasNoHearts }) => {
     const icon = useMemo(() => {
         const iconClass = "h-10 w-10 text-white/90 drop-shadow-lg";
@@ -38,7 +38,7 @@ const BlocoCircular = ({ status, tipo, hasNoHearts }) => {
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 10 }}
         >
-            {/* Efeito de brilho interno */}
+            {/* Internal glow effect */}
             <div className="absolute top-1 left-1 w-[90%] h-[90%] rounded-full bg-white/10 blur-sm"></div>
             <div className="relative z-10">{icon}</div>
         </motion.div>
@@ -68,7 +68,7 @@ const Trilha = () => {
     const novasRecompensas = [...recompensasColetadas, nivel];
     setRecompensasColetadas(novasRecompensas);
     localStorage.setItem('recompensasColetadas', JSON.stringify(novasRecompensas));
-    toast({ title: "Recompensa Coletada!", description: "Você ganhou 100 XP extras!", className: 'bg-gradient-warning text-white border-none' });
+    toast({ title: "Reward Collected!", description: "You earned 100 extra XP!", className: 'bg-gradient-warning text-white border-none' });
   };
 
   const { scrollYProgress } = useScroll();
@@ -85,7 +85,7 @@ const Trilha = () => {
             <Link to="/dashboard">
                 <Button variant="ghost" className="absolute top-8 left-8 z-20 backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Voltar ao Dashboard
+                    Back to Dashboard
                 </Button>
             </Link>
             <div className="text-center mb-16 pt-16">
@@ -94,14 +94,14 @@ const Trilha = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                     className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-primary to-indigo-400 bg-clip-text text-transparent">
-                        Sua Trilha de Aprendizado
+                        Your Learning Path
                 </motion.h1>
                 <motion.p 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="text-gray-400 mt-4 max-w-2xl mx-auto">
-                        Avance pelos níveis, complete os desafios e colete suas recompensas para dominar novas habilidades.
+                        Advance through the levels, complete challenges, and collect your rewards to master new skills.
                 </motion.p>
             </div>
 
@@ -161,10 +161,10 @@ const Trilha = () => {
                                             </TooltipTrigger>
                                             <TooltipContent>
                                                 <p className="font-bold">{bloco.titulo}</p>
-                                                {status === 'completo' && <p>Revisar</p>}
-                                                {status === 'desbloqueado' && !hasNoHearts && <p>Começar</p>}
-                                                {status === 'desbloqueado' && hasNoHearts && <p>Você está sem vidas!</p>}
-                                                {status === 'bloqueado' && <p>Bloqueado</p>}
+                                                {status === 'completo' && <p>Review</p>}
+                                                {status === 'desbloqueado' && !hasNoHearts && <p>Start</p>}
+                                                {status === 'desbloqueado' && hasNoHearts && <p>You are out of lives!</p>}
+                                                {status === 'bloqueado' && <p>Locked</p>}
                                             </TooltipContent>
                                         </Tooltip>
                                     </motion.div>
@@ -192,14 +192,14 @@ const Trilha = () => {
                                                 onClick={() => handleClaimReward(nivel.nivel)}
                                             >
                                                 <Gift className={`h-12 w-12 transition-colors ${isLevelComplete && !isRewardClaimed ? 'text-amber-400' : isRewardClaimed ? 'text-green-500' : 'text-gray-500'}`} />
-                                                <span className="text-xs font-bold text-gray-300">Recompensa</span>
+                                                <span className="text-xs font-bold text-gray-300">Reward</span>
                                             </Button>
                                         </motion.div>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        {isLevelComplete && !isRewardClaimed && <p>Clique para coletar 100 XP!</p>}
-                                        {isLevelComplete && isRewardClaimed && <p>Recompensa já coletada.</p>}
-                                        {!isLevelComplete && <p>Complete todos os blocos do nível para liberar.</p>}
+                                        {isLevelComplete && !isRewardClaimed && <p>Click to collect 100 XP!</p>}
+                                        {isLevelComplete && isRewardClaimed && <p>Reward already collected.</p>}
+                                        {!isLevelComplete && <p>Complete all blocks in the level to unlock.</p>}
                                     </TooltipContent>
                                 </Tooltip>
                             </motion.div>
