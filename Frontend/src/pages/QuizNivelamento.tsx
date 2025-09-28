@@ -274,6 +274,18 @@ const QuizNivelamento = () => {
   useEffect(() => {
     (async () => {
       const foco = localStorage.getItem('userFocus') || 'Conhecimentos Gerais';
+      const escolaridadePrompt = getEscolaridade();
+      const idade = getUserAge();
+
+      const cacheKey = `quizPerguntas_${foco}_${escolaridadePrompt}_${idade}`;
+      const cachedPerguntas = localStorage.getItem(cacheKey);
+
+      if (cachedPerguntas) {
+        setPerguntasNivelamento(JSON.parse(cachedPerguntas));
+        setCarregando(false);
+        return;
+      }
+
       const fallbackPerguntas = [
           {pergunta: 'Qual animal é conhecido como o "rei da selva"?', alternativas: ['Tigre', 'Leão', 'Elefante', 'Urso'], resposta: 1, area: 'Biologia'},
           {pergunta: 'Qual a fórmula da água?', alternativas: ['CO2', 'H2O', 'O2', 'N2'], resposta: 1, area: 'Biologia'},
@@ -309,14 +321,13 @@ const QuizNivelamento = () => {
         return;
       }
 
-      const escolaridadePrompt = getEscolaridade();
-      const idade = getUserAge();
-
       setCarregando(true);
       setErro(null);
       const perguntas = await gerarPerguntasGemini(escolaridadePrompt, foco, idade);
       if (perguntas && perguntas.length > 0) { // Check for any number of questions
-        setPerguntasNivelamento(orderPerguntas(perguntas, foco));
+        const orderedPerguntas = orderPerguntas(perguntas, foco);
+        setPerguntasNivelamento(orderedPerguntas);
+        localStorage.setItem(cacheKey, JSON.stringify(orderedPerguntas));
       } else {
         setErro("Falha ao gerar perguntas com IA. Usando um quiz de exemplo.");
         setPerguntasNivelamento(orderPerguntas(fallbackPerguntas, foco));
