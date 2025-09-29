@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Star, Target, Award, TrendingUp, TrendingDown, SkipForward, BookOpenCheck } from 'lucide-react';
+import { useGamification } from "@/hooks/useGamification";
 import { Separator } from "@/components/ui/separator";
 
 // Tipo seguro para perguntas do quiz
@@ -246,6 +247,7 @@ const QuizNivelamento = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addXp } = useGamification();
 
   const getEscolaridade = () => {
     const escolaridadeValue = localStorage.getItem('userEducationalLevel') || 'medio';
