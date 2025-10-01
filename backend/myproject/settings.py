@@ -167,6 +167,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React development server
     "http://127.0.0.1:3000",
     "http://localhost:5173",  # Vite development server
+    "http://localhost:8080",  # Added for the current Vite config
 ]
 
 CORS_ALLOW_CREDENTIALS = True

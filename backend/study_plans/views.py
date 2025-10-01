@@ -1,13 +1,55 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.utils import timezone
 from .models import Achievement, DailyQuest, QuizResult
-from accounts.models import UserAchievement, UserDailyQuest
+from accounts.models import UserAchievement, UserDailyQuest, UserGamification
 from .serializers import (
     AchievementSerializer, 
     DailyQuestSerializer, 
     QuizResultSerializer,
     UserAchievementSerializer,
-    UserDailyQuestSerializer
+    UserDailyQuestSerializer,
+    AddXpSerializer
 )
+
+class AddXpView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = AddXpSerializer(data=request.data)
+        if serializer.is_valid():
+            amount = serializer.validated_data['amount']
+            user_gamification, created = UserGamification.objects.get_or_create(user=request.user)
+            user_gamification.xp += amount
+            # Lógica de Level Up
+            xp_for_next_level = 100 * (user_gamification.level ** 1.5)
+            if user_gamification.xp >= xp_for_next_level:
+                user_gamification.level += 1
+                user_gamification.xp -= int(xp_for_next_level)
+            user_gamification.save()
+            return Response({'status': 'success', 'new_xp': user_gamification.xp, 'new_level': user_gamification.level}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CompleteDailyQuestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        quest_id = kwargs.get('quest_id')
+        today = timezone.now().date()
+        try:
+            user_quest = UserDailyQuest.objects.get(user=request.user, quest_id=quest_id, quest_date=today)
+            if not user_quest.is_completed:
+                user_quest.is_completed = True
+                user_quest.save()
+                # Adicionar XP por completar a quest
+                user_gamification, created = UserGamification.objects.get_or_create(user=request.user)
+                user_gamification.xp += user_quest.quest.xp_reward
+                user_gamification.save()
+                return Response({'status': 'success', 'message': 'Quest completed!'}, status=status.HTTP_200_OK)
+            return Response({'status': 'info', 'message': 'Quest already completed.'}, status=status.HTTP_200_OK)
+        except UserDailyQuest.DoesNotExist:
+            return Response({'error': 'Quest not found for today.'}, status=status.HTTP_404_NOT_FOUND)
 
 class AchievementListView(generics.ListAPIView):
     """

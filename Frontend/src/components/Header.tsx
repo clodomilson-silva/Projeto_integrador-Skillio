@@ -1,36 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { BookOpen, Star, Trophy, User, Flame, Heart } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [isLogged, setIsLogged] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
   const { level, xp, xpForNextLevel, progressPercentage, streak, hearts } = useGamification();
-
-  useEffect(() => {
-    const updateLogin = () => setIsLogged(!!localStorage.getItem("userEmail"));
-    updateLogin();
-    window.addEventListener("storage", updateLogin);
-    window.addEventListener("focus", updateLogin);
-    window.addEventListener("user-auth-changed", updateLogin);
-    return () => {
-      window.removeEventListener("storage", updateLogin);
-      window.removeEventListener("focus", updateLogin);
-      window.removeEventListener("user-auth-changed", updateLogin);
-    };
-  }, []);
-
-  function handleLogout() {
-    localStorage.clear();
-    setIsLogged(false);
-    window.dispatchEvent(new Event("user-auth-changed"));
-    navigate("/");
-  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-card/50 backdrop-blur-sm">
@@ -38,21 +17,20 @@ const Header = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Link to="/">
-              <img src="/public/logoSkillio2.svg" alt="Skillio" className="h-12 w-18 rounded-md object-cover" />
+              <img src="/logoSkillio2.svg" alt="Skillio" className="h-12 w-18 rounded-md object-cover" />
             </Link>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             {location.pathname !== "/" && <Link to="/" className="text-foreground hover:text-primary transition-colors">Início</Link>}
-            {isLogged && location.pathname !== "/dashboard" && <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">Meu Desempenho</Link>}
+            {isAuthenticated && location.pathname !== "/dashboard" && <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">Meu Desempenho</Link>}
             {location.pathname !== "/subjects" && <Link to="/subjects" className="text-foreground hover:text-primary transition-colors">Explorar</Link>}
             {location.pathname !== "/ranking" && <Link to="/ranking" className="text-foreground hover:text-primary transition-colors">Ranking</Link>}
             {location.pathname !== "/about" && <Link to="/about" className="text-foreground hover:text-primary transition-colors">Sobre Nós</Link>}
           </nav>
           <div className="flex items-center space-x-2">
-            {isLogged ? (
+            {isAuthenticated ? (
               <>
                 <div className="hidden sm:flex items-center gap-4 mr-2">
-                  {/* Hearts */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className={`flex items-center gap-1 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
@@ -63,7 +41,6 @@ const Header = () => {
                     <TooltipContent><p>{hearts} vidas restantes</p></TooltipContent>
                   </Tooltip>
 
-                  {/* Streak */}
                   {streak > 0 && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -76,7 +53,6 @@ const Header = () => {
                     </Tooltip>
                   )}
 
-                  {/* Level & XP */}
                   <div className="flex items-center gap-2">
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -92,7 +68,7 @@ const Header = () => {
                 </div>
 
                 <Link to="/profile"><Button variant="ghost" size="icon"><User className="h-4 w-4" /></Button></Link>
-                <Button variant="outline" size="sm" className="border-primary/50" onClick={handleLogout}>Sair</Button>
+                <Button variant="outline" size="sm" className="border-primary/50" onClick={logout}>Sair</Button>
               </>
             ) : (
               <>

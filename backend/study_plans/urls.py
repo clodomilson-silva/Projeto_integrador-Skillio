@@ -4,7 +4,9 @@ from .views import (
     UserAchievementListView,
     DailyQuestListView,
     UserDailyQuestListView,
-    QuizResultCreateView
+    QuizResultCreateView,
+    AddXpView,
+    CompleteDailyQuestView
 )
 
 urlpatterns = [
@@ -13,4 +15,8 @@ urlpatterns = [
     path('daily-quests/', DailyQuestListView.as_view(), name='daily-quest-list'),
     path('my-daily-quests/', UserDailyQuestListView.as_view(), name='user-daily-quest-list'),
     path('quiz-results/', QuizResultCreateView.as_view(), name='quiz-result-create'),
+
+    # Gamification actions
+    path('gamification/add-xp/', AddXpView.as_view(), name='add-xp'),
+    path('my-daily-quests/<str:quest_id>/complete/', CompleteDailyQuestView.as_view(), name='complete-daily-quest'),
 ]
