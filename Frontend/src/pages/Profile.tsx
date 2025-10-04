@@ -5,9 +5,27 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import * as LucideIcons from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useGamification } from '@/hooks/useGamification';
 import { useToast } from "@/hooks/use-toast";
+import apiClient from "@/api/axios";
+import { useAuth } from "@/contexts/AuthContext";
+
+// Tipagem para os dados que esperamos do backend
+interface UserProfileData {
+  birth_date: string;
+  educational_level: string;
+  profession: string;
+  focus: string;
+  foto: string | null;
+}
+interface UserData {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  profile: UserProfileData;
+}
 
 // Componente dinâmico para ícones
 const Icon = ({ name, ...props }: { name: string } & LucideIcons.LucideProps) => {
@@ -17,6 +35,7 @@ const Icon = ({ name, ...props }: { name: string } & LucideIcons.LucideProps) =>
 };
 
 const Profile = () => {
+  const navigate = useNavigate();
   const {
     level,
     xp,
@@ -26,51 +45,49 @@ const Profile = () => {
     allAchievements,
     unlockedAchievements,
     addXp,
+    isLoading: isGamificationLoading, // Renomeia para evitar conflito
   } = useGamification();
 
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const { logout } = useAuth();
+  const [isUserInfoLoading, setIsUserInfoLoading] = useState(true);
 
   const [userInfo, setUserInfo] = useState({
     name: '',
     email: '',
-    educationalLevel: '',
-    birthDate: '',
-    profession: '',
     focus: '',
     photo: null as string | null,
     joinDate: '...'
   });
 
   useEffect(() => {
-    const name = localStorage.getItem('userName') || 'Usuário';
-    const email = localStorage.getItem('userEmail') || '';
-    const educationalLevel = localStorage.getItem('userEducationalLevel') || '';
-    const birthDateISO = localStorage.getItem('userBirthDate');
-    const profession = localStorage.getItem('userProfession') || '';
-    const focus = localStorage.getItem('userFocus') || '';
-    const photo = localStorage.getItem('userPhoto');
+    const fetchUserData = async () => {
+      setIsUserInfoLoading(true);
+      try {
+        const response = await apiClient.get<UserData>('/users/me/');
+        const { data } = response;
 
-    let birthDateFormatted = '';
-    if (birthDateISO) {
-      const date = new Date(birthDateISO);
-      birthDateFormatted = date.toLocaleDateString('pt-BR');
-    }
+        setUserInfo({
+          name: data.first_name,
+          email: data.email,
+          focus: data.profile.focus,
+          photo: data.profile.foto,
+          joinDate: 'Setembro 2025' // Mantido como exemplo
+        });
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário:", error);
+        toast({ title: "Sessão expirada", description: "Faça o login novamente.", variant: "destructive" });
+        logout();
+      } finally {
+        setIsUserInfoLoading(false);
+      }
+    };
 
-    setUserInfo({
-      name,
-      email,
-      educationalLevel,
-      birthDate: birthDateFormatted,
-      profession,
-      focus,
-      photo,
-      joinDate: 'Setembro 2025'
-    });
-  }, []);
+    fetchUserData();
+  }, [logout, toast]);
 
   const handleShare = async () => {
-    const profileText = `Meu Perfil Skillio:\nNome: ${userInfo.name}\nNível: ${level}\nXP: ${xp}\nBlocos Completos: ${blocosCompletos.length}`;
+    const profileText = `Meu Perfil Skillio:\nNome: ${userInfo.name}\nNível: ${level}\nXP: ${xp}\nBlocos Completos: ${blocosCompletos?.length || 0}`;
 
     if (navigator.share) {
       try {
@@ -87,6 +104,14 @@ const Profile = () => {
       });
     }
   };
+
+  if (isUserInfoLoading || isGamificationLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <LucideIcons.Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,9 +131,9 @@ const Profile = () => {
           <GameCard variant="subject" className="p-6 text-center w-full">
             <Avatar className="w-24 h-24 mx-auto mb-4">
               <AvatarImage src={userInfo.photo || undefined} />
-              <AvatarFallback className="text-2xl">{userInfo.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              <AvatarFallback className="text-2xl">{userInfo.name ? userInfo.name.split(' ').map(n => n[0]).join('') : 'U'}</AvatarFallback>
             </Avatar>
-            <h2 className="text-2xl font-bold mb-2">{userInfo.name.charAt(0).toUpperCase() + userInfo.name.slice(1)}</h2>
+            <h2 className="text-2xl font-bold mb-2">{userInfo.name ? userInfo.name.charAt(0).toUpperCase() + userInfo.name.slice(1) : 'Usuário'}</h2>
             <p className="text-white mb-2">{userInfo.email}</p>
             
             <div className="text-left space-y-2 mb-4 w-full">
@@ -145,8 +170,8 @@ const Profile = () => {
           <div>
             <h2 className="text-2xl font-bold mb-6 text-white">Conquistas</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allAchievements.map((achievement) => {
-                const isEarned = unlockedAchievements.includes(achievement.id);
+              {allAchievements && allAchievements.map((achievement) => {
+                const isEarned = unlockedAchievements?.includes(achievement.id);
                 return (
                   <GameCard key={achievement.id} className={`p-4 transition-all ${isEarned ? 'border-green-500/50' : 'opacity-50'}`}>
                     <div className="flex items-center space-x-4">
@@ -169,11 +194,11 @@ const Profile = () => {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-white">Blocos Completos</span>
-                <span className="font-bold text-white">{blocosCompletos.length}</span>
+                <span className="font-bold text-white">{blocosCompletos?.length || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white">Conquistas</span>
-                <span className="font-bold text-white">{unlockedAchievements.length} / {allAchievements.length}</span>
+                <span className="font-bold text-white">{unlockedAchievements?.length || 0} / {allAchievements?.length || 0}</span>
               </div>
             </div>
           </GameCard>

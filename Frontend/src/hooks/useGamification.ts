@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/api/axios';
+import { allAchievements } from '../data/achievements';
 
 // Interfaces baseadas nos serializers do Django
 interface UserGamificationStats {
@@ -28,6 +29,7 @@ export const useGamification = () => {
     const [stats, setStats] = useState<UserGamificationStats>({ level: 1, xp: 0, streak: 0 });
     const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
     const [dailyQuests, setDailyQuests] = useState<Quest[]>([]);
+    const [blocosCompletos, setBlocosCompletos] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const xpForNextLevel = Math.floor(100 * Math.pow(stats.level, 1.5));
@@ -40,17 +42,25 @@ export const useGamification = () => {
         }
         setIsLoading(true);
         try {
-            // Usaremos o endpoint de profile que já retorna os dados de gamificação
-            const profileResponse = await apiClient.get('/auth/profile/');
-            const achievementsResponse = await apiClient.get('/study/my-achievements/');
-            const questsResponse = await apiClient.get('/study/my-daily-quests/');
+            // Usaremos o endpoint de /users/me/ que já retorna os dados de gamificação
+            const response = await apiClient.get('/users/me/');
+            const { data } = response;
 
-            if (profileResponse.data.gamification) {
-                setStats(profileResponse.data.gamification);
+            if (data.profile.gamification) {
+                setStats(data.profile.gamification);
             }
 
-            setUnlockedAchievements(achievementsResponse.data.map((ua: UserAchievement) => ua.achievement.id));
-            setDailyQuests(questsResponse.data);
+            if (data.profile.achievements) {
+                setUnlockedAchievements(data.profile.achievements.map((ua: UserAchievement) => ua.achievement.id));
+            }
+
+            if (data.profile.daily_quests) {
+                setDailyQuests(data.profile.daily_quests);
+            }
+
+            if (data.profile.blocos_completos) {
+                setBlocosCompletos(data.profile.blocos_completos);
+            }
 
         } catch (error) {
             console.error("Failed to fetch gamification data", error);
@@ -104,8 +114,10 @@ export const useGamification = () => {
         level: stats.level,
         xp: stats.xp,
         streak: stats.streak,
+        allAchievements,
         unlockedAchievements,
         dailyQuests,
+        blocosCompletos,
         isLoading,
         xpForNextLevel,
         progressPercentage,

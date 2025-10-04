@@ -86,19 +86,19 @@ const Register = () => {
     formData.append('email', email);
     formData.append('password', password);
     formData.append('first_name', name);
+    // Agrupando os dados do perfil para o serializer aninhado
     formData.append('terms_accepted', String(aceitouTermos));
     if (dataNascimento) formData.append('birth_date', dataNascimento.toISOString().split('T')[0]);
     if (escolaridade) formData.append('educational_level', escolaridade);
     if (profissao) formData.append('profession', profissao);
     if (foco) formData.append('focus', foco);
-    // O backend não está configurado para receber a foto no registro ainda.
-    // if (fotoFile) formData.append('photo', fotoFile);
+    if (fotoFile) formData.append('foto', fotoFile);
 
     try {
       const response = await apiClient.post('/auth/register/', formData, {
         headers: {
-          // O browser define o Content-Type para multipart/form-data automaticamente com o boundary correto
-          // quando o corpo é um FormData. Remover a definição manual.
+          // Força o Content-Type para multipart/form-data para sobrescrever qualquer padrão global do axios.
+          'Content-Type': 'multipart/form-data',
         },
       });
 
@@ -115,10 +115,15 @@ const Register = () => {
       let description = "Ocorreu um erro inesperado. Tente novamente.";
       if (error.response && error.response.data) {
         try {
+            // Tenta extrair a mensagem de erro do DRF
             const errors = error.response.data;
             const errorKey = Object.keys(errors)[0];
             const errorMessages = errors[errorKey];
-            description = Array.isArray(errorMessages) ? errorMessages[0] : errorMessages;
+            // Se for um erro de validação, será um array.
+            // Se for um erro de unicidade (como email duplicado), pode ser uma string.
+            const message = Array.isArray(errorMessages) ? errorMessages[0] : errorMessages;
+            // O DRF retorna "user with this email already exists."
+            description = message.replace("user with this email already exists.", "Já existe uma conta com este e-mail.");
         } catch {
             description = "Não foi possível processar o erro retornado pelo servidor."
         }

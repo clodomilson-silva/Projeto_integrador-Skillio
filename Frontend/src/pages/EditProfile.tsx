@@ -4,11 +4,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, User, ArrowLeft } from "lucide-react";
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, User, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedDatePicker } from "@/components/ui/AnimatedDatePicker";
 import { Separator } from "@/components/ui/separator";
+import apiClient from '@/api/axios';
+import { useAuth } from '@/contexts/AuthContext';
+
+// Tipagem para os dados que esperamos do backend
+interface UserProfileData {
+  birth_date: string;
+  educational_level: string;
+  profession: string;
+  focus: string;
+  foto: string | null;
+}
+interface UserData {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  profile: UserProfileData;
+}
 
 const EditProfile = () => {
   // State for profile info
@@ -18,7 +36,8 @@ const EditProfile = () => {
   const [dataNascimento, setDataNascimento] = useState<Date>();
   const [profissao, setProfissao] = useState("");
   const [foco, setFoco] = useState("");
-  const [foto, setFoto] = useState<string | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
 
   // State for password change
   const [currentPassword, setCurrentPassword] = useState("");
@@ -28,26 +47,70 @@ const EditProfile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logout } = useAuth();
 
   const opcoesFoco = ["ENEM", "Lógica", "Direito", "Português", "Matemática", "Programação", "História"];
 
   useEffect(() => {
-    // Load existing user data
-    setName(localStorage.getItem('userName') || '');
-    setEmail(localStorage.getItem('userEmail') || '');
-    setEscolaridade(localStorage.getItem('userEducationalLevel') || '');
-    const birthDateISO = localStorage.getItem('userBirthDate');
-    if (birthDateISO) {
-      setDataNascimento(new Date(birthDateISO));
-    }
-    setProfissao(localStorage.getItem('userProfession') || '');
-    setFoco(localStorage.getItem('userFocus') || '');
-    setFoto(localStorage.getItem('userPhoto') || null);
-  }, []);
+    const fetchUserData = async () => {
+      try {
+        const response = await apiClient.get<UserData>('/users/me/');
+        const { data } = response;
+        setName(data.first_name);
+        setEmail(data.email);
+        setEscolaridade(data.profile.educational_level || '');
+        if (data.profile.birth_date) {
+          // Adiciona um dia para corrigir problemas de fuso horário na conversão
+          const date = new Date(data.profile.birth_date);
+          date.setUTCDate(date.getUTCDate() + 1);
+          setDataNascimento(date);
+        }
+        setProfissao(data.profile.profession || '');
+        setFoco(data.profile.focus || '');
+        setFotoPreview(data.profile.foto);
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário:", error);
+        toast({ title: "Erro ao carregar perfil", description: "Faça o login novamente.", variant: "destructive" });
+        logout();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUserData();
+  }, [logout, toast]);
 
-  const handleSave = () => {
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFotoFile(file);
+      setFotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+
+    const formData = new FormData();
+    formData.append('first_name', name);
+    formData.append('email', email);
+    if (dataNascimento) {
+      formData.append('profile.birth_date', dataNascimento.toISOString().split('T')[0]);
+    }
+    formData.append('profile.educational_level', escolaridade);
+    formData.append('profile.profession', profissao);
+    formData.append('profile.focus', foco);
+    if (fotoFile) {
+      formData.append('profile.foto', fotoFile);
+    }
+
+    // Log para depuração
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
     // --- Lógica de Alteração de Senha ---
     if (currentPassword || newPassword || confirmPassword) {
       if (!currentPassword || !newPassword || !confirmPassword) {
@@ -56,7 +119,8 @@ const EditProfile = () => {
           description: "Por favor, preencha todos os três campos de senha para alterá-la.",
           variant: "destructive",
         });
-        return; // Impede o salvamento do resto do perfil se a senha estiver incompleta
+        setIsLoading(false);
+        return;
       }
 
       if (newPassword !== confirmPassword) {
@@ -65,6 +129,7 @@ const EditProfile = () => {
           description: "A nova senha e a confirmação não são iguais.",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
@@ -74,31 +139,95 @@ const EditProfile = () => {
           description: "A nova senha deve ter pelo menos 6 caracteres.",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
-      
-      // Lógica para alterar a senha (ex: chamada de API)
-      console.log("Alterando a senha...");
-      // Se a alteração de senha for bem-sucedida, pode continuar para salvar o perfil
+
+      try {
+        await apiClient.post('/auth/password/change/', {
+          new_password1: newPassword,
+          new_password2: confirmPassword,
+        });
+        toast({
+          title: "Senha alterada com sucesso!",
+          description: "Sua senha foi atualizada.",
+        });
+        // Limpa os campos de senha após a alteração
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } catch (error: any) {
+        console.error("Erro ao alterar a senha:", error);
+        const errorMessage = error.response?.data?.detail || "Ocorreu um erro desconhecido.";
+        toast({
+          title: "Erro ao alterar a senha",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return; // Para a execução se a senha falhar
+      }
     }
 
     // --- Lógica para Salvar Informações do Perfil ---
-    localStorage.setItem('userName', name);
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('userEducationalLevel', escolaridade);
-    localStorage.setItem('userBirthDate', dataNascimento ? dataNascimento.toISOString() : '');
-    localStorage.setItem('userProfession', profissao);
-    localStorage.setItem('userFocus', foco);
-    if (foto) {
-      localStorage.setItem('userPhoto', foto);
-    }
+    try {
+      const { data } = await apiClient.patch<UserData>('/users/me/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-    toast({
-      title: "Perfil atualizado com sucesso!",
-      description: "Suas informações foram salvas.",
-    });
-    navigate("/profile");
+      // Atualiza o estado local com os novos dados (opcional, mas bom para consistência)
+      setName(data.first_name);
+      setEmail(data.email);
+      setEscolaridade(data.profile.educational_level || '');
+      if (data.profile.birth_date) {
+        const date = new Date(data.profile.birth_date);
+        date.setUTCDate(date.getUTCDate() + 1);
+        setDataNascimento(date);
+      }
+      setProfissao(data.profile.profession || '');
+      setFoco(data.profile.focus || '');
+      setFotoPreview(data.profile.foto);
+
+
+      toast({
+        title: "Perfil atualizado com sucesso!",
+        description: "Suas informações foram salvas.",
+      });
+      navigate("/perfil");
+
+    } catch (error: any) {
+      console.error("Erro ao salvar o perfil:", error);
+      const errorData = error.response?.data;
+      let description = "Ocorreu um erro desconhecido.";
+      if (errorData) {
+        // Pega a primeira chave de erro (ex: 'email', 'profile.focus')
+        const firstErrorKey = Object.keys(errorData)[0];
+        if (firstErrorKey) {
+          description = `${firstErrorKey}: ${errorData[firstErrorKey]}`;
+        }
+      }
+      toast({
+        title: "Erro ao salvar perfil",
+        description: description,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-background">
+        <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
+          <EducacaoParticles />
+        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12 relative overflow-hidden">
@@ -120,7 +249,7 @@ const EditProfile = () => {
           </p>
         </div>
         <Card className="p-6 shadow-elevated bg-card/80 backdrop-blur-sm border-border/50 relative">
-          <Link to="/profile">
+          <Link to="/perfil">
             <Button
               variant="outline"
               size="icon"
@@ -170,9 +299,9 @@ const EditProfile = () => {
               </datalist>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="foto" className="text-foreground">Foto de perfil</Label>
-              <Input id="foto" type="file" accept="image/*" onChange={e => setFoto(e.target.files?.[0] ? URL.createObjectURL(e.target.files[0]) : null)} />
-              {foto && <img src={foto} alt="Foto de perfil" className="mt-2 w-24 h-24 rounded-full object-cover mx-auto" />}
+              <Label htmlFor="foto" className="text-foreground">Foto de perfil (Opcional)</Label>
+              <Input id="foto" type="file" accept="image/*" onChange={handleFotoChange} />
+              {fotoPreview && <img src={fotoPreview} alt="Preview da foto de perfil" className="mt-2 w-24 h-24 rounded-full object-cover mx-auto" />}
             </div>
 
             <Separator className="my-8 bg-border/50" />
@@ -234,7 +363,7 @@ const EditProfile = () => {
           </form>
         </Card>
         <div className="text-center mt-6">
-          <Link to="/profile" className="text-sm text-muted-foreground hover:text-primary transition-colors">← Voltar para o Perfil</Link>
+          <Link to="/perfil" className="text-sm text-muted-foreground hover:text-primary transition-colors">← Voltar para o Perfil</Link>
         </div>
       </div>
     </div>

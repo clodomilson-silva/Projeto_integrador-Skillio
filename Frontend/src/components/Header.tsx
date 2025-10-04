@@ -5,11 +5,33 @@ import { useGamification } from "@/hooks/useGamification";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from 'react';
+import apiClient from "@/api/axios";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = () => {
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
   const { level, xp, xpForNextLevel, progressPercentage, streak, hearts } = useGamification();
+  const [userProfile, setUserProfile] = useState<{ first_name: string; foto: string | null } | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (isAuthenticated) {
+        try {
+          const response = await apiClient.get('/users/me/');
+          setUserProfile({ 
+            first_name: response.data.first_name, 
+            foto: response.data.profile.foto 
+          });
+        } catch (error) {
+          console.error("Failed to fetch user data for header", error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [isAuthenticated]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-card/50 backdrop-blur-sm">
@@ -67,7 +89,12 @@ const Header = () => {
                   </div>
                 </div>
 
-                <Link to="/profile"><Button variant="ghost" size="icon"><User className="h-4 w-4" /></Button></Link>
+                <Link to="/profile">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={userProfile?.foto || undefined} />
+                    <AvatarFallback>{userProfile?.first_name ? userProfile.first_name.charAt(0) : 'U'}</AvatarFallback>
+                  </Avatar>
+                </Link>
                 <Button variant="outline" size="sm" className="border-primary/50" onClick={logout}>Sair</Button>
               </>
             ) : (

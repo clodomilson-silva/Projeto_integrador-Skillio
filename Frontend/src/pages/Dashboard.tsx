@@ -10,6 +10,7 @@ import { CalendarioAtividades } from "@/components/ui/CalendarioAtividades";
 import { useGamification } from "@/hooks/useGamification";
 import { useToast } from "@/hooks/use-toast";
 import { Flame, Star, Trophy, AreaChart, BarChart, ArrowLeft } from "lucide-react";
+import apiClient from '@/api/axios'; // Importe o apiClient
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, RadialLinearScale);
 
@@ -43,10 +44,17 @@ const calculatePerformance = (items) => {
   return total > 0 ? Math.round((totalAcertos / total) * 100) : 0;
 };
 
+interface UserData {
+  first_name: string;
+  profile: {
+    foto: string | null;
+  };
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [userName, setUserName] = useState('Usuário');
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [chartType, setChartType] = useState('bar'); // 'barras' ou 'radar'
   const [currentView, setCurrentView] = useState('Visão Geral'); // 'visão geral' ou nome da área
   const [quizNivelamentoConcluido, setQuizNivelamentoConcluido] = useState(false);
@@ -61,12 +69,21 @@ const Dashboard = () => {
   } = useGamification();
 
   useEffect(() => {
-    const name = localStorage.getItem('userName');
-    if (name) setUserName(name);
-    
+    const fetchUserData = async () => {
+      try {
+        const response = await apiClient.get('/users/me/');
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário:", error);
+        toast({ title: "Erro", description: "Não foi possível carregar os dados do usuário.", variant: "destructive" });
+      }
+    };
+
+    fetchUserData();
+
     const quizConcluido = localStorage.getItem('quizNivelamentoConcluido') === 'true';
     setQuizNivelamentoConcluido(quizConcluido);
-  }, []);
+  }, [toast]);
 
   const handleNextExercise = () => {
     if (quizNivelamentoConcluido) {
@@ -147,11 +164,15 @@ const Dashboard = () => {
     }
   };
 
+  const userName = userData?.first_name || 'Usuário';
+  const profilePicture = userData?.profile?.foto || `https://api.dicebear.com/8.x/adventurer/tsx?seed=${userName}`;
+
+
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <img src={`https://api.dicebear.com/8.x/adventurer/tsx?seed=${userName}`} alt="Foto de perfil" className="w-20 h-20 rounded-full border-2 border-primary shadow-glow object-cover" />
+          <img src={profilePicture} alt="Foto de perfil" className="w-20 h-20 rounded-full border-2 border-primary shadow-glow object-cover" />
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">Bem-vindo, {userName}!</h2>
             <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-sm sm:text-base">
