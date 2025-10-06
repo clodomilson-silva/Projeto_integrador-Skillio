@@ -2,44 +2,92 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate, Link } from "react-router-dom";
-import { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Bar, Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, RadialLinearScale } from 'chart.js';
 import { getElementAtEvent } from 'react-chartjs-2';
-import { CalendarioAtividades } from "@/components/ui/CalendarioAtividades";
 import { useGamification } from "@/hooks/useGamification";
+import { usePerformance } from "@/hooks/usePerformance";
 import { useToast } from "@/hooks/use-toast";
-import { Flame, Star, Trophy, AreaChart, BarChart, ArrowLeft } from "lucide-react";
-import apiClient from '@/api/axios'; // Importe o apiClient
+import { useAuth } from "@/contexts/AuthContext";
+import { Flame, Star, Trophy, AreaChart, BarChart, ArrowLeft, Loader2, CheckCircle, Calendar, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
+import apiClient from '@/api/axios';
+import { DayPicker, type DayContentProps } from 'react-day-picker';
+import { ptBR } from 'date-fns/locale';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useActivity } from '@/hooks/useActivity';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, RadialLinearScale);
 
-// Estrutura de dados atualizada para as áreas da BNCC
-const estatisticasPorArea = {
-  "Linguagens e suas Tecnologias": [
-    { nome: "Português", acertos: 75, erros: 25 },
-    { nome: "Inglês", acertos: 68, erros: 32 },
-  ],
-  "Matemática e suas Tecnologias": [
-    { nome: "Matemática", acertos: 88, erros: 12 },
-  ],
-  "Ciências da Natureza e suas Tecnologias": [
-    { nome: "Física", acertos: 80, erros: 20 },
-    { nome: "Química", acertos: 78, erros: 22 },
-    { nome: "Biologia", acertos: 95, erros: 5 },
-  ],
-  "Ciências Humanas e Sociais Aplicadas": [
-    { nome: "História", acertos: 92, erros: 8 },
-    { nome: "Geografia", acertos: 85, erros: 15 },
-    { nome: "Sociologia", acertos: 82, erros: 18 },
-    { nome: "Filosofia", acertos: 79, erros: 21 },
-  ],
+// Tipos e Funções do Calendário
+type Activity = {
+  date: Date;
+  type: 'pratica' | 'falha';
 };
 
+const calculateStats = (activities: Activity[]) => {
+    const sortedActivities = [...activities].sort((a, b) => a.date.getTime() - b.date.getTime());
+    let longestPracticeStreak = 0;
+    let currentPracticeStreak = 0;
+    let longestFailureStreak = 0;
+    let currentFailureStreak = 0;
+    const totalPracticeDays = new Set(activities.filter(a => a.type === 'pratica').map(a => a.date.toDateString())).size;
+    let lastDate: Date | null = null;
+
+    sortedActivities.forEach(activity => {
+        const currentDate = new Date(activity.date.getFullYear(), activity.date.getMonth(), activity.date.getDate());
+        const lastDateOnly = lastDate ? new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate()) : null;
+
+        if (activity.type === 'pratica') {
+            if (lastDateOnly && (currentDate.getTime() - lastDateOnly.getTime()) / (1000 * 3600 * 24) === 1) {
+                currentPracticeStreak++;
+            } else if (!lastDateOnly || (currentDate.getTime() - lastDateOnly.getTime()) / (1000 * 3600 * 24) > 1) {
+                currentPracticeStreak = 1;
+            }
+            longestPracticeStreak = Math.max(longestPracticeStreak, currentPracticeStreak);
+            currentFailureStreak = 0;
+        } else if (activity.type === 'falha') {
+            if (lastDateOnly && (currentDate.getTime() - lastDateOnly.getTime()) / (1000 * 3600 * 24) === 1) {
+                currentFailureStreak++;
+            } else if (!lastDateOnly || (currentDate.getTime() - lastDateOnly.getTime()) / (1000 * 3600 * 24) > 1) {
+                currentFailureStreak = 1;
+            }
+            longestFailureStreak = Math.max(longestFailureStreak, currentFailureStreak);
+            currentPracticeStreak = 0;
+        }
+        lastDate = activity.date;
+    });
+
+    return { longestPracticeStreak, longestFailureStreak, totalPracticeDays };
+};
+
+function CustomDayContent(props: DayContentProps) {
+    const { activeModifiers: modifiers, date } = props;
+    const isOutside = modifiers.outside;
+
+    return (
+        <div className={cn("relative flex flex-col items-center justify-center w-full h-full", {
+            "font-bold text-primary": modifiers.today && !isOutside
+        })}>
+            <span>{date.getDate()}</span>
+            {!isOutside && (modifiers.practice || modifiers.failure) && (
+                <div className="absolute -bottom-1">
+                    <Flame className={cn(
+                        "h-4 w-4",
+                        modifiers.practice && "text-orange-500",
+                        modifiers.failure && "text-sky-500"
+                    )} />
+                </div>
+            )}
+        </div>
+    );
+}
+
 // Função auxiliar para calcular o desempenho
-const calculatePerformance = (items) => {
-  const totalAcertos = items.reduce((sum, item) => sum + item.acertos, 0);
-  const totalErros = items.reduce((sum, item) => sum + item.erros, 0);
+const calculatePerformance = (subjects: any[]) => {
+  const totalAcertos = subjects.reduce((sum, item) => sum + item.correct_answers, 0);
+  const totalErros = subjects.reduce((sum, item) => sum + item.incorrect_answers, 0);
   const total = totalAcertos + totalErros;
   return total > 0 ? Math.round((totalAcertos / total) * 100) : 0;
 };
@@ -54,36 +102,47 @@ interface UserData {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [chartType, setChartType] = useState('bar'); // 'barras' ou 'radar'
-  const [currentView, setCurrentView] = useState('Visão Geral'); // 'visão geral' ou nome da área
+  const [chartType, setChartType] = useState('bar');
+  const [currentView, setCurrentView] = useState('Visão Geral');
   const [quizNivelamentoConcluido, setQuizNivelamentoConcluido] = useState(false);
   const chartRef = useRef<ChartJS>(null);
 
-  const {
-    level,
-    xp,
-    streak,
-    dailyQuests,
-    completeQuest,
-  } = useGamification();
+  const { level, xp, streak, dailyQuests, completeQuest, isLoading: isGamificationLoading } = useGamification();
+  const { performanceData, isLoading: isPerformanceLoading } = usePerformance();
+  const { activities: apiActivities, isLoading: isActivityLoading } = useActivity();
+
+  const activities = useMemo(() => {
+    return apiActivities.map(a => ({ ...a, date: new Date(a.date) }));
+  }, [apiActivities]);
+
+  const activityStats = useMemo(() => calculateStats(activities), [activities]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await apiClient.get('/users/me/');
-        setUserData(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
-        toast({ title: "Erro", description: "Não foi possível carregar os dados do usuário.", variant: "destructive" });
-      }
-    };
+    if (!isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
-    fetchUserData();
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchUserData = async () => {
+        try {
+          const response = await apiClient.get('/users/me/');
+          setUserData(response.data);
+        } catch (error) {
+          console.error("Erro ao buscar dados do usuário:", error);
+          toast({ title: "Erro", description: "Não foi possível carregar os dados do usuário.", variant: "destructive" });
+        }
+      };
 
-    const quizConcluido = localStorage.getItem('quizNivelamentoConcluido') === 'true';
-    setQuizNivelamentoConcluido(quizConcluido);
-  }, [toast]);
+      fetchUserData();
+
+      const quizConcluido = localStorage.getItem('quizNivelamentoConcluido') === 'true';
+      setQuizNivelamentoConcluido(quizConcluido);
+    }
+  }, [isAuthenticated, toast]);
 
   const handleNextExercise = () => {
     if (quizNivelamentoConcluido) {
@@ -98,27 +157,33 @@ const Dashboard = () => {
   };
 
   const chartData = useMemo(() => {
-    let labels;
-    let performanceData;
-    let errorData = [];
+    if (!performanceData || performanceData.length === 0) {
+      return { labels: [], datasets: [] };
+    }
+
+    let labels: string[];
+    let performanceDataset: number[];
+    let errorData: number[] = [];
 
     if (currentView === 'Visão Geral') {
-      labels = Object.keys(estatisticasPorArea);
-      performanceData = labels.map(area => calculatePerformance(estatisticasPorArea[area]));
+      labels = performanceData.map(area => area.area_name);
+      performanceDataset = performanceData.map(area => calculatePerformance(area.subjects));
       if (chartType === 'bar') {
-        errorData = labels.map(area => 100 - calculatePerformance(estatisticasPorArea[area]));
+        errorData = performanceDataset.map(p => 100 - p);
       }
     } else {
-      const subjects = estatisticasPorArea[currentView];
-      labels = subjects.map(m => m.nome);
-      performanceData = subjects.map(m => {
-        const total = m.acertos + m.erros;
-        return total ? Math.round((m.acertos / total) * 100) : 0;
+      const area = performanceData.find(a => a.area_name === currentView);
+      if (!area) return { labels: [], datasets: [] };
+
+      labels = area.subjects.map(m => m.subject_name);
+      performanceDataset = area.subjects.map(m => {
+        const total = m.correct_answers + m.incorrect_answers;
+        return total > 0 ? Math.round((m.correct_answers / total) * 100) : 0;
       });
       if (chartType === 'bar') {
-        errorData = subjects.map(m => {
-          const total = m.acertos + m.erros;
-          return total ? Math.round((m.erros / total) * 100) : 0;
+        errorData = area.subjects.map(m => {
+          const total = m.correct_answers + m.incorrect_answers;
+          return total > 0 ? Math.round((m.incorrect_answers / total) * 100) : 0;
         });
       }
     }
@@ -126,7 +191,7 @@ const Dashboard = () => {
     const datasets = [
       {
         label: '% de Acertos',
-        data: performanceData,
+        data: performanceDataset,
         backgroundColor: chartType === 'bar' ? '#22c55e' : 'rgba(54, 162, 235, 0.5)',
         borderColor: chartType === 'bar' ? undefined : 'rgba(54, 162, 235, 1)',
         borderWidth: 2,
@@ -150,16 +215,16 @@ const Dashboard = () => {
     }
 
     return { labels, datasets };
-  }, [currentView, chartType]);
+  }, [currentView, chartType, performanceData]);
 
-  const handleChartClick = (event) => {
+  const handleChartClick = (event: any) => {
     if (currentView !== 'Visão Geral' || !chartRef.current) return;
     const element = getElementAtEvent(chartRef.current, event);
     if (element.length > 0) {
       const dataIndex = element[0].index;
-      const area = chartData.labels[dataIndex];
-      if (estatisticasPorArea[area]) {
-        setCurrentView(area);
+      const areaName = chartData.labels[dataIndex];
+      if (performanceData.some(a => a.area_name === areaName)) {
+        setCurrentView(areaName);
       }
     }
   };
@@ -167,6 +232,16 @@ const Dashboard = () => {
   const userName = userData?.first_name || 'Usuário';
   const profilePicture = userData?.profile?.foto || `https://api.dicebear.com/8.x/adventurer/tsx?seed=${userName}`;
 
+  if (isGamificationLoading || isPerformanceLoading || isActivityLoading) {
+    return (
+        <div className="flex justify-center items-center h-screen">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
+
+  const practiceDays = activities.filter(a => a.type === 'pratica').map(a => a.date);
+  const failureDays = activities.filter(a => a.type === 'falha').map(a => a.date);
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -196,76 +271,154 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="flex flex-col gap-8">
-        <CalendarioAtividades />
+      <main className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-3 flex flex-col gap-8">
+            <Card className="p-4 sm:p-6 flex flex-col gap-4 col-span-1 md:col-span-2 bg-gradient-subtle shadow-elegant">
+                <CardHeader className="p-0">
+                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-primary">
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+                    Meu Calendário de Atividades
+                    </CardTitle>
+                </CardHeader>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 flex justify-center">
+                        <DayPicker
+                            mode="multiple"
+                            locale={ptBR}
+                            showOutsideDays
+                            fixedWeeks
+                            modifiers={{
+                                practice: practiceDays,
+                                failure: failureDays,
+                            }}
+                            classNames={{
+                                root: 'p-3',
+                                months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
+                                month: 'space-y-4',
+                                caption: 'flex justify-center pt-1 relative items-center',
+                                caption_label: 'text-sm font-medium',
+                                nav: 'space-x-1 flex items-center',
+                                nav_button: cn(
+                                buttonVariants({ variant: 'outline' }),
+                                'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100'
+                                ),
+                                nav_button_previous: 'absolute left-1',
+                                nav_button_next: 'absolute right-1',
+                                table: 'w-full border-collapse space-y-1',
+                                head_row: 'flex',
+                                head_cell: 'text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]',
+                                row: 'flex w-full mt-2',
+                                cell: 'h-10 w-10 text-center text-sm p-0',
+                                day: 'h-10 w-10 p-0 font-normal',
+                                day_today: 'text-primary',
+                                day_outside: 'text-muted-foreground opacity-50',
+                                day_disabled: 'text-muted-foreground opacity-50',
+                                day_hidden: 'invisible',
+                            }}
+                            components={{
+                                DayContent: CustomDayContent,
+                                IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+                                IconRight: () => <ChevronRight className="h-4 w-4" />,
+                            }}
+                        />
+                    </div>
+                    <div className="flex flex-col gap-4 justify-center lg:border-l lg:pl-6">
+                        <h3 className="text-lg font-semibold mb-2 text-center lg:text-left">Estatísticas de Atividade</h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg">
+                                <TrendingUp className="h-8 w-8 text-orange-500 flex-shrink-0" />
+                                <div>
+                                    <p className="font-bold text-2xl">{activityStats.longestPracticeStreak}</p>
+                                    <p className="text-sm text-muted-foreground">Maior sequência de práticas</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg">
+                                <Flame className="h-8 w-8 text-sky-500 flex-shrink-0" />
+                                <div>
+                                    <p className="font-bold text-2xl">{activityStats.longestFailureStreak}</p>
+                                    <p className="text-sm text-muted-foreground">Maior sequência de falhas</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg">
+                                <CheckCircle className="h-8 w-8 text-primary flex-shrink-0" />
+                                <div>
+                                    <p className="font-bold text-2xl">{activityStats.totalPracticeDays}</p>
+                                    <p className="text-sm text-muted-foreground">Total de dias praticados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              {currentView !== 'Visão Geral' && (
-                <Button variant="outline" size="icon" onClick={() => setCurrentView('Visão Geral')}>
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              )}
-              <CardTitle>
-                {currentView === 'Visão Geral' ? 'Desempenho por Área da BNCC' : `Desempenho em ${currentView}`}
-              </CardTitle>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setChartType(prev => prev === 'bar' ? 'radar' : 'bar')}>
-              {chartType === 'bar' ? <AreaChart className="w-4 h-4 mr-2" /> : <BarChart className="w-4 h-4 mr-2" />}
-              {chartType === 'bar' ? 'Gráfico de Rede' : 'Gráfico de Barras'}
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="min-h-[350px] w-full">
-              {chartType === 'bar' ? (
-                <Bar
-                  ref={chartRef}
-                  data={chartData}
-                  onClick={handleChartClick}
-                  options={{ responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, max: 100 } }, plugins: { legend: { display: true } } }}
-                />
-              ) : (
-                <Radar
-                  ref={chartRef}
-                  data={chartData}
-                  options={{
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                      r: {
-                        max: 100,
-                        min: 0,
-                        backgroundColor: '#1f2937',
-                        grid: { color: 'rgba(255, 255, 255, 0.2)' },
-                        angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
-                        pointLabels: { font: { size: 12, weight: 'bold' }, color: 'text-foreground' },
-                        ticks: { display: false }
-                      }
-                    }
-                  }}
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                    {currentView !== 'Visão Geral' && (
+                        <Button variant="outline" size="icon" onClick={() => setCurrentView('Visão Geral')}>
+                        <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                    )}
+                    <CardTitle>
+                        {currentView === 'Visão Geral' ? 'Desempenho por Área da BNCC' : `Desempenho em ${currentView}`}
+                    </CardTitle>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setChartType(prev => prev === 'bar' ? 'radar' : 'bar')}>
+                    {chartType === 'bar' ? <AreaChart className="w-4 h-4 mr-2" /> : <BarChart className="w-4 h-4 mr-2" />}
+                    {chartType === 'bar' ? 'Gráfico de Rede' : 'Gráfico de Barras'}
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <div className="min-h-[350px] w-full">
+                    {chartType === 'bar' ? (
+                        <Bar
+                        ref={chartRef}
+                        data={chartData}
+                        onClick={handleChartClick}
+                        options={{ responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, max: 100 } }, plugins: { legend: { display: true } } }}
+                        />
+                    ) : (
+                        <Radar
+                        ref={chartRef}
+                        data={chartData}
+                        options={{
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                            r: {
+                                max: 100,
+                                min: 0,
+                                backgroundColor: '#1f2937',
+                                grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                                angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                                pointLabels: { font: { size: 12, weight: 'bold' }, color: 'text-foreground' },
+                                ticks: { display: false }
+                            }
+                            }
+                        }}
+                        />
+                    )}
+                    </div>
+                </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Missões Diárias</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {dailyQuests.map(quest => (
-              <div key={quest.id} className={`flex items-center gap-4 p-3 rounded-lg transition-all ${quest.isCompleted ? 'bg-green-500/10' : 'bg-muted/50'}`}>
-                <Checkbox id={quest.id} checked={quest.isCompleted} disabled className="data-[state=checked]:border-green-500 data-[state=checked]:bg-green-500" />
-                <label htmlFor={quest.id} className={`flex-1 text-sm ${quest.isCompleted ? 'line-through text-muted-foreground' : ''}`}>
-                  {quest.description}
-                </label>
-                {!quest.isCompleted && <Button size="sm" variant="outline" onClick={() => completeQuest(quest.id)}>+50 XP</Button>}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Missões Diárias</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {dailyQuests && dailyQuests.map(quest => (
+                    <div key={quest.quest.id} className={`flex items-center gap-4 p-3 rounded-lg transition-all ${quest.is_completed ? 'bg-green-500/10' : 'bg-muted/50'}`}>
+                        <Checkbox id={quest.quest.id} checked={quest.is_completed} disabled className="data-[state=checked]:border-green-500 data-[state=checked]:bg-green-500" />
+                        <label htmlFor={quest.quest.id} className={`flex-1 text-sm ${quest.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                        {quest.quest.description}
+                        </label>
+                        {!quest.is_completed && <Button size="sm" variant="outline" onClick={() => completeQuest(quest.quest.id)}>+{quest.quest.xp_reward} XP</Button>}
+                    </div>
+                    ))}
+                </CardContent>
+            </Card>
+        </div>
       </main>
     </div>
   );

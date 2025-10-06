@@ -24,6 +24,7 @@ import Lesson from "./pages/Lesson";
 import EditProfile from "./pages/EditProfile";
 import StudyPlan from "./pages/StudyPlan";
 import Trilha from "./pages/Trilha";
+import PrivateRoute from "./components/PrivateRoute";
 
 const queryClient = new QueryClient();
 
@@ -51,10 +52,12 @@ const App = () => (
               <Route path="/termos-condicoes" element={<TermosCondicoesDetalhado />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/about" element={<About />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/quiz-nivelamento" element={<QuizNivelamento />} />
               <Route path="/suporte" element={<Suporte />} />
               <Route path="/study-plan" element={<StudyPlan />} />
+              <Route element={<PrivateRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+              </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Star, Target, Award, TrendingUp, TrendingDown, SkipForward, BookOpenCheck } from 'lucide-react';
 import { useGamification } from "@/hooks/useGamification";
+import { usePerformance } from "@/hooks/usePerformance";
 import { Separator } from "@/components/ui/separator";
 import LoadingAnimation from "@/components/ui/LoadingAnimation";
 
@@ -180,7 +181,7 @@ async function gerarPlanoDeEstudo(
         "analysis": {
           "summary": "string", // Um resumo conciso e encorajador do desempenho geral.
           "focusPoints": ["string", "string"], // Array com as 2 áreas prioritárias (mais erros/pulos). A área de foco "${foco}" deve ser priorizada se estiver entre as piores.
-          "strength": "string" // A área com o melhor desempenho. Ex: "Seu Ponto Forte: [Matéria]".
+          "strength": "string" // A área com o melhor desempenho. Ex: "Seu Ponto Forte: [Matéria]"
         },
         "actionPlan": [
           {
@@ -204,7 +205,7 @@ async function gerarPlanoDeEstudo(
           "title": "string", // Título para a seção. Ex: "🎯 Seu Próximo Desafio".
           "suggestion": "string" // Sugestão prática e encorajadora, indicando por onde começar.
         },
-        "motivation": "string" // Mensagem final curta, inspiradora e motivacional. Ex: "Lembre-se: cada passo é um progresso!".
+        "motivation": "string" // Mensagem final curta, inspiradora e motivacional. Ex: "Lembre-se: cada passo é um progresso!"
       }
     `;
 
@@ -249,6 +250,7 @@ const QuizNivelamento = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addXp } = useGamification();
+  const { updatePerformance } = usePerformance();
 
   const getEscolaridade = () => {
     const escolaridadeValue = localStorage.getItem('userEducationalLevel') || 'medio';
@@ -373,6 +375,16 @@ const QuizNivelamento = () => {
       }));
       setDadosGrafico(dadosParaGrafico);
 
+      const performanceResults = Object.entries(analise).map(([subject, data]) => ({
+        subject,
+        correct: data.acertos,
+        incorrect: data.erros + data.pulos,
+      }));
+      updatePerformance(performanceResults);
+
+      const totalAcertos = Object.values(analise).reduce((sum, { acertos }) => sum + acertos, 0);
+      addXp(totalAcertos * 10);
+
       (async () => {
         setGerandoPlano(true);
         const escolaridade = getEscolaridade();
@@ -398,7 +410,7 @@ const QuizNivelamento = () => {
         setGerandoPlano(false);
       })();
     }
-  }, [finalizado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak]);
+  }, [finalizado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance]);
 
   const proximaPergunta = (resposta: number | null) => {
     const perguntaAtual = perguntasNivelamento[indice];

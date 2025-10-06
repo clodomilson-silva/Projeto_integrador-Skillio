@@ -1,9 +1,10 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import UserProfile
+from .models import UserProfile, AreaBNCC, Subject, UserPerformance, ActivityLog, Gamification, Achievement, UserAchievement, Quest, UserQuest
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.validators import UniqueValidator
+from django.utils import timezone
 
 class UserSerializer(serializers.ModelSerializer):
     # Trazendo os campos do perfil para o serializer principal.
@@ -65,6 +66,9 @@ class UserSerializer(serializers.ModelSerializer):
             **profile_data
         )
 
+        # Criamos a entrada de gamificação para o usuário
+        Gamification.objects.create(user=user)
+
         # Gera os tokens para o usuário recém-criado
         refresh = RefreshToken.for_user(user)
 
@@ -77,14 +81,61 @@ class UserSerializer(serializers.ModelSerializer):
 
 # --- Serializers para Leitura de Dados ---
 
+class UserPerformanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPerformance
+        fields = ('subject', 'correct_answers', 'incorrect_answers')
+
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = ('id', 'name')
+
+class AreaBNCCSerializer(serializers.ModelSerializer):
+    subjects = SubjectSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = AreaBNCC
+        fields = ('id', 'name', 'subjects')
+
+class GamificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Gamification
+        fields = ('level', 'xp', 'streak')
+
+class AchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = ('id', 'name', 'description', 'icon')
+
+class UserAchievementSerializer(serializers.ModelSerializer):
+    achievement = AchievementSerializer(read_only=True)
+    class Meta:
+        model = UserAchievement
+        fields = ('achievement', 'unlocked_at')
+
+class QuestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quest
+        fields = ('id', 'description', 'xp_reward')
+
+class UserQuestSerializer(serializers.ModelSerializer):
+    quest = QuestSerializer(read_only=True)
+    class Meta:
+        model = UserQuest
+        fields = ('quest', 'quest_date', 'is_completed')
+
 class UserProfileDetailSerializer(serializers.ModelSerializer):
     """Serializer para exibir os detalhes do perfil do usuário."""
     foto = serializers.SerializerMethodField()
+    gamification = GamificationSerializer(read_only=True, source='user.gamification')
+    achievements = UserAchievementSerializer(many=True, read_only=True, source='user.achievements')
+    daily_quests = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
         # O campo 'foto' será serializado como uma URL completa.
-        fields = ('birth_date', 'educational_level', 'profession', 'focus', 'foto')
+        fields = ('birth_date', 'educational_level', 'profession', 'focus', 'foto', 'gamification', 'achievements', 'daily_quests')
 
     def get_foto(self, obj):
         request = self.context.get('request')
@@ -92,11 +143,48 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.foto.url)
         return None
 
+    def get_daily_quests(self, obj):
+        # obj is UserProfile instance, so obj.user is the User instance
+        user = obj.user
+        today = timezone.now().date()
+        quests = Quest.objects.filter(type='daily')
+        user_quests = []
+        for quest in quests:
+            user_quest, created = UserQuest.objects.get_or_create(user=user, quest=quest, quest_date=today)
+            user_quests.append(user_quest)
+        serializer = UserQuestSerializer(user_quests, many=True)
+        return serializer.data
+
 
 class UserDetailSerializer(serializers.ModelSerializer):
     """Serializer para exibir os detalhes do usuário, incluindo o perfil aninhado."""
     profile = UserProfileDetailSerializer(read_only=True)
+    performance = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'profile')
+        fields = ('id', 'username', 'email', 'first_name', 'profile', 'performance')
+
+    def get_performance(self, obj):
+        performance_data = []
+        areas = AreaBNCC.objects.prefetch_related('subjects').all()
+        for area in areas:
+            area_data = {
+                'area_name': area.name,
+                'subjects': []
+            }
+            for subject in area.subjects.all():
+                performance, created = UserPerformance.objects.get_or_create(user=obj, subject=subject)
+                subject_data = {
+                    'subject_name': subject.name,
+                    'correct_answers': performance.correct_answers,
+                    'incorrect_answers': performance.incorrect_answers,
+                }
+                area_data['subjects'].append(subject_data)
+            performance_data.append(area_data)
+        return performance_data
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActivityLog
+        fields = ('date', 'type')

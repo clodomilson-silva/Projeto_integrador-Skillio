@@ -10,6 +10,7 @@ import { useGenerativeAI } from "@/hooks/useGenerativeAI";
 import { trilhaPrincipal } from "@/data/trilhaPrincipal";
 import { subjects } from "@/data/subjects"; // Import subjects
 import { useGamification } from "@/hooks/useGamification";
+import { usePerformance } from "@/hooks/usePerformance";
 import { useTimeTracker } from "@/hooks/useTimeTracker";
 
 interface Question {
@@ -25,6 +26,7 @@ const Game = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addXp, completeBlock, isBlockCompleted, loseHeart, hearts, resetHearts } = useGamification();
+  const { updatePerformance } = usePerformance();
   useTimeTracker(); // Inicia o rastreamento de tempo nesta página
 
   const trilhaBloco = trilhaPrincipal.flatMap(n => n.blocos).find(b => b.id === blocoId);
@@ -60,6 +62,7 @@ const Game = () => {
   const [mistakes, setMistakes] = useState(0);
   const [pendingScore, setPendingScore] = useState(0);
   const [pendingXp, setPendingXp] = useState(0);
+  const [sessionAnswers, setSessionAnswers] = useState({ correct: 0, incorrect: 0 });
 
   const educationalLevel = localStorage.getItem('userEducationalLevel') || 'medio';
 
@@ -85,6 +88,7 @@ const Game = () => {
     
     const isCorrect = answerIndex === questions[currentQuestion]?.correct;
     if (isCorrect) {
+        setSessionAnswers(prev => ({ ...prev, correct: prev.correct + 1 }));
         if (isTrailGame) {
             setPendingScore(prev => prev + 10);
             setPendingXp(prev => prev + 5);
@@ -95,6 +99,7 @@ const Game = () => {
             toast({ title: "Correto! 🎉", description: `+10 Pontos, +5 XP` });
         }
     } else {
+      setSessionAnswers(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
       if (isTrailGame) {
           if (answerIndex !== null && answerIndex !== -1) { // Apenas erros contam, não pulos ou tempo esgotado
             setMistakes(prev => prev + 1);
@@ -139,20 +144,28 @@ const Game = () => {
   }, [mistakes, isTrailGame, toast]);
 
   useEffect(() => {
-    if (gameOver && blocoId && isTrailGame) {
-      if (mistakes < 5 && !isBlockCompleted(blocoId)) { // Player won
-        setScore(prevScore => prevScore + pendingScore);
-        addXp(pendingXp);
-        completeBlock(blocoId);
-        toast({
-          title: "Bloco Concluído!",
-          description: `Parabéns! Você ganhou +${pendingScore} Pontos e +${pendingXp} XP.`,
-        });
-      } else if (mistakes >= 5) { // Player lost
-        resetHearts();
+    if (gameOver) {
+      updatePerformance([{
+        subject: subject,
+        correct: sessionAnswers.correct,
+        incorrect: sessionAnswers.incorrect,
+      }]);
+
+      if (blocoId && isTrailGame) {
+        if (mistakes < 5 && !isBlockCompleted(blocoId)) { // Player won
+          setScore(prevScore => prevScore + pendingScore);
+          addXp(pendingXp);
+          completeBlock(blocoId);
+          toast({
+            title: "Bloco Concluído!",
+            description: `Parabéns! Você ganhou +${pendingScore} Pontos e +${pendingXp} XP.`,
+          });
+        } else if (mistakes >= 5) { // Player lost
+          resetHearts();
+        }
       }
     }
-  }, [gameOver, blocoId, isTrailGame, completeBlock, isBlockCompleted, toast, pendingScore, pendingXp, addXp, mistakes, resetHearts]);
+  }, [gameOver, blocoId, isTrailGame, completeBlock, isBlockCompleted, toast, pendingScore, pendingXp, addXp, mistakes, resetHearts, subject, sessionAnswers, updatePerformance]);
 
   const resetGame = () => {
       refetch();
@@ -163,6 +176,7 @@ const Game = () => {
       setShowResult(false);
       setGameOver(false);
       setMistakes(0);
+      setSessionAnswers({ correct: 0, incorrect: 0 });
   };
 
   if (isTrailGame && hearts <= 0 && blocoId && !isBlockCompleted(blocoId)) {
