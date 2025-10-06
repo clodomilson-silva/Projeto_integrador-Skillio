@@ -131,5 +131,6 @@ export const useGamification = () => {
         addXp,
         completeQuest,
         loseHeart,
+        refetchGamificationData: fetchInitialData,
     };
 };

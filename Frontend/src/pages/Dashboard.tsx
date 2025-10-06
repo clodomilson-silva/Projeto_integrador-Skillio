@@ -109,8 +109,8 @@ const Dashboard = () => {
   const [quizNivelamentoConcluido, setQuizNivelamentoConcluido] = useState(false);
   const chartRef = useRef<ChartJS>(null);
 
-  const { level, xp, streak, dailyQuests, completeQuest, isLoading: isGamificationLoading } = useGamification();
-  const { performanceData, isLoading: isPerformanceLoading } = usePerformance();
+  const { level, xp, streak, dailyQuests, completeQuest, isLoading: isGamificationLoading, refetchGamificationData } = useGamification();
+  const { performanceData, isLoading: isPerformanceLoading, refetchPerformanceData } = usePerformance();
   const { activities: apiActivities, isLoading: isActivityLoading } = useActivity();
 
   const activities = useMemo(() => {
@@ -143,6 +143,16 @@ const Dashboard = () => {
       setQuizNivelamentoConcluido(quizConcluido);
     }
   }, [isAuthenticated, toast]);
+
+  useEffect(() => {
+    const quizConcluido = localStorage.getItem('quizNivelamentoConcluido') === 'true';
+    if (quizConcluido) {
+      if (refetchGamificationData) refetchGamificationData();
+      if (refetchPerformanceData) refetchPerformanceData();
+      localStorage.removeItem('quizNivelamentoConcluido');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleNextExercise = () => {
     if (quizNivelamentoConcluido) {

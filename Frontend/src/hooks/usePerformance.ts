@@ -50,5 +50,5 @@ export const usePerformance = () => {
         }
     }, [fetchPerformanceData]);
 
-    return { performanceData, isLoading, updatePerformance };
+    return { performanceData, isLoading, updatePerformance, refetchPerformanceData: fetchPerformanceData };
 };

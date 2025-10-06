@@ -12,6 +12,7 @@ interface User {
 interface AuthContextType {
     isAuthenticated: boolean;
     user: User | null;
+    loading: boolean; // Adicionado para saber quando a verificação inicial está ocorrendo
     login: (accessToken: string, refreshToken: string) => void;
     logout: () => void;
 }
@@ -21,41 +22,58 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true); // Começa como true
 
     useEffect(() => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-            try {
-                const decoded: { user_id: string; email: string; username: string; } = jwtDecode(token);
-                setUser({ id: decoded.user_id, email: decoded.email, username: decoded.username });
-                setIsAuthenticated(true);
-            } catch (error) {
-                console.error("Invalid token");
-                logout();
-            }
+        const refreshToken = localStorage.getItem('refreshToken');
+
+        if (!refreshToken) {
+            setLoading(false);
+            return;
         }
+
+        const verifyRefreshToken = async () => {
+            try {
+                const response = await apiClient.post('/auth/token/refresh/', { refresh: refreshToken });
+                const { access: newAccessToken } = response.data;
+                login(newAccessToken, refreshToken); // Reutiliza a função de login
+            } catch (error) {
+                console.error("Refresh token failed", error);
+                logout(); // Se o refresh token falhar, desloga o usuário
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        verifyRefreshToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const login = (accessToken: string, refreshToken: string) => {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        const decoded: { user_id: string; email: string; username: string; } = jwtDecode(accessToken);
-        setUser({ id: decoded.user_id, email: decoded.email, username: decoded.username });
-        setIsAuthenticated(true);
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        try {
+            const decoded: { user_id: string; email: string; username: string; } = jwtDecode(accessToken);
+            setUser({ id: decoded.user_id, email: decoded.email, username: decoded.username });
+            setIsAuthenticated(true);
+        } catch (error) {
+            console.error("Invalid token on login", error);
+            logout();
+        }
     };
 
     const logout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        delete apiClient.defaults.headers.common['Authorization'];
         setUser(null);
         setIsAuthenticated(false);
-        // Opcional: notificar o backend sobre o logout
-        // apiClient.post('/auth/logout/', { refresh: localStorage.getItem('refreshToken') });
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
-            {children}
+        <AuthContext.Provider value={{ isAuthenticated, user, loading, login, logout }}>
+            {!loading && children} 
         </AuthContext.Provider>
     );
 };
