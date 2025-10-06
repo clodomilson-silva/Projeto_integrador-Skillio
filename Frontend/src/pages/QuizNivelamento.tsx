@@ -410,7 +410,7 @@ const QuizNivelamento = () => {
         setGerandoPlano(false);
       })();
     }
-  }, [finalizado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance]);
+  }, [finalizado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance, addXp]);
 
   const proximaPergunta = (resposta: number | null) => {
     const perguntaAtual = perguntasNivelamento[indice];

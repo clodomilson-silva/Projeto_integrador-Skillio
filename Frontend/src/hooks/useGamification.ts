@@ -74,18 +74,24 @@ export const useGamification = () => {
         fetchInitialData();
     }, [fetchInitialData]);
 
-    const addXp = async (amount: number) => {
+    const addXp = useCallback(async (amount: number) => {
         try {
             const response = await apiClient.post('/study/gamification/add-xp/', { amount });
-            const { new_level, new_xp } = response.data;
-            if (new_level > stats.level) {
-                toast({ title: `🚀 Level Up!`, description: `Você alcançou o Nível ${new_level}!`, className: 'bg-gradient-growth text-white border-none' });
-            }
+            const { new_level, new_xp, level_up } = response.data;
+            
             setStats(prev => ({ ...prev, level: new_level, xp: new_xp }));
+
+            if (level_up) {
+                toast({ 
+                    title: `🚀 Level Up!`, 
+                    description: `Você alcançou o Nível ${new_level}!`, 
+                    className: 'bg-gradient-growth text-white border-none' 
+                });
+            }
         } catch (error) {
             console.error("Failed to add XP", error);
         }
-    };
+    }, [toast]);
 
     const completeQuest = async (questId: string) => {
         const quest = dailyQuests.find(q => q.quest.id === questId);

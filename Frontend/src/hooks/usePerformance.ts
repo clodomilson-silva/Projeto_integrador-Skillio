@@ -40,7 +40,7 @@ export const usePerformance = () => {
         fetchPerformanceData();
     }, [fetchPerformanceData]);
 
-    const updatePerformance = async (results: { subject: string; correct: number; incorrect: number }[]) => {
+    const updatePerformance = useCallback(async (results: { subject: string; correct: number; incorrect: number }[]) => {
         try {
             await apiClient.post('/performance/update/', { results });
             // Refetch the performance data to get the updated stats
@@ -48,7 +48,7 @@ export const usePerformance = () => {
         } catch (error) {
             console.error("Failed to update performance data", error);
         }
-    };
+    }, [fetchPerformanceData]);
 
     return { performanceData, isLoading, updatePerformance };
 };
