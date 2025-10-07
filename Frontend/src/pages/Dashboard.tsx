@@ -106,12 +106,19 @@ const Dashboard = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [chartType, setChartType] = useState('bar');
   const [currentView, setCurrentView] = useState('Visão Geral');
-  const [quizNivelamentoConcluido, setQuizNivelamentoConcluido] = useState(false);
   const chartRef = useRef<ChartJS>(null);
 
-  const { level, xp, streak, dailyQuests, completeQuest, isLoading: isGamificationLoading, refetchGamificationData } = useGamification();
+  const { level, xp, streak, dailyQuests, completeQuest, isLoading: isGamificationLoading, refetchGamificationData, blocosCompletos } = useGamification();
   const { performanceData, isLoading: isPerformanceLoading, refetchPerformanceData } = usePerformance();
   const { activities: apiActivities, isLoading: isActivityLoading } = useActivity();
+
+  // Lógica para o botão de Nivelamento/Plano de Estudo
+  const initialQuizDone = useMemo(() => performanceData && performanceData.length > 0, [performanceData]);
+  const blockCountOnQuizStart = parseInt(localStorage.getItem('blockCountOnQuizStart') || '0', 10);
+  const canRetakeQuiz = useMemo(() => {
+    if (!blocosCompletos) return false;
+    return blocosCompletos.length > blockCountOnQuizStart;
+  }, [blocosCompletos, blockCountOnQuizStart]);
 
   const activities = useMemo(() => {
     return apiActivities.map(a => ({ ...a, date: new Date(a.date) }));
@@ -138,24 +145,21 @@ const Dashboard = () => {
       };
 
       fetchUserData();
-
-      const quizConcluido = localStorage.getItem('quizNivelamentoConcluido') === 'true';
-      setQuizNivelamentoConcluido(quizConcluido);
     }
   }, [isAuthenticated, toast]);
 
   useEffect(() => {
-    const quizConcluido = localStorage.getItem('quizNivelamentoConcluido') === 'true';
-    if (quizConcluido) {
-      if (refetchGamificationData) refetchGamificationData();
-      if (refetchPerformanceData) refetchPerformanceData();
-      localStorage.removeItem('quizNivelamentoConcluido');
+    const justFinishedQuiz = sessionStorage.getItem('justFinishedQuiz') === 'true';
+    if (justFinishedQuiz) {
+      refetchGamificationData?.();
+      refetchPerformanceData?.();
+      sessionStorage.removeItem('justFinishedQuiz');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleNextExercise = () => {
-    if (quizNivelamentoConcluido) {
+    if (initialQuizDone) {
       navigate('/trilha');
     } else {
       toast({
@@ -268,13 +272,17 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          {quizNivelamentoConcluido ? (
-            <Link to="/study-plan" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full">Meu Plano de Estudo</Button>
-            </Link>
-          ) : (
+          {!initialQuizDone ? (
             <Link to="/quiz-nivelamento" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="w-full">Fazer Quiz de nivelamento</Button>
+            </Link>
+          ) : canRetakeQuiz ? (
+            <Link to="/quiz-nivelamento" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full">Refazer Quiz de nivelamento</Button>
+            </Link>
+          ) : (
+            <Link to="/study-plan" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full">Meu Plano de Estudo</Button>
             </Link>
           )}
           <Button size="lg" className="bg-gradient-knowledge shadow-glow w-full sm:w-auto" onClick={handleNextExercise}>Próxima Lição</Button>

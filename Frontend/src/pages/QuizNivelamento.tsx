@@ -249,8 +249,15 @@ const QuizNivelamento = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addXp } = useGamification();
+  const { addXp, blocosCompletos } = useGamification();
   const { updatePerformance } = usePerformance();
+
+  useEffect(() => {
+    // Salva a contagem de blocos quando o quiz é iniciado
+    if (blocosCompletos) {
+      localStorage.setItem('blockCountOnQuizStart', String(blocosCompletos.length));
+    }
+  }, [blocosCompletos]);
 
   const getEscolaridade = () => {
     const escolaridadeValue = localStorage.getItem('userEducationalLevel') || 'medio';
@@ -382,8 +389,8 @@ const QuizNivelamento = () => {
       }));
       updatePerformance(performanceResults);
 
-      const totalAcertos = Object.values(analise).reduce((sum, { acertos }) => sum + acertos, 0);
-      addXp(totalAcertos * 10);
+      // Adiciona uma quantidade fixa de XP por completar o quiz de nivelamento
+      addXp(50);
 
       (async () => {
         setGerandoPlano(true);
@@ -395,7 +402,7 @@ const QuizNivelamento = () => {
         if (planoResponse) {
           setPlanoDeEstudo(planoResponse);
           localStorage.setItem('studyPlan', JSON.stringify(planoResponse));
-          localStorage.setItem('quizNivelamentoConcluido', 'true');
+          sessionStorage.setItem('justFinishedQuiz', 'true');
           
           const priorityAreas = planoResponse.analysis.focusPoints;
           if (priorityAreas && priorityAreas.length > 0) {
