@@ -3,9 +3,35 @@ import { useLessonAI } from '@/hooks/useLessonAI';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Youtube } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { trilhaPrincipal } from "@/data/trilhaPrincipal";
 import { subjects } from "@/data/subjects";
+
+// Helper para extrair o ID do vídeo do YouTube de vários formatos de URL
+const getYouTubeVideoId = (url: string): string | null => {
+  if (!url) return null;
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.hostname === 'youtu.be') {
+      return urlObj.pathname.slice(1);
+    }
+    if (urlObj.hostname.includes('youtube.com')) {
+      const videoId = urlObj.searchParams.get('v');
+      if (videoId) {
+        return videoId;
+      }
+      // Checa também por URLs de embed
+      const pathParts = urlObj.pathname.split('/');
+      if (pathParts[1] === 'embed') {
+        return pathParts[2];
+      }
+    }
+  } catch (e) {
+    console.error("URL do YouTube inválida:", url, e);
+    return null;
+  }
+  return null;
+};
 
 const Lesson = () => {
   const { subjectId } = useParams<{ subjectId: string }>();
@@ -87,22 +113,36 @@ const Lesson = () => {
           <CardHeader>
             <CardTitle>Vídeos Sugeridos</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-4">
-              {generatedLesson?.videoSuggestions.map((suggestion, index) => (
-                <li key={index}>
-                  <a 
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(suggestion)}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <Youtube className="h-8 w-8 text-red-500" />
-                    <span className="font-semibold flex-1">{suggestion}</span>
+          <CardContent className="space-y-8">
+            {generatedLesson?.videos && generatedLesson.videos.map((video, index) => {
+              const videoId = getYouTubeVideoId(video.url);
+              if (!videoId) {
+                return (
+                  <div key={index} className="p-4 border rounded-lg">
+                    <h3 className="font-semibold mb-2">{video.title}</h3>
+                    <p className="text-red-500">Não foi possível carregar o vídeo a partir do link: {video.url}</p>
+                  </div>
+                );
+              }
+              return (
+                <div key={index}>
+                  <h3 className="font-semibold text-lg mb-3">{video.title}</h3>
+                  <div className="aspect-video overflow-hidden rounded-lg border shadow-lg mb-2">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title={video.title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                    ></iframe>
+                  </div>
+                  <a href={video.url} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    Não consegue ver o vídeo? Clique aqui para abrir no YouTube.
                   </a>
-                </li>
-              ))}
-            </ul>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 

@@ -94,14 +94,14 @@ const Trilha = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                     className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-primary to-indigo-400 bg-clip-text text-transparent">
-                        Your Learning Path
+                        Seu Caminho de Aprendizado
                 </motion.h1>
                 <motion.p 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="text-gray-400 mt-4 max-w-2xl mx-auto">
-                        Advance through the levels, complete challenges, and collect your rewards to master new skills.
+                        Avance pelos níveis, complete desafios e colete suas recompensas para dominar novas habilidades.
                 </motion.p>
             </div>
 
