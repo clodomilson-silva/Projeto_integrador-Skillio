@@ -81,10 +81,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'skillio',
+        'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': '12345678',
-        'HOST': 'localhost',
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': 'db.cpqecntjnimngamjzznr.supabase.co',
         'PORT': '5432',
     }
 }
