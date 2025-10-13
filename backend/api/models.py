@@ -91,7 +91,7 @@ class Quest(models.Model):
         return self.description
 
 class UserQuest(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_quests')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_quests')
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE)
     quest_date = models.DateField()
     is_completed = models.BooleanField(default=False)
