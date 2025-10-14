@@ -249,7 +249,7 @@ const QuizNivelamento = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addXp, blocosCompletos } = useGamification();
+  const { addXp, blocosCompletos, resetHearts } = useGamification();
   const { updatePerformance } = usePerformance();
 
   useEffect(() => {
@@ -389,8 +389,9 @@ const QuizNivelamento = () => {
       }));
       updatePerformance(performanceResults);
 
-      // Adiciona uma quantidade fixa de XP por completar o quiz de nivelamento
-      addXp(50);
+      const xpGanhos = acertos * 10;
+      addXp(xpGanhos);
+      resetHearts();
 
       (async () => {
         setGerandoPlano(true);

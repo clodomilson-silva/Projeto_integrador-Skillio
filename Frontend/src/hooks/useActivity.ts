@@ -33,5 +33,6 @@ export const useActivity = () => {
         fetchActivityData();
     }, [fetchActivityData]);
 
-    return { activities, isLoading };
+    return { activities, isLoading, refetchActivityData: fetchActivityData };
 };
+

@@ -25,6 +25,7 @@ import EditProfile from "./pages/EditProfile";
 import StudyPlan from "./pages/StudyPlan";
 import Trilha from "./pages/Trilha";
 import PrivateRoute from "./components/PrivateRoute";
+import { GamificationProvider } from "@/hooks/useGamification";
 
 const queryClient = new QueryClient();
 
@@ -34,36 +35,38 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Header />
-        <div className="min-h-screen flex flex-col justify-between pt-20">
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/trilha" element={<Trilha />} />
-              <Route path="/subjects" element={<Subjects />} />
-              <Route path="/game/:blocoId" element={<Game />} />
-              <Route path="/lesson/:subjectId" element={<Lesson />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/edit-profile" element={<EditProfile />} />
-              <Route path="/ranking" element={<Ranking />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/termos-condicoes" element={<TermosCondicoesDetalhado />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/quiz-nivelamento" element={<QuizNivelamento />} />
-              <Route path="/suporte" element={<Suporte />} />
-              <Route path="/study-plan" element={<StudyPlan />} />
-              <Route element={<PrivateRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-              </Route>
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+        <GamificationProvider>
+          <Header />
+          <div className="min-h-screen flex flex-col justify-between pt-20">
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/trilha" element={<Trilha />} />
+                <Route path="/subjects" element={<Subjects />} />
+                <Route path="/game/:blocoId" element={<Game />} />
+                <Route path="/lesson/:subjectId" element={<Lesson />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/edit-profile" element={<EditProfile />} />
+                <Route path="/ranking" element={<Ranking />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/termos-condicoes" element={<TermosCondicoesDetalhado />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/quiz-nivelamento" element={<QuizNivelamento />} />
+                <Route path="/suporte" element={<Suporte />} />
+                <Route path="/study-plan" element={<StudyPlan />} />
+                <Route element={<PrivateRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                </Route>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </GamificationProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

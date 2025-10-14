@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/api/axios';
 
-interface SubjectPerformance {
+export interface SubjectPerformance {
     subject_name: string;
     correct_answers: number;
     incorrect_answers: number;
 }
 
-interface AreaPerformance {
+export interface AreaPerformance {
     area_name: string;
     subjects: SubjectPerformance[];
 }

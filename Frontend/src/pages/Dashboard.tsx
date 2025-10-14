@@ -110,7 +110,7 @@ const Dashboard = () => {
 
   const { level, xp, streak, dailyQuests, completeQuest, isLoading: isGamificationLoading, refetchGamificationData, blocosCompletos } = useGamification();
   const { performanceData, isLoading: isPerformanceLoading, refetchPerformanceData } = usePerformance();
-  const { activities: apiActivities, isLoading: isActivityLoading } = useActivity();
+  const { activities: apiActivities, isLoading: isActivityLoading, refetchActivityData } = useActivity();
 
   // Lógica para o botão de Nivelamento/Plano de Estudo
   const initialQuizDone = useMemo(() => performanceData && performanceData.length > 0, [performanceData]);
@@ -153,10 +153,10 @@ const Dashboard = () => {
     if (justFinishedQuiz) {
       refetchGamificationData?.();
       refetchPerformanceData?.();
+      refetchActivityData?.();
       sessionStorage.removeItem('justFinishedQuiz');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refetchGamificationData, refetchPerformanceData, refetchActivityData]);
 
   const handleNextExercise = () => {
     if (initialQuizDone) {
@@ -431,7 +431,7 @@ const Dashboard = () => {
                         <label htmlFor={quest.quest.id} className={`flex-1 text-sm ${quest.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                         {quest.quest.description}
                         </label>
-                        {!quest.is_completed && <Button size="sm" variant="outline" onClick={() => completeQuest(quest.quest.id)}>+{quest.quest.xp_reward} XP</Button>}
+                        {!quest.is_completed && <span className="text-sm text-muted-foreground">+{quest.quest.xp_reward} XP</span>}
                     </div>
                     ))}
                 </CardContent>
