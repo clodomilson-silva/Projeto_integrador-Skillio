@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { BookOpen, Star, Trophy, User, Flame, Heart } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
   const { level, xp, xpForNextLevel, progressPercentage, streak, hearts } = useGamification();
   const [userProfile, setUserProfile] = useState<{ first_name: string; foto: string | null } | null>(null);
@@ -32,6 +33,11 @@ const Header = () => {
 
     fetchUserData();
   }, [isAuthenticated]);
+
+  const handleLogout = () => {
+    navigate('/');
+    logout();
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-card/50 backdrop-blur-sm">
@@ -95,7 +101,7 @@ const Header = () => {
                     <AvatarFallback>{userProfile?.first_name ? userProfile.first_name.charAt(0) : 'U'}</AvatarFallback>
                   </Avatar>
                 </Link>
-                <Button variant="outline" size="sm" className="border-primary/50" onClick={logout}>Sair</Button>
+                <Button variant="outline" size="sm" className="border-primary/50" onClick={handleLogout}>Sair</Button>
               </>
             ) : (
               <>

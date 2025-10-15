@@ -12,6 +12,7 @@ const DEFAULT_MODEL = "gemini-2.5-flash";
 export const useLessonAI = (
   subject: string,
   educationalLevel: string,
+  enabled: boolean = true,
   modelName: string = DEFAULT_MODEL
 ) => {
   const [generatedLesson, setGeneratedLesson] = useState<Lesson | null>(null);
@@ -19,6 +20,11 @@ export const useLessonAI = (
   const [error, setError] = useState<string | null>(null);
 
   const generateLessonContent = useCallback(async () => {
+    if (!enabled) {
+      setGeneratedLesson(null);
+      setLoading(false);
+      return;
+    }
     if (!API_KEY) {
       setError(
         "Google Generative Language API Key não está definida. Configure VITE_GOOGLE_GENERATIVE_LANGUAGE_API_KEY no .env."
@@ -88,7 +94,7 @@ export const useLessonAI = (
     } finally {
       setLoading(false);
     }
-  }, [subject, educationalLevel, modelName]);
+  }, [subject, educationalLevel, modelName, enabled]);
 
   useEffect(() => {
     generateLessonContent();

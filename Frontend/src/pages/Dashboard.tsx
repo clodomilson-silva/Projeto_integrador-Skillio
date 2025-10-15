@@ -6,17 +6,14 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Bar, Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, RadialLinearScale } from 'chart.js';
 import { getElementAtEvent } from 'react-chartjs-2';
-import { useGamification } from "@/hooks/useGamification";
-import { usePerformance } from "@/hooks/usePerformance";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Flame, Star, Trophy, AreaChart, BarChart, ArrowLeft, Loader2, CheckCircle, Calendar, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
-import apiClient from '@/api/axios';
 import { DayPicker, type DayContentProps } from 'react-day-picker';
 import { ptBR } from 'date-fns/locale';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useActivity } from '@/hooks/useActivity';
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, RadialLinearScale);
 
@@ -92,35 +89,26 @@ const calculatePerformance = (subjects: any[]) => {
   return total > 0 ? Math.round((totalAcertos / total) * 100) : 0;
 };
 
-interface UserData {
-  first_name: string;
-  profile: {
-    foto: string | null;
-  };
-}
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [chartType, setChartType] = useState('bar');
   const [currentView, setCurrentView] = useState('Visão Geral');
   const chartRef = useRef<ChartJS>(null);
 
-  const { level, xp, streak, dailyQuests, completeQuest, isLoading: isGamificationLoading, refetchGamificationData, blocosCompletos } = useGamification();
-  const { performanceData, isLoading: isPerformanceLoading, refetchPerformanceData } = usePerformance();
-  const { activities: apiActivities, isLoading: isActivityLoading, refetchActivityData } = useActivity();
+  const { userData, gamification, performanceData, activities: apiActivities, isLoading, refetchData, error } = useDashboardData();
 
   // Lógica para o botão de Nivelamento/Plano de Estudo
   const initialQuizDone = useMemo(() => performanceData && performanceData.length > 0, [performanceData]);
   const blockCountOnQuizStart = parseInt(localStorage.getItem('blockCountOnQuizStart') || '0', 10);
   const canRetakeQuiz = useMemo(() => {
-    if (!blocosCompletos) return false;
-    return blocosCompletos.length > blockCountOnQuizStart;
-  }, [blocosCompletos, blockCountOnQuizStart]);
+    if (!gamification?.blocosCompletos) return false;
+    return gamification.blocosCompletos.length > blockCountOnQuizStart;
+  }, [gamification?.blocosCompletos, blockCountOnQuizStart]);
 
   const activities = useMemo(() => {
+    if (!apiActivities) return [];
     return apiActivities.map(a => ({ ...a, date: new Date(a.date) }));
   }, [apiActivities]);
 
@@ -133,30 +121,18 @@ const Dashboard = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      const fetchUserData = async () => {
-        try {
-          const response = await apiClient.get('/users/me/');
-          setUserData(response.data);
-        } catch (error) {
-          console.error("Erro ao buscar dados do usuário:", error);
-          toast({ title: "Erro", description: "Não foi possível carregar os dados do usuário.", variant: "destructive" });
-        }
-      };
-
-      fetchUserData();
+    if (error) {
+        toast({ title: "Erro", description: "Não foi possível carregar os dados do dashboard.", variant: "destructive" });
     }
-  }, [isAuthenticated, toast]);
+  }, [error, toast]);
 
   useEffect(() => {
     const justFinishedQuiz = sessionStorage.getItem('justFinishedQuiz') === 'true';
     if (justFinishedQuiz) {
-      refetchGamificationData?.();
-      refetchPerformanceData?.();
-      refetchActivityData?.();
+      refetchData?.();
       sessionStorage.removeItem('justFinishedQuiz');
     }
-  }, [refetchGamificationData, refetchPerformanceData, refetchActivityData]);
+  }, [refetchData]);
 
   const handleNextExercise = () => {
     if (initialQuizDone) {
@@ -237,7 +213,7 @@ const Dashboard = () => {
     if (element.length > 0) {
       const dataIndex = element[0].index;
       const areaName = chartData.labels[dataIndex];
-      if (performanceData.some(a => a.area_name === areaName)) {
+      if (performanceData && performanceData.some(a => a.area_name === areaName)) {
         setCurrentView(areaName);
       }
     }
@@ -246,7 +222,7 @@ const Dashboard = () => {
   const userName = userData?.first_name || 'Usuário';
   const profilePicture = userData?.profile?.foto || `https://api.dicebear.com/8.x/adventurer/tsx?seed=${userName}`;
 
-  if (isGamificationLoading || isPerformanceLoading || isActivityLoading) {
+  if (isLoading) {
     return (
         <div className="flex justify-center items-center h-screen">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -265,9 +241,9 @@ const Dashboard = () => {
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">Bem-vindo, {userName}!</h2>
             <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-sm sm:text-base">
-              <span className="flex items-center text-muted-foreground"><Star className="w-4 h-4 mr-1 text-amber-400"/>Nível: <b className="ml-1 text-primary">{level}</b></span>
-              <span className="flex items-center text-muted-foreground"><Trophy className="w-4 h-4 mr-1 text-amber-400"/>Pontos: <b className="ml-1 text-primary">{xp} XP</b></span>
-              {streak > 0 && <span className="flex items-center text-muted-foreground"><Flame className="w-4 h-4 mr-1 text-orange-500"/>Sequência: <b className="ml-1 text-orange-500">{streak} dias</b></span>}
+              <span className="flex items-center text-muted-foreground"><Star className="w-4 h-4 mr-1 text-amber-400"/>Nível: <b className="ml-1 text-primary">{gamification?.level}</b></span>
+              <span className="flex items-center text-muted-foreground"><Trophy className="w-4 h-4 mr-1 text-amber-400"/>Pontos: <b className="ml-1 text-primary">{gamification?.xp} XP</b></span>
+              {gamification?.streak && gamification.streak > 0 && <span className="flex items-center text-muted-foreground"><Flame className="w-4 h-4 mr-1 text-orange-500"/>Sequência: <b className="ml-1 text-orange-500">{gamification.streak} dias</b></span>}
             </div>
           </div>
         </div>
@@ -425,7 +401,7 @@ const Dashboard = () => {
                     <CardTitle>Missões Diárias</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {dailyQuests && dailyQuests.map(quest => (
+                    {gamification?.dailyQuests && gamification.dailyQuests.map(quest => (
                     <div key={quest.quest.id} className={`flex items-center gap-4 p-3 rounded-lg transition-all ${quest.is_completed ? 'bg-green-500/10' : 'bg-muted/50'}`}>
                         <Checkbox id={quest.quest.id} checked={quest.is_completed} disabled className="data-[state=checked]:border-green-500 data-[state=checked]:bg-green-500" />
                         <label htmlFor={quest.quest.id} className={`flex-1 text-sm ${quest.is_completed ? 'line-through text-muted-foreground' : ''}`}>
