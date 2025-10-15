@@ -3,7 +3,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Lesson {
   lesson: string;
-  videos: { title: string; url: string }[];
 }
 
 const API_KEY = import.meta.env.VITE_GOOGLE_GENERATIVE_LANGUAGE_API_KEY;
@@ -44,7 +43,7 @@ export const useLessonAI = (
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: modelName });
 
-      const prompt = `Gere uma breve aula sobre '${subject}' para um estudante do nível '${educationalLevel}'. A aula deve ser um resumo conciso do tópico em um parágrafo. Além disso, sugira 2 a 3 vídeos do YouTube. Para cada vídeo, forneça o título e o link COMPLETO (URL). Os vídeos devem ser de canais confiáveis, curtos (idealmente menos de 5 minutos), publicamente acessíveis, e que provavelmente permitam incorporação em outros sites. A resposta deve ser um objeto JSON com os campos 'lesson' (string) e 'videos' (um array de objetos, cada um com 'title' e 'url'). Certifique-se de que a resposta seja um JSON válido e nada mais.`;
+      const prompt = `Gere uma breve aula sobre '${subject}' para um estudante do nível '${educationalLevel}'. A aula deve ser um resumo conciso do tópico em um parágrafo. A resposta deve ser um objeto JSON com o campo 'lesson' (string). Certifique-se de que a resposta seja um JSON válido e nada mais.`;
 
       const result = await model.generateContent(prompt);
 

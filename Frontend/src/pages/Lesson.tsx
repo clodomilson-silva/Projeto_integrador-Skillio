@@ -11,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/api/axios';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
+
 // Helper para extrair o ID do vídeo do YouTube de vários formatos de URL
 const getYouTubeVideoId = (url: string): string | null => {
   if (!url) return null;
@@ -51,6 +53,8 @@ const Lesson = () => {
   const [userFocus, setUserFocus] = useState('Conhecimentos Gerais');
   const [isLoadingFocus, setIsLoadingFocus] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [isLoadingVideos, setIsLoadingVideos] = useState(true);
 
   useEffect(() => {
     const fetchUserFocus = async () => {
@@ -79,7 +83,7 @@ const Lesson = () => {
   let displayTitle: string;
   let subjectForAI: string;
 
-  if (trilhaBloco) { // It's a trail game
+  if (trilhaBloco) { // É um jogo de trilha
     if (trilhaBloco.tipo === 'foco') {
       displayTitle = userFocus;
       subjectForAI = userFocus;
@@ -87,7 +91,7 @@ const Lesson = () => {
       displayTitle = trilhaBloco.titulo;
       subjectForAI = trilhaBloco.titulo;
     }
-  } else if (subjectInfo) { // It's a subject game
+  } else if (subjectInfo) { // É um jogo de matéria
     displayTitle = subjectInfo.name;
     subjectForAI = subjectInfo.name;
   } else {
@@ -96,6 +100,39 @@ const Lesson = () => {
   }
   
   const { generatedLesson, loading: isLoadingLesson, error, refetch } = useLessonAI(subjectForAI, educationalLevel, !isLoadingFocus);
+
+  useEffect(() => {
+    const fetchYouTubeVideos = async () => {
+      if (!subjectForAI) return;
+  
+      if (!YOUTUBE_API_KEY) {
+        console.error("A chave da API do YouTube não foi definida. Crie um arquivo .env na pasta Frontend e adicione VITE_YOUTUBE_API_KEY=SUA_CHAVE.");
+        setIsLoadingVideos(false);
+        return;
+      }
+  
+      setIsLoadingVideos(true);
+      try {
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(subjectForAI + " aula")}s&key=${YOUTUBE_API_KEY}&type=video&maxResults=3&videoEmbeddable=true&relevanceLanguage=pt`);
+        const data = await response.json();
+        if (data.items) {
+          const fetchedVideos = data.items.map((item: any) => ({
+            title: item.snippet.title,
+            url: `https://www.youtube.com/watch?v=${item.id.videoId}`
+          }));
+          setVideos(fetchedVideos);
+        }
+      } catch (error) {
+        console.error("Falha ao buscar vídeos do YouTube", error);
+      } finally {
+        setIsLoadingVideos(false);
+      }
+    };
+  
+    if (!isLoadingLesson) {
+      fetchYouTubeVideos();
+    }
+  }, [subjectForAI, isLoadingLesson]);
 
   if (isLoadingFocus || isLoadingLesson) {
     return (
@@ -152,27 +189,50 @@ const Lesson = () => {
               <CardTitle>Vídeos Sugeridos</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {generatedLesson?.videos && generatedLesson.videos.map((video, index) => {
-                const videoId = getYouTubeVideoId(video.url);
-                if (!videoId) {
+              {isLoadingVideos ? (
+                <div className="col-span-full text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                  <p>Buscando vídeos...</p>
+                </div>
+              ) : videos.length > 0 ? (
+                videos.map((video, index) => {
+                  const videoId = getYouTubeVideoId(video.url);
+                  if (!videoId) {
+                    return (
+                      <div key={index} className="p-4 border rounded-lg text-red-500">
+                        <p>Link de vídeo inválido: {video.url}</p>
+                      </div>
+                    );
+                  }
                   return (
-                    <div key={index} className="p-4 border rounded-lg text-red-500">
-                      <p>Link de vídeo inválido: {video.url}</p>
+                    <div key={index} className="cursor-pointer group" onClick={() => setSelectedVideo(video)}>
+                      <div className="relative aspect-video overflow-hidden rounded-lg border shadow-lg mb-2">
+                        <img 
+                          src={`https://i.ytimg.com/vi/${videoId}/sddefault.jpg`} 
+                          alt={video.title} 
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (target.src.includes('/sddefault.jpg')) {
+                              target.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+                            } else if (target.src.includes('/hqdefault.jpg')) {
+                              target.src = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+                            } else if (target.src.includes('/mqdefault.jpg')) {
+                              target.src = `https://i.ytimg.com/vi/${videoId}/default.jpg`;
+                            }
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <PlayCircle className="h-12 w-12 text-white" />
+                        </div>
+                      </div>
+                      <h3 className="font-semibold text-sm text-center">{video.title}</h3>
                     </div>
                   );
-                }
-                return (
-                  <div key={index} className="cursor-pointer group" onClick={() => setSelectedVideo(video)}>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border shadow-lg mb-2">
-                      <img src={`https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`} alt={video.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <PlayCircle className="h-12 w-12 text-white" />
-                      </div>
-                    </div>
-                    <h3 className="font-semibold text-sm text-center">{video.title}</h3>
-                  </div>
-                );
-              })}
+                })
+              ) : (
+                <p className="col-span-full text-center text-muted-foreground">Nenhum vídeo encontrado.</p>
+              )}
             </CardContent>
           </Card>
 
