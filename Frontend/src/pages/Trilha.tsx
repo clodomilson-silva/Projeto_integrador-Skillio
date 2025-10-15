@@ -9,42 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useTimeTracker } from '@/hooks/useTimeTracker';
 import { motion, useScroll, useSpring } from "framer-motion";
 
-// Component for the circular block visual with 3D effect
-const BlocoCircular = ({ status, tipo, hasNoHearts }) => {
-    const icon = useMemo(() => {
-        const iconClass = "h-10 w-10 text-white/90 drop-shadow-lg";
-        if (status === 'completo') return <Check className={iconClass} />;
-        if (status === 'bloqueado') return <Lock className="h-8 w-8 text-gray-400" />;
-        if (hasNoHearts) return <Heart className="h-8 w-8 text-gray-400" />;
-        if (tipo === 'foco') return <Flame className={iconClass} />;
-        return <BrainCircuit className={iconClass} />;
-    }, [status, tipo, hasNoHearts]);
-
-    const gradientClasses = useMemo(() => {
-        if (status === 'completo') return "from-green-500 to-green-700 shadow-lg shadow-green-700/40";
-        if (status === 'desbloqueado' && !hasNoHearts) {
-            if (tipo === 'foco') return "from-purple-500 to-indigo-700 shadow-lg shadow-indigo-700/40";
-            return "from-sky-500 to-blue-700 shadow-lg shadow-blue-700/40";
-        }
-        return "from-gray-600 to-gray-800 shadow-lg shadow-black/30";
-    }, [status, tipo, hasNoHearts]);
-
-    const isPulsing = status === 'desbloqueado' && !hasNoHearts;
-
-    return (
-        <motion.div
-            className={`relative w-24 h-24 rounded-full flex items-center justify-center bg-gradient-to-br border-2 border-white/10 ${gradientClasses} ${isPulsing ? 'animate-pulse' : ''}`}
-            whileHover={{ scale: 1.1, y: -8 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
-        >
-            {/* Internal glow effect */}
-            <div className="absolute top-1 left-1 w-[90%] h-[90%] rounded-full bg-white/10 blur-sm"></div>
-            <div className="relative z-10">{icon}</div>
-        </motion.div>
-    );
-};
-
 const Trilha = () => {
   const navigate = useNavigate();
   const { blocosCompletos, hearts, addXp } = useGamification();
@@ -85,7 +49,7 @@ const Trilha = () => {
             <Link to="/dashboard">
                 <Button variant="ghost" className="absolute top-8 left-8 z-20 backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Dashboard
+                    Voltar para Dashboard
                 </Button>
             </Link>
             <div className="text-center mb-16 pt-16">
@@ -156,7 +120,18 @@ const Trilha = () => {
                                                     onClick={() => !isDisabled && handleBlockClick(nivel.nivel, bloco.id)}
                                                     disabled={isDisabled}
                                                 >
-                                                    <BlocoCircular status={status} tipo={bloco.tipo} hasNoHearts={hasNoHearts} />
+                                                    <div className="relative w-24 h-24">
+                                                        <img
+                                                            src={`/Group ${indiceGlobal + 1}.svg`}
+                                                            alt={bloco.titulo}
+                                                            className="w-full h-full rounded-full object-cover"
+                                                        />
+                                                        {status === 'completo' && (
+                                                            <div className="absolute inset-0 bg-green-500/70 rounded-full flex items-center justify-center">
+                                                                <Check className="h-10 w-10 text-white" />
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>
