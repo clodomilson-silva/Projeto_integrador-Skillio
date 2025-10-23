@@ -38,7 +38,7 @@ export const useGenerativeAI = (
     setLoading(true);
     setError(null);
 
-    try {
+  try {
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: modelName });
 
@@ -100,7 +100,30 @@ Certifique-se de que a resposta seja um JSON válido e nada mais.`;
           "Modelo não encontrado ou não habilitado para sua chave. Verifique o nome do modelo e permissões da API no Google Cloud Console.";
       }
       setError(`Falha ao gerar perguntas: ${msg}`);
-      setGeneratedQuestions([]);
+      // Em modo de desenvolvimento, fornece perguntas de fallback para permitir
+      // que a UI seja testada mesmo sem a chave ou quando a API falhar.
+      if (import.meta.env.DEV) {
+        console.warn("useGenerativeAI: usando perguntas de fallback de desenvolvimento devido a erro:", msg);
+        const fallback = [
+          {
+            id: 1,
+            question: `Pergunta de fallback: o que é ${subject}?`,
+            options: ["Opção A", "Opção B", "Opção C", "Opção D"],
+            correct: 0,
+            difficulty: "easy",
+          },
+          {
+            id: 2,
+            question: `Pergunta de fallback: qual é o conceito básico de ${subject}?`,
+            options: ["A", "B", "C", "D"],
+            correct: 1,
+            difficulty: "medium",
+          },
+        ];
+        setGeneratedQuestions(fallback);
+      } else {
+        setGeneratedQuestions([]);
+      }
     } finally {
       setLoading(false);
     }

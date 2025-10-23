@@ -109,7 +109,7 @@ class AreaBNCCSerializer(serializers.ModelSerializer):
 class GamificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Gamification
-        fields = ('level', 'xp', 'streak')
+        fields = ('level', 'xp', 'streak', 'hearts', 'hearts_last_refill')
 
 class AchievementSerializer(serializers.ModelSerializer):
     class Meta:

@@ -56,6 +56,10 @@ class Gamification(models.Model):
     level = models.PositiveIntegerField(default=1)
     xp = models.PositiveIntegerField(default=0)
     streak = models.PositiveIntegerField(default=0)
+    # Vidas do usuário (corações)
+    hearts = models.PositiveSmallIntegerField(default=5)
+    # Última vez em que a recarga começou/foi aplicada (usado para calcular recarga automática)
+    hearts_last_refill = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.user.username} - Nível: {self.level}, XP: {self.xp}'

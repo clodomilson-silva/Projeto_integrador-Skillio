@@ -13,7 +13,8 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
-  const { level, xp, xpForNextLevel, progressPercentage, streak, hearts } = useGamification();
+  const { level, xp, xpForNextLevel, progressPercentage, streak, hearts, nextRefillInSeconds, refillHearts } = useGamification();
+  const [countdown, setCountdown] = useState<number | null>(null);
   const [userProfile, setUserProfile] = useState<{ first_name: string; foto: string | null } | null>(null);
 
   useEffect(() => {
@@ -32,6 +33,28 @@ const Header = () => {
 
     fetchUserData();
   }, [isAuthenticated]);
+
+  // Atualiza countdown local a partir de nextRefillInSeconds
+  useEffect(() => {
+    let interval: number | undefined;
+    if (nextRefillInSeconds && hearts <= 0) {
+      setCountdown(nextRefillInSeconds);
+      interval = window.setInterval(() => {
+        setCountdown(prev => {
+          if (prev === null) return null;
+          if (prev <= 1) {
+            // tempo zerou — tenta recarregar
+            refillHearts();
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      setCountdown(null);
+    }
+    return () => { if (interval) window.clearInterval(interval); };
+  }, [nextRefillInSeconds, hearts, refillHearts]);
 
   const handleLogout = () => {
     navigate('/');
@@ -60,12 +83,23 @@ const Header = () => {
                 <div className="hidden sm:flex items-center gap-4 mr-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className={`flex items-center gap-1 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                      <div className={`flex items-center gap-2 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
                         <Heart className="w-4 h-4" />
                         <span>{hearts}</span>
+                        {hearts <= 0 && countdown !== null && (
+                          <button onClick={() => refillHearts()} className="text-xs text-muted-foreground underline">
+                            {Math.floor(countdown / 60).toString().padStart(2, '0')}:{(countdown % 60).toString().padStart(2, '0')}
+                          </button>
+                        )}
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent><p>{hearts} vidas restantes</p></TooltipContent>
+                    <TooltipContent>
+                      <div>
+                        <p>{hearts} vidas restantes</p>
+                        {hearts <= 0 && countdown !== null && <p>Próxima vida em {Math.floor(countdown / 60)}m {countdown % 60}s</p>}
+                        {hearts <= 0 && countdown === null && <p>Verificando recarga...</p>}
+                      </div>
+                    </TooltipContent>
                   </Tooltip>
 
                   {streak > 0 && (

@@ -249,7 +249,7 @@ const QuizNivelamento = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addXp, blocosCompletos, resetHearts } = useGamification();
+  const { addXp, blocosCompletos, resetHearts, userFocus } = useGamification();
   const { updatePerformance } = usePerformance();
 
   useEffect(() => {
@@ -285,7 +285,7 @@ const QuizNivelamento = () => {
 
   useEffect(() => {
     (async () => {
-      const foco = localStorage.getItem('userFocus') || 'Conhecimentos Gerais';
+  const foco = userFocus || 'Conhecimentos Gerais';
       const escolaridadePrompt = getEscolaridade();
       const idade = getUserAge();
 
@@ -346,7 +346,7 @@ const QuizNivelamento = () => {
       }
       setCarregando(false);
     })();
-  }, []);
+  }, [userFocus]);
 
   const calcularPlanoEstudo = useCallback(() => {
     const analise: Record<string, { acertos: number; erros: number; pulos: number }> = {};
@@ -396,7 +396,7 @@ const QuizNivelamento = () => {
       (async () => {
         setGerandoPlano(true);
         const escolaridade = getEscolaridade();
-        const foco = localStorage.getItem('userFocus') || 'Conhecimentos Gerais';
+  const foco = userFocus || 'Conhecimentos Gerais';
         const idade = getUserAge();
         const planoResponse = await gerarPlanoDeEstudo(analise, escolaridade, foco, idade, maxStreak, maxErrorStreak);
 
@@ -418,7 +418,7 @@ const QuizNivelamento = () => {
         setGerandoPlano(false);
       })();
     }
-  }, [finalizado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance, addXp]);
+  }, [finalizado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance, addXp, resetHearts, userFocus]);
 
   const proximaPergunta = (resposta: number | null) => {
     const perguntaAtual = perguntasNivelamento[indice];

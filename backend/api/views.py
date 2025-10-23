@@ -9,6 +9,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 import base64
+from django.conf import settings
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -157,6 +158,85 @@ class AddXpView(generics.GenericAPIView):
             'new_level': gamification.level,
             'new_xp': gamification.xp
         }, status=status.HTTP_200_OK)
+
+
+class LoseHeartView(generics.GenericAPIView):
+    """Decrementa 1 vida do usuário autenticado."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        gamification = user.gamification
+        if gamification.hearts > 0:
+            gamification.hearts = max(0, gamification.hearts - 1)
+            # Ao perder a primeira vida, registra o tempo de início da recarga se ainda não houver
+            if gamification.hearts == 0 and gamification.hearts_last_refill is None:
+                gamification.hearts_last_refill = timezone.now()
+            gamification.save()
+        return Response({'hearts': gamification.hearts}, status=status.HTTP_200_OK)
+
+
+class ResetHeartsView(generics.GenericAPIView):
+    """Reseta as vidas do usuário para o máximo (5)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        gamification = user.gamification
+        gamification.hearts = 5
+        gamification.hearts_last_refill = None
+        gamification.save()
+        return Response({'hearts': gamification.hearts}, status=status.HTTP_200_OK)
+
+
+class RefillHeartsView(generics.GenericAPIView):
+    """Tenta recarregar vidas com base no tempo decorrido: 1 vida a cada 3 minutos desde que o usuário ficou sem vidas.
+    Retorna as novas vidas e o tempo restante até a próxima vida se não estiver cheio.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        gamification = user.gamification
+        MAX_HEARTS = 5
+        REFILL_MINUTES_PER_HEART = getattr(settings, 'GAMIFICATION_REFILL_MINUTES', 3)
+
+        now = timezone.now()
+
+        # Se já está cheio, nada a fazer
+        if gamification.hearts >= MAX_HEARTS:
+            gamification.hearts_last_refill = None
+            gamification.save()
+            return Response({'hearts': gamification.hearts, 'next_in_seconds': None}, status=status.HTTP_200_OK)
+
+        # Se não houver timestamp, e hearts < max, consideramos que o contador começa agora
+        if gamification.hearts_last_refill is None:
+            gamification.hearts_last_refill = now
+            gamification.save()
+            return Response({'hearts': gamification.hearts, 'next_in_seconds': REFILL_MINUTES_PER_HEART * 60}, status=status.HTTP_200_OK)
+
+        elapsed = now - gamification.hearts_last_refill
+        elapsed_minutes = int(elapsed.total_seconds() // 60)
+        # Quantas vidas recuperar
+        hearts_to_add = elapsed_minutes // REFILL_MINUTES_PER_HEART
+        if hearts_to_add > 0:
+            new_hearts = min(MAX_HEARTS, gamification.hearts + hearts_to_add)
+            # calcula quanto tempo sobrou após aplicar a recarga
+            minutes_used = hearts_to_add * REFILL_MINUTES_PER_HEART
+            remainder_seconds = int(elapsed.total_seconds() - (minutes_used * 60))
+            gamification.hearts = new_hearts
+            # Se já estiver cheio, limpa o timestamp, senão atualiza para o tempo do último tick aplicado
+            if gamification.hearts >= MAX_HEARTS:
+                gamification.hearts_last_refill = None
+            else:
+                gamification.hearts_last_refill = now - timezone.timedelta(seconds=remainder_seconds)
+            gamification.save()
+        else:
+            # Ainda não recuperou nenhuma vida; calcula quanto falta até o próximo
+            remainder_seconds = REFILL_MINUTES_PER_HEART * 60 - int(elapsed.total_seconds())
+
+        next_in = None if gamification.hearts >= MAX_HEARTS else remainder_seconds
+        return Response({'hearts': gamification.hearts, 'next_in_seconds': next_in}, status=status.HTTP_200_OK)
 
 
 class CompleteQuestView(generics.GenericAPIView):

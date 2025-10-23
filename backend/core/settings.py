@@ -152,6 +152,10 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
+# Gamification defaults
+# Number of minutes required to refill 1 heart when the user is out of lives
+GAMIFICATION_REFILL_MINUTES = int(os.environ.get('GAMIFICATION_REFILL_MINUTES', '3'))
+
 # --- Supabase Storage Configuration (using S3 backend) --- (Commented out since saving images in DB)
 
 # Extract Supabase Project ID from URL for convenience

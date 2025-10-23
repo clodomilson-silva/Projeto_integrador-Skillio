@@ -34,10 +34,15 @@ interface GamificationContextType {
     xpForNextLevel: number;
     progressPercentage: number;
     hearts: number;
+    nextRefillInSeconds: number | null;
+    userFocus: string;
     addXp: (amount: number) => Promise<void>;
     completeQuest: (questId: string) => Promise<void>;
+    completeBlock: (blockId: string) => Promise<void>;
+    isBlockCompleted: (blockId: string) => boolean;
     loseHeart: () => void;
     resetHearts: () => void;
+    refillHearts: () => void;
     refetchGamificationData: () => void;
 }
 
@@ -53,7 +58,9 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     const [dailyQuests, setDailyQuests] = useState<Quest[]>([]);
     const [blocosCompletos, setBlocosCompletos] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [hearts, setHearts] = useState(() => parseInt(localStorage.getItem('userHearts') || '5', 10));
+    const [hearts, setHearts] = useState<number>(5);
+    const [nextRefillInSeconds, setNextRefillInSeconds] = useState<number | null>(null);
+    const [userFocus, setUserFocus] = useState<string>('Conhecimentos Gerais');
 
     const fetchGamificationData = useCallback(async () => {
         if (!isAuthenticated) {
@@ -69,6 +76,29 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
                 setUnlockedAchievements((data.profile.achievements || []).map((ua: UserAchievement) => ua.achievement.id));
                 setDailyQuests(data.profile.daily_quests || []);
                 setBlocosCompletos(data.profile.blocos_completos || []);
+                // Extrai hearts e o timestamp retornados pelo backend
+                const gam = data.profile.gamification || {};
+                const serverHearts = typeof gam.hearts === 'number' ? gam.hearts : 5;
+                setHearts(serverHearts);
+                // user focus vindo do profile (o tópico que o usuário escolheu durante registro)
+                if (data.profile.focus) setUserFocus(data.profile.focus);
+
+                // Cálculo local do tempo até a próxima vida com base no timestamp do servidor
+                if (gam.hearts_last_refill && serverHearts < 5) {
+                    try {
+                        const lastRefill = new Date(gam.hearts_last_refill);
+                        const now = new Date();
+                        const elapsedSeconds = Math.floor((now.getTime() - lastRefill.getTime()) / 1000);
+                        const REFILL_SECONDS = 3 * 60; // 3 minutos por vida
+                        const secondsSinceLastTick = elapsedSeconds % REFILL_SECONDS;
+                        const secondsToNext = REFILL_SECONDS - secondsSinceLastTick;
+                        setNextRefillInSeconds(secondsToNext);
+                    } catch (e) {
+                        setNextRefillInSeconds(null);
+                    }
+                } else {
+                    setNextRefillInSeconds(null);
+                }
             }
         } catch (error) {
             console.error("Failed to fetch gamification data", error);
@@ -121,21 +151,85 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const loseHeart = () => {
-        const newHearts = Math.max(0, hearts - 1);
-        setHearts(newHearts);
-        localStorage.setItem('userHearts', String(newHearts));
-    };
+    const loseHeart = useCallback(async () => {
+        if (!isAuthenticated) return;
+        try {
+            const resp = await apiClient.post('/study/gamification/lose-heart/');
+            setHearts(resp.data.hearts);
+            // Se ficou em 0, iniciamos verificação de recarga
+        } catch (e) {
+            console.error('Failed to lose heart', e);
+        }
+    }, [isAuthenticated]);
 
-    const resetHearts = () => {
-        setHearts(5);
-        localStorage.setItem('userHearts', '5');
-    };
+    const resetHearts = useCallback(async () => {
+        if (!isAuthenticated) return;
+        try {
+            const resp = await apiClient.post('/study/gamification/reset-hearts/');
+            setHearts(resp.data.hearts);
+            setNextRefillInSeconds(null);
+        } catch (e) {
+            console.error('Failed to reset hearts', e);
+        }
+    }, [isAuthenticated]);
+
+    const refillHearts = useCallback(async () => {
+        if (!isAuthenticated) return;
+        try {
+            const resp = await apiClient.post('/study/gamification/refill/');
+            setHearts(resp.data.hearts);
+            setNextRefillInSeconds(resp.data.next_in_seconds ?? null);
+        } catch (e) {
+            console.error('Failed to refill hearts', e);
+        }
+    }, [isAuthenticated]);
+
+    const isBlockCompleted = useCallback((blockId: string) => {
+        return blocosCompletos.includes(blockId);
+    }, [blocosCompletos]);
+
+    const completeBlock = useCallback(async (blockId: string) => {
+        // Atualiza localmente imediatamente para boa UX
+        if (!blocosCompletos.includes(blockId)) {
+            setBlocosCompletos(prev => [...prev, blockId]);
+        }
+        // Tenta notificar o backend (se o endpoint existir). Falha silenciosa se não existir.
+        try {
+            await apiClient.post(`/study/gamification/complete-block/`, { block_id: blockId });
+        } catch (e) {
+            // Não bloquear a UX por conta de falha na rede / endpoint ausente
+            console.warn('Failed to persist block completion to backend', e);
+        }
+    }, [blocosCompletos]);
+
+    // Agendar recarga local baseada em nextRefillInSeconds para reduzir polling
+    useEffect(() => {
+        let timeoutId: number | undefined;
+        if (isAuthenticated && nextRefillInSeconds && nextRefillInSeconds > 0) {
+            // agenda para chamar o refill exatamente quando a próxima vida estiver disponível
+            timeoutId = window.setTimeout(() => {
+                refillHearts();
+            }, nextRefillInSeconds * 1000);
+        }
+        // Se o usuário estiver sem vidas (hearts === 0) e não houver nextRefill informado, fazemos um fallback de polling leve
+        let intervalId: number | undefined;
+        if (isAuthenticated && hearts <= 0 && !nextRefillInSeconds) {
+            // fallback polling a cada 30s
+            intervalId = window.setInterval(() => {
+                refillHearts();
+            }, 30000);
+        }
+        return () => {
+            if (timeoutId) window.clearTimeout(timeoutId);
+            if (intervalId) window.clearInterval(intervalId);
+        };
+    }, [isAuthenticated, nextRefillInSeconds, hearts, refillHearts]);
 
     const value = {
         level: stats.level,
         xp: stats.xp,
         streak: stats.streak,
+        userFocus,
         allAchievements,
         unlockedAchievements,
         dailyQuests,
@@ -144,10 +238,14 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         xpForNextLevel,
         progressPercentage,
         hearts,
+        nextRefillInSeconds,
         addXp,
+        completeBlock,
+        isBlockCompleted,
         completeQuest,
         loseHeart,
         resetHearts,
+        refillHearts,
         refetchGamificationData: fetchGamificationData,
     };
 

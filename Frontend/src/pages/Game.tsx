@@ -25,7 +25,7 @@ const Game = () => {
   const { blocoId } = useParams<{ blocoId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addXp, completeBlock, isBlockCompleted, loseHeart, hearts, resetHearts } = useGamification();
+  const { addXp, completeBlock, isBlockCompleted, loseHeart, hearts, resetHearts, userFocus } = useGamification();
   const { updatePerformance } = usePerformance();
   useTimeTracker(); // Inicia o rastreamento de tempo nesta página
 
@@ -42,8 +42,10 @@ const Game = () => {
     title = trilhaBloco.titulo;
     const nivelInfo = trilhaPrincipal.find(n => n.blocos.some(b => b.id === blocoId));
     nivel = nivelInfo ? nivelInfo.nivel : 1; // Default to 1 if not found
-    const userFocus = localStorage.getItem('userFocus') || 'Conhecimentos Gerais';
-    subject = trilhaBloco.tipo === 'foco' ? userFocus : 'Conhecimentos Gerais';
+  // Se o bloco for do tipo foco use o foco do usuário quando disponível,
+  // caso contrário use 'Conhecimentos Gerais' como fallback para garantir
+  // que `useGenerativeAI` sempre receba um subject válido.
+  subject = trilhaBloco.tipo === 'foco' ? (userFocus || 'Conhecimentos Gerais') : 'Conhecimentos Gerais';
   } else if (subjectInfo) { // It's a subject game
     title = subjectInfo.name;
     nivel = 1; // Default level for subject games
@@ -87,18 +89,21 @@ const Game = () => {
     setShowResult(true);
     
     const isCorrect = answerIndex === questions[currentQuestion]?.correct;
-    if (isCorrect) {
-        setSessionAnswers(prev => ({ ...prev, correct: prev.correct + 1 }));
-        if (isTrailGame) {
-            setPendingScore(prev => prev + 10);
-            setPendingXp(prev => prev + 5);
-            toast({ title: "Correto! 🎉" });
-        } else {
-            setScore(prevScore => prevScore + 10);
-            addXp(5);
-            toast({ title: "Correto! 🎉", description: `+10 Pontos, +5 XP` });
-        }
+  if (isCorrect) {
+    setSessionAnswers(prev => ({ ...prev, correct: prev.correct + 1 }));
+    // Sempre contabiliza pontos imediatamente ao acertar, mesmo em jogos de trilha.
+    // Mantemos `pendingScore`/`pendingXp` para o fluxo de conclusão do bloco (exibição/registro),
+    // mas evitamos premiar esses valores novamente ao finalizar o bloco para não duplicar pontos.
+    setScore(prevScore => prevScore + 10);
+    addXp(5);
+    if (isTrailGame) {
+      setPendingScore(prev => prev + 10);
+      setPendingXp(prev => prev + 5);
+      toast({ title: "Correto! 🎉" });
     } else {
+      toast({ title: "Correto! 🎉", description: `+10 Pontos, +5 XP` });
+    }
+  } else {
       setSessionAnswers(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
       if (isTrailGame) {
           if (answerIndex !== null && answerIndex !== -1) { // Apenas erros contam, não pulos ou tempo esgotado
@@ -153,19 +158,23 @@ const Game = () => {
 
       if (blocoId && isTrailGame) {
         if (mistakes < 5 && !isBlockCompleted(blocoId)) { // Player won
-          setScore(prevScore => prevScore + pendingScore);
-          addXp(pendingXp);
+          // Os pontos foram contabilizados ao longo do jogo; aqui apenas finalizamos o bloco
+          // e informamos o usuário que os pontos já foram aplicados durante as respostas.
           completeBlock(blocoId);
           toast({
             title: "Bloco Concluído!",
-            description: `Parabéns! Você ganhou +${pendingScore} Pontos e +${pendingXp} XP.`,
+            description: `Parabéns! Você completou o bloco. (${pendingScore} pontos e ${pendingXp} XP foram contabilizados durante o jogo.)`,
           });
+          // Após uma breve pausa para o usuário ver a tela de conclusão, redirecionamos para a Trilha
+          setTimeout(() => {
+            navigate('/trilha');
+          }, 2000);
         } else if (mistakes >= 5) { // Player lost
           resetHearts();
         }
       }
     }
-  }, [gameOver, blocoId, isTrailGame, completeBlock, isBlockCompleted, toast, pendingScore, pendingXp, addXp, mistakes, resetHearts, subject, sessionAnswers, updatePerformance]);
+  }, [gameOver, blocoId, isTrailGame, completeBlock, isBlockCompleted, navigate, toast, pendingScore, pendingXp, addXp, mistakes, resetHearts, subject, sessionAnswers, updatePerformance]);
 
   const resetGame = () => {
       refetch();
