@@ -56,6 +56,7 @@ const EditProfile = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAccountDeleted, setIsAccountDeleted] = useState(false);
 
   const handleDeleteAccount = async () => {
     if (!deletePassword) {
@@ -66,7 +67,8 @@ const EditProfile = () => {
     setIsDeleting(true);
     try {
   await apiClient.post('/users/me/delete-account/', { password: deletePassword });
-      toast({ title: 'Conta apagada', description: 'Sua conta e dados foram removidos.', variant: 'default' });
+      setIsAccountDeleted(true);
+      toast({ title: 'conta desativada', description: 'Sua conta e dados foram removidos.', variant: 'default' });
       logout();
       navigate('/');
     } catch (err: unknown) {
@@ -103,8 +105,10 @@ const EditProfile = () => {
         setFotoPreview(data.profile.foto);
       } catch (error) {
         console.error("Erro ao buscar dados do usuário:", error);
-        toast({ title: "Erro ao carregar perfil", description: "Faça o login novamente.", variant: "destructive" });
-        logout();
+        if (!isAccountDeleted) {
+          toast({ title: "Erro ao carregar perfil", description: "Faça o login novamente.", variant: "destructive" });
+          logout();
+        }
       } finally {
         setIsLoading(false);
       }
