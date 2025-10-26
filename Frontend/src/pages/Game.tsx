@@ -97,13 +97,13 @@ const Game = () => {
     setScore(prevScore => prevScore + 10);
     if (isTrailGame) {
       setPendingScore(prev => prev + 10);
-      setPendingXp(prev => prev + 5);
+      setPendingXp(prev => prev + 10);  // 10 XP por pergunta certa
       toast({ title: "Correto! 🎉" });
     } else {
       // Para quizzes avulsos (não-trilha), damos XP imediatamente e aguardamos a persistência
       try {
-        await addXp(5);
-        toast({ title: "Correto! 🎉", description: `+10 Pontos, +5 XP` });
+        await addXp(10);  // 10 XP por pergunta certa
+        toast({ title: "Correto! 🎉", description: `+10 Pontos, +10 XP` });
         // sinaliza que houve atualização persistida para que o Dashboard recupere os dados ao voltar
         sessionStorage.setItem('justFinishedQuiz', 'true');
       } catch (e) {
@@ -116,8 +116,9 @@ const Game = () => {
       if (isTrailGame) {
           if (answerIndex !== null && answerIndex !== -1) { // Apenas erros contam, não pulos ou tempo esgotado
             setMistakes(prev => prev + 1);
+            // Aguarda a perda de vida para garantir que o estado seja atualizado no header
+            await loseHeart();
           }
-          loseHeart();
       }
       if (answerIndex === -1) {
         toast({ title: "Tempo esgotado! ⏰", variant: "destructive" });
@@ -209,6 +210,9 @@ const Game = () => {
             navigate('/trilha');
           }, 2000);
         } else if (mistakes >= 5) { // Player lost
+          // Descarta os pontos e XP pendentes (não concluiu o bloco)
+          setPendingScore(0);
+          setPendingXp(0);
           resetHearts();
         }
       }
@@ -226,6 +230,8 @@ const Game = () => {
       setShowResult(false);
       setGameOver(false);
       setMistakes(0);
+      setPendingScore(0);
+      setPendingXp(0);
       setSessionAnswers({ correct: 0, incorrect: 0 });
   };
 
@@ -283,21 +289,66 @@ const Game = () => {
   }
 
   if (gameOver) {
+    const playerWon = isTrailGame ? mistakes < 5 : true;
+    const playerLost = isTrailGame && mistakes >= 5;
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <GameCard variant="subject" className="p-8 text-center max-w-md">
-          <Trophy className="h-16 w-16 mx-auto mb-6 text-warning" />
-          <h2 className="text-3xl font-bold mb-4">{isTrailGame ? 'Bloco Finalizado!' : 'Quiz Finalizado!'}</h2>
-          <p className="text-2xl font-bold my-4">Pontuação Final: {score}</p>
+        <GameCard variant="subject" className="p-8 text-center max-w-md bg-card">
+          {playerLost ? (
+            <>
+              <HeartCrack className="h-20 w-20 mx-auto mb-6 text-red-500" />
+              <h2 className="text-4xl font-bold mb-8 text-foreground">Quiz Encerrado!</h2>
+              <div className="space-y-6 mb-8">
+                <div className="bg-red-500/10 border-2 border-red-500/30 p-4 rounded-lg">
+                  <p className="text-xl font-bold text-foreground">
+                    Você cometeu <span className="text-red-500">5 erros</span>
+                  </p>
+                  <p className="text-base text-foreground/80 mt-2">
+                    e perdeu todas as suas chances
+                  </p>
+                </div>
+                <p className="text-lg font-semibold text-foreground">
+                  💪 Não desanime! Tente novamente e melhore seu desempenho.
+                </p>
+              </div>
+              <div className="bg-blue-500/15 border-2 border-blue-500/40 p-5 rounded-xl mb-8 shadow-lg">
+                <div className="flex items-start gap-3 text-left">
+                  <span className="text-3xl flex-shrink-0">💡</span>
+                  <div>
+                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400 mb-2">Dica Importante</p>
+                    <p className="text-base font-medium text-foreground">
+                      Revise o conteúdo e volte mais preparado!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <Trophy className="h-16 w-16 mx-auto mb-6 text-warning" />
+              <h2 className="text-3xl font-bold mb-4">{isTrailGame ? 'Bloco Concluído!' : 'Quiz Finalizado!'}</h2>
+              <p className="text-2xl font-bold my-4">Pontuação Final: {score}</p>
+              <p className="text-muted-foreground mb-4">Parabéns! Continue assim! 🎉</p>
+            </>
+          )}
           <div className="flex flex-col gap-4 mt-8">
+            {playerWon && (
               <Button variant="game" onClick={() => navigate(isTrailGame ? '/trilha' : '/subjects')} className="flex-1">
                 <CheckCircle className="h-4 w-4 mr-2" />
                 {isTrailGame ? 'Voltar para a Trilha' : 'Ver outras matérias'}
               </Button>
-            <Button variant="outline" onClick={resetGame} className="w-full">
+            )}
+            <Button variant={playerLost ? "game" : "outline"} onClick={resetGame} className="w-full">
               <RotateCcw className="h-4 w-4 mr-2" />
-              Jogar Novamente
+              Tentar Novamente
             </Button>
+            {playerLost && (
+              <Button variant="outline" onClick={() => navigate(isTrailGame ? '/trilha' : '/subjects')} className="w-full">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {isTrailGame ? 'Voltar para a Trilha' : 'Voltar'}
+              </Button>
+            )}
           </div>
         </GameCard>
       </div>

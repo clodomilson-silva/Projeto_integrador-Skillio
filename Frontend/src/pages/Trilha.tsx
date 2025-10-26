@@ -17,7 +17,7 @@ const Trilha = () => {
   const { toast } = useToast();
   useTimeTracker();
 
-    const [checkingPlan, setCheckingPlan] = useState(true);
+  const [checkingPlan, setCheckingPlan] = useState(true);
 
   const [recompensasColetadas, setRecompensasColetadas] = useState<number[]>(() => {
       const saved = localStorage.getItem('recompensasColetadas');
@@ -32,32 +32,40 @@ const Trilha = () => {
         restDelta: 0.001
     });
 
-    // Guard: only allow access to Trilha if user has a study plan saved
-        useEffect(() => {
+    // Verifica se o usuário completou o quiz de nivelamento (tem performance data)
+    useEffect(() => {
         (async () => {
             try {
                 const resp = await apiClient.get('/users/me/');
-                let plan = resp.data?.profile?.study_plan;
-                if (typeof plan === 'string') {
-                    try { plan = JSON.parse(plan); } catch (e) { plan = null; }
-                }
-                const hasPlan = plan && Object.keys(plan).length > 0;
-                        if (!hasPlan) {
-                            toast({ title: 'Plano não encontrado', description: 'Você precisa gerar um plano de estudo antes de acessar a Trilha.' });
-                    navigate('/study-plan');
+                const performanceData = resp.data?.performance || [];
+                
+                // Verifica se há dados de performance com respostas registradas
+                const hasPerformanceData = performanceData.length > 0 && 
+                    performanceData.some((area: { subjects: { correct_answers: number; incorrect_answers: number }[] }) =>
+                        area.subjects.some((subject: { correct_answers: number; incorrect_answers: number }) => 
+                            subject.correct_answers > 0 || subject.incorrect_answers > 0
+                        )
+                    );
+                
+                if (!hasPerformanceData) {
+                    toast({ 
+                        title: 'Quiz de Nivelamento Pendente', 
+                        description: 'Você precisa completar o quiz de nivelamento antes de acessar a trilha.',
+                        variant: 'destructive'
+                    });
+                    navigate('/quiz-nivelamento');
                 } else {
                     setCheckingPlan(false);
                 }
             } catch (e) {
-                // If the request fails, allow access (optimistic) or optionally redirect; we'll allow but stop checking
-                console.warn('Could not verify study plan on server, allowing access by fallback.', e);
+                console.warn('Could not verify quiz completion, allowing access by fallback.', e);
                 setCheckingPlan(false);
             }
         })();
     }, [navigate, toast]);
 
             if (checkingPlan) {
-                return <LoadingAnimation text="Verificando plano de estudo..." subtext="Aguarde" />;
+                return <LoadingAnimation text="Verificando progresso..." subtext="Aguarde um momento" />;
             }
 
   const handleBlockClick = (nivel: number, blocoId: string) => {

@@ -305,6 +305,7 @@ const QuizNivelamento = () => {
             { acertos: 0, total: 0 }
           );
           const xpGanhos = acertos * 10;
+          console.log(`QuizNivelamento: Total acertos=${acertos}, XP a ganhar=${xpGanhos}`);
           setQuizResults({ acertos, total, xpGanhos });
 
           const dadosParaGrafico = Object.entries(analise).map(([name, value]) => ({
@@ -322,15 +323,22 @@ const QuizNivelamento = () => {
 
           // Persist performance and gamification data
           try {
-            await Promise.all([
-              updatePerformance(performanceResults),
-              addXp(xpGanhos),
-              resetHearts(),
-            ]);
+            console.log(`QuizNivelamento: Chamando addXp com ${xpGanhos} XP`);
+            
+            // Chama as funções separadamente para identificar qual está falhando
+            await updatePerformance(performanceResults);
+            console.log(`QuizNivelamento: updatePerformance concluído`);
+            
+            await addXp(xpGanhos);
+            console.log(`QuizNivelamento: addXp concluído - ${xpGanhos} XP adicionados`);
+            
+            await resetHearts();
+            console.log(`QuizNivelamento: resetHearts concluído`);
+            
             sessionStorage.setItem('justFinishedQuiz', 'true');
           } catch (e) {
-            console.warn('Failed to persist quiz data', e);
-            toast({ title: "Erro", description: "Houve um problema ao salvar seu progresso. Seus resultados podem não ter sido registrados." });
+            console.error('Failed to persist quiz data:', e);
+            toast({ title: "Erro", description: "Houve um problema ao salvar seu progresso. Seus resultados podem não ter sido registrados.", variant: "destructive" });
           }
 
           // Fire-and-forget request to generate study plan

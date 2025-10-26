@@ -120,23 +120,28 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [isAuthenticated, fetchGamificationData]);
 
-    // Novo cálculo de nível baseado em blocos completados: a cada 15 blocos, sobe 1 nível
+    // Cálculo de nível baseado em blocos completados: a cada 15 blocos, sobe 1 nível
     const calculatedLevel = Math.floor(blocosCompletos.length / 15) + 1;
-    const currentLevel = Math.max(stats.level, calculatedLevel); // Mantém o maior entre o calculado e o salvo
+    const currentLevel = Math.max(stats.level, calculatedLevel);
     const blocksInCurrentLevel = blocosCompletos.length % 15;
     const progressPercentage = (blocksInCurrentLevel / 15) * 100;
-    const xpForNextLevel = Math.floor(100 * Math.pow(currentLevel, 1.5)); // Mantém XP para outras funcionalidades
+    // XP para próximo nível é apenas visual (não afeta o level real)
+    const xpForNextLevel = Math.floor(100 * Math.pow(currentLevel, 1.5));
 
     const addXp = useCallback(async (amount: number) => {
         if (!isAuthenticated) return;
         try {
+            console.log(`useGamification.addXp: Chamando backend com ${amount} XP`);
             const response = await apiClient.post('/study/gamification/add-xp/', { amount });
+            console.log(`useGamification.addXp: Resposta do backend:`, response.data);
             const { level_up, new_level, new_xp } = response.data;
             if (level_up) {
                 toast({ title: `🚀 Level Up!`, description: `Você alcançou o Nível ${new_level}!`, className: 'bg-gradient-growth text-white border-none' });
             }
             // Refresh local gamification state with server values
+            console.log(`useGamification.addXp: Buscando dados atualizados...`);
             await fetchGamificationData();
+            console.log(`useGamification.addXp: Dados atualizados com sucesso`);
             // Notify other hooks/pages (Dashboard) that gamification data changed
             try {
                 window.dispatchEvent(new CustomEvent('app:data:updated', { detail: { type: 'gamification' } }));
@@ -145,7 +150,7 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
             }
             return { level_up, new_level, new_xp };
         } catch (error) {
-            console.error("Failed to add XP", error);
+            console.error("useGamification.addXp: ERRO ao adicionar XP:", error);
             // Repropaga o erro para que chamadores (Game, Quiz) possam reagir/exibir erro e evitar marcar como concluído
             throw error;
         }
@@ -170,11 +175,26 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         try {
             const resp = await apiClient.post('/study/gamification/lose-heart/');
             setHearts(resp.data.hearts);
+            // Notifica outros componentes que as vidas mudaram
+            // Despacha o evento após um pequeno delay para garantir que o estado foi atualizado
+            setTimeout(() => {
+                try {
+                    window.dispatchEvent(new CustomEvent('app:data:updated', { detail: { type: 'hearts', hearts: resp.data.hearts } }));
+                } catch (e) {
+                    console.error('Failed to dispatch hearts event', e);
+                }
+            }, 50);
             // Se ficou em 0, iniciamos verificação de recarga
+            if (resp.data.hearts === 0) {
+                // Após perder a última vida, tenta buscar o tempo de recarga
+                setTimeout(() => {
+                    fetchGamificationData();
+                }, 500);
+            }
         } catch (e) {
             console.error('Failed to lose heart', e);
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, fetchGamificationData]);
 
     const resetHearts = useCallback(async () => {
         if (!isAuthenticated) return;

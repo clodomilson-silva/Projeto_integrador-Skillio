@@ -142,6 +142,15 @@ REST_FRAMEWORK = {
     )
 }
 
+# SIMPLE JWT
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),  # Token expira em 2 horas
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token expira em 7 dias
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+}
+
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
 

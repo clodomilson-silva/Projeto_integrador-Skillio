@@ -102,14 +102,25 @@ const Dashboard = () => {
   const chartRef = useRef<any>(null);
 
   const { userData, performanceData, activities: apiActivities, isLoading, refetchData, error } = useDashboardData();
-  const { level, xp, streak, dailyQuests, blocosCompletos } = useGamification();
+  const { level, xp, streak, dailyQuests, blocosCompletos, hearts, nextRefillInSeconds } = useGamification();
 
   // determine if user has a study plan
   const studyPlan = (userData?.profile as any)?.study_plan ?? null;
 
   // Lógica para o botão de Nivelamento/Plano de Estudo
-  // initialQuizDone: true if user already has a study plan or has performance data
-  const initialQuizDone = useMemo(() => Boolean(studyPlan) || (performanceData && performanceData.length > 0), [studyPlan, performanceData]);
+  // initialQuizDone: true if user has performance data (quiz completed)
+  const initialQuizDone = useMemo(() => {
+    // Considera quiz feito se há dados de performance com respostas registradas
+    if (performanceData && performanceData.length > 0) {
+      const hasAnyAnswers = performanceData.some(area =>
+        area.subjects.some(subject => 
+          subject.correct_answers > 0 || subject.incorrect_answers > 0
+        )
+      );
+      return hasAnyAnswers;
+    }
+    return false;
+  }, [performanceData]);
   const blockCountOnQuizStart = parseInt(localStorage.getItem('blockCountOnQuizStart') || '0', 10);
   // canRetakeQuiz: only allow retake if user has completed at least one full level
   const hasCompletedAnyLevel = useMemo(() => {
@@ -154,13 +165,30 @@ const Dashboard = () => {
 
   const handleNextExercise = () => {
     if (initialQuizDone) {
+      // Se não tem vidas mas já fez o quiz, mostra mensagem informativa
+      if (hearts <= 0) {
+        const minutes = nextRefillInSeconds ? Math.floor(nextRefillInSeconds / 60) : 0;
+        const seconds = nextRefillInSeconds ? nextRefillInSeconds % 60 : 0;
+        toast({
+          title: "Sem vidas disponíveis! 💔",
+          description: `Você pode visualizar a trilha, mas não poderá iniciar novos blocos. ${
+            nextRefillInSeconds 
+              ? `Próxima vida em ${minutes}m ${seconds}s.` 
+              : 'As vidas recarregam a cada 3 minutos.'
+          }`,
+          variant: "default",
+        });
+      }
       navigate('/trilha');
     } else {
+      // Apenas impede se realmente não tiver feito o quiz
       toast({
         title: "Quiz de Nivelamento Pendente",
         description: "Você precisa concluir o quiz de nivelamento antes de acessar as lições.",
         variant: "destructive",
       });
+      // Redireciona para o quiz
+      navigate('/quiz-nivelamento');
     }
   };
 
@@ -286,7 +314,7 @@ const Dashboard = () => {
             <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-sm sm:text-base">
               <span className="flex items-center text-muted-foreground"><Star className="w-4 h-4 mr-1 text-amber-400"/>Nível: <b className="ml-1 text-primary">{level}</b></span>
               <span className="flex items-center text-muted-foreground"><Trophy className="w-4 h-4 mr-1 text-amber-400"/>Pontos: <b className="ml-1 text-primary">{xp} XP</b></span>
-              {streak && streak > 0 && <span className="flex items-center text-muted-foreground"><Flame className="w-4 h-4 mr-1 text-orange-500"/>Sequência: <b className="ml-1 text-orange-500">{streak} dias</b></span>}
+              {streak && streak > 0 && <span className="flex items-center text-muted-foreground"><Flame className="w-4 h-4 mr-1 text-orange-500"/>Sequência: {streak} dias</span>}
             </div>
           </div>
         </div>
@@ -295,14 +323,19 @@ const Dashboard = () => {
             <Link to="/quiz-nivelamento" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="w-full">Fazer Quiz de nivelamento</Button>
             </Link>
-          ) : canRetakeQuiz ? (
-            <Link to="/quiz-nivelamento" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full">Refazer Quiz de nivelamento</Button>
-            </Link>
           ) : (
-            <Link to="/study-plan" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full">Meu Plano de Estudo</Button>
-            </Link>
+            <>
+              {studyPlan && (
+                <Link to="/study-plan" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full">Meu Plano de Estudo</Button>
+                </Link>
+              )}
+              {canRetakeQuiz && (
+                <Link to="/quiz-nivelamento" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full">Refazer Quiz</Button>
+                </Link>
+              )}
+            </>
           )}
           <Button size="lg" className="bg-gradient-knowledge shadow-glow w-full sm:w-auto" onClick={handleNextExercise}>Próxima Lição</Button>
         </div>

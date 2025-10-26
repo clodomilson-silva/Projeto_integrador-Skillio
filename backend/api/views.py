@@ -43,7 +43,12 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         # Retorna o usuário associado à requisição atual
-        return self.request.user
+        user = self.request.user
+        # Force refresh gamification from DB
+        if hasattr(user, 'gamification'):
+            user.gamification.refresh_from_db()
+            print(f"UserProfileView.get_object: User {user.username} (ID: {user.id}), Gamification XP: {user.gamification.xp}, Level: {user.gamification.level}")
+        return user
 
     def update(self, request, *args, **kwargs):
         user = self.get_object()
@@ -204,18 +209,25 @@ class AddXpView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         amount = request.data.get('amount', 0)
         user = request.user
-        gamification = user.gamification
-        gamification.xp += amount
         
-        # Check for level up
-        xp_for_next_level = 100 * (gamification.level ** 1.5)
-        if gamification.xp >= xp_for_next_level:
-            gamification.level += 1
-            gamification.xp = gamification.xp - xp_for_next_level
+        # Force refresh from DB to avoid stale data
+        from django.db import transaction
+        with transaction.atomic():
+            gamification = Gamification.objects.select_for_update().get(user=user)
+            
+            print(f"AddXpView: User {user.username} (ID: {user.id}), adding {amount} XP")
+            print(f"AddXpView: Before - Level: {gamification.level}, XP: {gamification.xp}")
+            
+            # XP sempre acumula, nunca subtrai (10 XP por pergunta certa)
+            gamification.xp += amount
 
-        gamification.save()
+            gamification.save()
+            
+            print(f"AddXpView: After save - Level: {gamification.level}, XP: {gamification.xp}")
+            print(f"AddXpView: Gamification ID: {gamification.id}")
         
         return Response({
+            'level_up': False,  # Level sobe apenas quando completa 15 blocos, não por XP
             'new_level': gamification.level,
             'new_xp': gamification.xp
         }, status=status.HTTP_200_OK)
@@ -228,12 +240,14 @@ class LoseHeartView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         user = request.user
         gamification = user.gamification
+        print(f"LoseHeartView: User {user.username}, current hearts: {gamification.hearts}")
         if gamification.hearts > 0:
             gamification.hearts = max(0, gamification.hearts - 1)
-            # Ao perder a primeira vida, registra o tempo de início da recarga se ainda não houver
-            if gamification.hearts == 0 and gamification.hearts_last_refill is None:
+            # Ao perder a última vida, registra o tempo de início da recarga
+            if gamification.hearts == 0:
                 gamification.hearts_last_refill = timezone.now()
             gamification.save()
+            print(f"LoseHeartView: After save, hearts: {gamification.hearts}")
         return Response({'hearts': gamification.hearts}, status=status.HTTP_200_OK)
 
 
@@ -362,6 +376,16 @@ class CompleteBlockView(generics.GenericAPIView):
                 import json
                 profile.blocos_completos = json.dumps(current)
                 profile.save()
+
+            # Atualiza o level baseado em blocos completados (a cada 15 blocos = +1 nível)
+            new_level = (len(current) // 15) + 1
+            gamification = user.gamification
+            old_level = gamification.level
+            gamification.level = new_level
+            gamification.save()
+            
+            print(f"CompleteBlockView: User {user.username} completed block {block_id}")
+            print(f"CompleteBlockView: Total blocks: {len(current)}, Level: {old_level} -> {new_level}")
 
         return Response({'blocos_completos': current}, status=status.HTTP_200_OK)
 

@@ -13,7 +13,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
-  const { level, xp, xpForNextLevel, progressPercentage, streak, hearts, nextRefillInSeconds, refillHearts } = useGamification();
+  const { level, xp, xpForNextLevel, progressPercentage, streak, hearts, nextRefillInSeconds, refillHearts, refetchGamificationData } = useGamification();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [userProfile, setUserProfile] = useState<{ first_name: string; foto: string | null } | null>(null);
 
@@ -33,6 +33,23 @@ const Header = () => {
 
     fetchUserData();
   }, [isAuthenticated]);
+
+  // Escuta eventos de atualização de dados de gamificação
+  useEffect(() => {
+    const handleDataUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail;
+      if (detail && (detail.type === 'hearts' || detail.type === 'gamification')) {
+        // Força atualização dos dados quando vidas ou gamificação mudarem
+        refetchGamificationData();
+      }
+    };
+
+    window.addEventListener('app:data:updated', handleDataUpdate);
+    return () => {
+      window.removeEventListener('app:data:updated', handleDataUpdate);
+    };
+  }, [refetchGamificationData]);
 
   // Atualiza countdown local a partir de nextRefillInSeconds
   useEffect(() => {
