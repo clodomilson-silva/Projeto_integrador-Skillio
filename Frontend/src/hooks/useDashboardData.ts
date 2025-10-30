@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/api/axios';
 
@@ -29,6 +29,11 @@ export interface DashboardData {
   activities: Activity[] | null;
 }
 
+// Cache simples com timestamp
+let cachedData: DashboardData | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 30000; // 30 segundos
+
 export const useDashboardData = () => {
     const { isAuthenticated } = useAuth();
     const [data, setData] = useState<DashboardData>({
@@ -38,23 +43,48 @@ export const useDashboardData = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const isMountedRef = useRef(true);
 
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (forceRefresh = false) => {
         if (!isAuthenticated) {
             setIsLoading(false);
             return;
         }
+        
+        // Verifica cache
+        const now = Date.now();
+        if (!forceRefresh && cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
+            console.log('⏱️ useDashboardData: Usando cache');
+            setData(cachedData);
+            setIsLoading(false);
+            return;
+        }
+        
+        const startTime = performance.now();
+        console.log('⏱️ useDashboardData: Iniciando fetch...');
+        
         setIsLoading(true);
         setError(null);
         try {
-            // Faz apenas UMA requisição para /users/me/ que já retorna tudo
-            const userResponse = await apiClient.get('/users/me/');
-            const userData = userResponse.data;
+            // Faz as duas requisições em PARALELO para otimizar performance
+            console.log('⏱️ useDashboardData: Fazendo requisições paralelas...');
+            const requestStart = performance.now();
             
-            // Busca activity log separadamente (menor e mais rápido)
-            const activityResponse = await apiClient.get('/activity-log/');
+            const [userResponse, activityResponse] = await Promise.all([
+                apiClient.get('/users/me/'),
+                apiClient.get('/activity-log/')
+            ]);
+            
+            console.log(`⏱️ useDashboardData: Requisições completadas em ${(performance.now() - requestStart).toFixed(0)}ms`);
+            
+            if (!isMountedRef.current) return; // Componente desmontado
+            
+            const userData = userResponse.data;
             const activityData = activityResponse.data;
+            
+            console.log('⏱️ useDashboardData: Processando dados...');
+            const processStart = performance.now();
             
             // Normalize possible string fields (server may return JSON as string fallback)
             const profile = userData.profile || {};
@@ -73,26 +103,44 @@ export const useDashboardData = () => {
                 profile.study_plan = null;
             }
 
-            setData({
+            const newData = {
                 userData: {
                     first_name: userData.first_name,
                     profile,
                 },
                 performanceData: userData.performance || [],
                 activities: activityData || [],
-            });
+            };
+            
+            // Atualiza cache
+            cachedData = newData;
+            cacheTimestamp = Date.now();
+            
+            setData(newData);
+            
+            console.log(`⏱️ useDashboardData: Processamento completado em ${(performance.now() - processStart).toFixed(0)}ms`);
+            console.log(`⏱️ useDashboardData: TOTAL: ${(performance.now() - startTime).toFixed(0)}ms`);
 
         } catch (err) {
             console.error("Failed to fetch dashboard data", err);
-            setError(err as Error);
+            if (isMountedRef.current) {
+                setError(err as Error);
+            }
         } finally {
-            setIsLoading(false);
+            if (isMountedRef.current) {
+                setIsLoading(false);
+            }
         }
     }, [isAuthenticated]);
 
     useEffect(() => {
+        isMountedRef.current = true;
         fetchData();
+        
+        return () => {
+            isMountedRef.current = false;
+        };
     }, [fetchData]);
 
-    return { ...data, isLoading, error, refetchData: fetchData };
+    return { ...data, isLoading, error, refetchData: () => fetchData(true) };
 };
