@@ -239,6 +239,7 @@ const QuizNivelamento = () => {
   const [errorStreak, setErrorStreak] = useState(0);
   const [maxErrorStreak, setMaxErrorStreak] = useState(0);
   const [quizProcessado, setQuizProcessado] = useState(false);
+  const [gerandoPlano, setGerandoPlano] = useState(false);
 
   const [dadosGrafico, setDadosGrafico] = useState<DadosGrafico>([]);
 
@@ -418,27 +419,43 @@ const QuizNivelamento = () => {
             console.log(`QuizNivelamento: resetHearts concluído`);
             
             sessionStorage.setItem('justFinishedQuiz', 'true');
+            
+            // Gerar plano de estudo e AGUARDAR a conclusão
+            setGerandoPlano(true);
+            try {
+              console.log(`QuizNivelamento: Gerando plano de estudo...`);
+              await apiClient.post('/users/me/generate-study-plan/', {
+                analise,
+                maxStreak,
+                maxErrorStreak,
+              });
+              console.log(`QuizNivelamento: Plano de estudo gerado com sucesso!`);
+              
+              // Após gerar o plano, navega automaticamente para a tela do plano
+              setTimeout(() => {
+                navigate('/study-plan');
+              }, 1000); // Aguarda 1 segundo para dar feedback visual
+              
+            } catch (e) {
+              console.error('Failed to trigger study plan generation', e);
+              toast({ 
+                title: "Erro", 
+                description: "Não foi possível gerar seu plano de estudo. Tente novamente.", 
+                variant: "destructive" 
+              });
+              setGerandoPlano(false);
+            }
           } catch (e) {
             console.error('Failed to persist quiz data:', e);
             toast({ title: "Erro", description: "Houve um problema ao salvar seu progresso. Seus resultados podem não ter sido registrados.", variant: "destructive" });
           }
-
-          // Fire-and-forget request to generate study plan
-          apiClient.post('/users/me/generate-study-plan/', {
-            analise,
-            maxStreak,
-            maxErrorStreak,
-          }).catch(e => {
-            console.error('Failed to trigger study plan generation', e);
-            // Optionally, inform the user that the plan generation might fail
-          });
 
         } finally {
           setIsSubmitting(false);
         }
       })();
     }
-  }, [finalizado, quizProcessado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance, addXp, resetHearts]);
+  }, [finalizado, quizProcessado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance, addXp, resetHearts, navigate]);
 
   const proximaPergunta = (resposta: number | null) => {
     const perguntaAtual = perguntasNivelamento[indice];
@@ -481,57 +498,54 @@ const QuizNivelamento = () => {
     }, { acertos: 0, total: 0 });
 
     return (
-      <div className="min-h-screen bg-background p-4 sm:p-8">
-        <Card className="max-w-4xl mx-auto shadow-elevated overflow-hidden">
-          <CardHeader className="bg-muted/30 p-6">
-            <h2 className="text-3xl font-bold text-center text-primary">Seu Desempenho no Quiz!</h2>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Target size={20} /> Desempenho por Matéria</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}> 
-                  <BarChart data={dadosGrafico} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                    <XAxis type="number" hide />
-                    <YAxis type="category" dataKey="name" width={80} stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
-                    <Tooltip cursor={{ fill: 'rgba(240, 240, 240, 0.5)' }} contentStyle={{backgroundColor: '#fff', border: '1px solid #ccc'}}/>
-                    <Legend wrapperStyle={{paddingTop: '20px'}}/>
-                    <Bar dataKey="acertos" name="Acertos" stackId="a" fill="#22c55e" radius={[0, 4, 4, 0]} />
-                    <Bar dataKey="erros" name="Erros/Pulos" stackId="a" fill="#ef4444" radius={[4, 0, 0, 4]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card className="text-center p-4">
-                <Award size={24} className="mx-auto text-primary"/>
-                <p className="text-2xl font-bold mt-2">+{acertos * 10}</p>
-                <p className="text-xs text-muted-foreground">XP Ganhos</p>
-              </Card>
-              <Card className="text-center p-4">
-                <TrendingUp size={24} className="mx-auto text-green-500"/>
-                <p className="text-2xl font-bold mt-2">{maxStreak}</p>
-                <p className="text-xs text-muted-foreground">Melhor Sequência</p>
-              </Card>
-              <Card className="text-center p-4">
-                <TrendingDown size={24} className="mx-auto text-red-500"/>
-                <p className="text-2xl font-bold mt-2">{maxErrorStreak}</p>
-                <p className="text-xs text-muted-foreground">Pior Sequência</p>
-              </Card>
-              <Card className="text-center p-4">
-                <Star size={24} className="mx-auto text-yellow-400"/>
-                <p className="text-2xl font-bold mt-2">{acertos}/{total}</p>
-                <p className="text-xs text-muted-foreground">Acertos</p>
-              </Card>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-2xl w-full shadow-elevated">
+          <CardContent className="p-12 text-center space-y-8">
+            {/* Ícone animado */}
+            <div className="relative">
+              <div className="mx-auto w-24 h-24 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center animate-pulse">
+                <BookOpenCheck className="h-12 w-12 text-primary" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            </div>
+
+            {/* Mensagem principal */}
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Analisando Seu Desempenho
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Nossa IA está criando um plano de estudos personalizado para você...
+              </p>
+            </div>
+
+            {/* Estatísticas rápidas */}
+            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto pt-4">
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <p className="text-2xl font-bold text-primary">{acertos}/{total}</p>
+                <p className="text-xs text-muted-foreground mt-1">Questões Acertadas</p>
+              </div>
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <p className="text-2xl font-bold text-primary">+{acertos * 10}</p>
+                <p className="text-xs text-muted-foreground mt-1">XP Conquistados</p>
+              </div>
+            </div>
+
+            {/* Indicador de progresso */}
+            <div className="space-y-2 pt-4">
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <p className="text-sm font-medium text-primary">
+                  {gerandoPlano ? 'Gerando plano personalizado...' : 'Preparando análise...'}
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Você será redirecionado automaticamente em instantes
+              </p>
             </div>
           </CardContent>
-          <div className="p-6 border-t text-center">
-            <p className="text-muted-foreground mb-4">Seu plano de estudo personalizado está sendo gerado com IA!</p>
-            <Button size="lg" className="bg-gradient-growth" onClick={() => navigate("/study-plan")}>Avançar</Button>
-          </div>
         </Card>
       </div>
     );

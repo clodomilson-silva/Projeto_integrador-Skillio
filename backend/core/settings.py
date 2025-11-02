@@ -187,6 +187,10 @@ GAMIFICATION_REFILL_MINUTES = int(os.environ.get('GAMIFICATION_REFILL_MINUTES', 
 # AWS_DEFAULT_ACL = 'public-read' # Make files public by default
 # AWS_S3_REGION_NAME = 'us-east-1' # Optional: Specify a region
 
+# API Keys
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
+
 # SWAGGER / OpenAPI Configuration
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {

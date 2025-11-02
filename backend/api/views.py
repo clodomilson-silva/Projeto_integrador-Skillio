@@ -111,14 +111,78 @@ def gerar_plano_de_estudo(analise, escolaridade, foco, idade, max_streak, max_er
             return None
 
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash')
 
         desempenho = "\n".join([
             f"- **{area}**: Acertou {dados['acertos']} de {dados['acertos'] + dados['erros'] + dados['pulos']} (pulou {dados['pulos']})."
             for area, dados in analise.items()
         ])
 
-        prompt = f"""... (o mesmo prompt que estava no frontend) ..."""
+        prompt = f"""Você é um assistente educacional especializado. Com base nos dados abaixo, crie um plano de estudo personalizado em formato JSON.
+
+**Dados do Aluno:**
+- Idade: {idade} anos
+- Escolaridade: {escolaridade}
+- Foco de Estudo: {foco}
+- Maior sequência de acertos: {max_streak}
+- Maior sequência de erros: {max_error_streak}
+
+**Desempenho no Quiz:**
+{desempenho}
+
+**IMPORTANTE:**
+1. O plano DEVE priorizar a área de foco "{foco}" como primeira área no actionPlan
+2. Identifique os pontos fracos (áreas com mais erros ou pulos) e inclua nas focusPoints
+3. Identifique o ponto forte (área com melhor desempenho) para strength
+4. Crie um actionPlan com 3 áreas: a área de foco PRIMEIRO, depois outras áreas importantes
+5. Para cada área, forneça tópicos ESPECÍFICOS e DETALHADOS (não use tópicos genéricos)
+6. NUNCA mencione quebra-cabeças, enigmas ou jogos - sugira apenas estudo focado, exercícios práticos e revisão de conteúdos
+
+**Formato JSON esperado:**
+{{{{
+  "title": "Plano de Estudo - Foco em [área de foco]",
+  "greeting": "Olá! Com base no seu quiz, preparamos um plano focado em {foco}, incluindo outras áreas importantes.",
+  "analysis": {{{{
+    "summary": "Análise detalhada do desempenho no quiz com insights específicos",
+    "focusPoints": ["Área1 com dificuldade", "Área2 com dificuldade", "Área3 com dificuldade"],
+    "strength": "Área onde o aluno foi melhor"
+  }}}},
+  "actionPlan": [
+    {{{{
+      "area": "{foco} - [subtópico específico]",
+      "emoji": "📝",
+      "topics": [
+        {{{{ "title": "Tópico específico 1", "description": "Descrição detalhada" }}}},
+        {{{{ "title": "Tópico específico 2", "description": "Descrição detalhada" }}}},
+        {{{{ "title": "Tópico específico 3", "description": "Descrição detalhada" }}}},
+        {{{{ "title": "Tópico específico 4", "description": "Descrição detalhada" }}}}
+      ]
+    }}}},
+    {{{{
+      "area": "Segunda Área Importante",
+      "emoji": "➕",
+      "topics": [
+        {{{{ "title": "Tópico específico 1", "description": "Descrição" }}}},
+        {{{{ "title": "Tópico específico 2", "description": "Descrição" }}}}
+      ]
+    }}}},
+    {{{{
+      "area": "Terceira Área Importante",
+      "emoji": "📚",
+      "topics": [
+        {{{{ "title": "Tópico específico 1", "description": "Descrição" }}}},
+        {{{{ "title": "Tópico específico 2", "description": "Descrição" }}}}
+      ]
+    }}}}
+  ],
+  "nextChallenge": {{{{
+    "title": "Próximo Desafio",
+    "suggestion": "Sugestão motivadora sobre ESTUDAR conteúdos específicos, fazer exercícios práticos ou revisar matérias (NUNCA mencione quebra-cabeças, enigmas ou jogos)"
+  }}}},
+  "motivation": "Mensagem motivacional personalizada"
+}}}}
+
+Retorne APENAS o JSON, sem texto adicional."""
 
         print(f"   🤖 Chamando Gemini API...")
         response = model.generate_content(prompt)
@@ -160,8 +224,8 @@ class GenerateStudyPlanView(generics.GenericAPIView):
         print(f"   🎯 Focus do perfil: '{profile.focus}'")
 
         # Obter informações do perfil
-        escolaridade = profile.get_educational_level_display()
-        foco = profile.focus
+        escolaridade = profile.educational_level or "Ensino Médio"
+        foco = profile.focus or "Conhecimentos Gerais"
         idade = (timezone.now().date() - profile.birth_date).days // 365 if profile.birth_date else 25
 
         # Gerar o plano de estudo

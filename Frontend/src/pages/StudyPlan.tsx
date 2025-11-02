@@ -3,12 +3,10 @@ import apiClient from '@/api/axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowLeft, RefreshCw, Rocket } from 'lucide-react';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { ArrowLeft, BookOpenCheck } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
-import { trilhaPrincipal } from '@/data/trilhaPrincipal';
 import { Separator } from '@/components/ui/separator';
-import { BookOpenCheck } from 'lucide-react';
 import LoadingAnimation from '@/components/ui/LoadingAnimation';
 
 // Tipos do Plano de Estudo (espelhado de QuizNivelamento.tsx)
@@ -188,12 +186,14 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
   // Defensive: se plan ou partes essenciais estiverem ausentes, não quebre a UI
   if (!plan || !plan.analysis) {
     return (
-      <div className="p-6 text-center space-y-4">
-        <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-          <BookOpenCheck className="h-8 w-8 text-muted-foreground" />
+      <div className="p-8 sm:p-12 text-center space-y-6">
+        <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center animate-pulse">
+          <BookOpenCheck className="h-10 w-10 text-primary" />
         </div>
-        <h3 className="text-2xl font-bold text-primary">Plano de Estudo em Construção</h3>
-        <p className="text-muted-foreground max-w-md mx-auto">
+        <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Plano de Estudo em Construção
+        </h3>
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
           Sua análise personalizada está sendo gerada com base no seu desempenho no quiz de nivelamento. 
           Em breve, você terá um roteiro completo do básico ao avançado!
         </p>
@@ -252,46 +252,61 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
 
   return (
     <div className="space-y-8">
-      {/* Cabeçalho do Plano */}
-      <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-2">
-          <span className="text-sm font-semibold text-primary">📊 Análise Baseada no Quiz</span>
+      {/* Cabeçalho do Plano - Sóbrio e Profissional */}
+      <div className="text-center space-y-3">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-full mb-2">
+          <span className="text-xs font-semibold text-primary uppercase tracking-wide">Análise Personalizada</span>
         </div>
-        <h3 className="text-2xl font-bold text-primary">{plan.title || 'Seu Plano de Estudo Personalizado'}</h3>
-        <p className="text-muted-foreground">{plan.greeting || ''}</p>
+        <h3 className="text-2xl sm:text-3xl font-bold text-foreground">
+          {plan.title || 'Seu Plano de Estudo Personalizado'}
+        </h3>
+        <p className="text-muted-foreground text-sm max-w-2xl mx-auto">
+          {plan.greeting || ''}
+        </p>
       </div>
 
-      <Separator />
+      <Separator className="my-6" />
 
-      {/* Raio-X do Conhecimento */}
+      {/* Raio-X do Conhecimento - Compacto */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-1 bg-primary rounded-full"></div>
-          <h4 className="font-bold text-2xl">🔍 Raio-X do Seu Conhecimento</h4>
-        </div>
-        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <h4 className="font-bold text-lg flex items-center gap-2">
+          <span className="text-primary">📊</span>
+          Análise do Seu Desempenho
+        </h4>
+        <Card className="border border-border shadow-sm">
           <CardContent className="p-6 space-y-4">
-            <p className="text-base leading-relaxed">{plan.analysis.summary || ''}</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-              <div className="space-y-2">
+            <p className="text-sm leading-relaxed text-muted-foreground">{plan.analysis.summary || ''}</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {/* Áreas de Atenção */}
+              <div className="space-y-3 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-900">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">🎯</span>
-                  <p className="font-bold text-lg">Áreas que Precisam de Atenção</p>
+                  <span className="text-lg">🎯</span>
+                  <p className="font-semibold text-sm text-orange-900 dark:text-orange-100">
+                    Pontos de Atenção
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {focusPoints.map((point, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 rounded-full text-sm font-medium">
+                    <span 
+                      key={idx} 
+                      className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 rounded-md text-xs font-medium"
+                    >
                       {point}
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
+
+              {/* Ponto Forte */}
+              <div className="space-y-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-900">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">💪</span>
-                  <p className="font-bold text-lg">Seu Ponto Forte</p>
+                  <span className="text-lg">✓</span>
+                  <p className="font-semibold text-sm text-green-900 dark:text-green-100">
+                    Ponto Forte
+                  </p>
                 </div>
-                <span className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
+                <span className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-md text-xs font-medium">
                   {plan.analysis.strength || 'Identificando...'}
                 </span>
               </div>
@@ -300,86 +315,82 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
         </Card>
       </div>
 
-      {/* Plano de Ação Progressivo */}
+      {/* Plano de Ação - Design Profissional */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-1 bg-gradient-to-b from-green-500 via-yellow-500 to-red-500 rounded-full"></div>
-          <h4 className="font-bold text-2xl">🎓 Seu Plano de Estudos Detalhado</h4>
-        </div>
-        <p className="text-muted-foreground text-sm mb-6">
-          Com base na sua performance no quiz, organizamos os conteúdos que você precisa estudar do básico ao avançado.
+        <div className="flex items-center justify-between">
+          <h4 className="font-bold text-lg flex items-center gap-2">
+            <span className="text-primary">📚</span>
+            Áreas de Estudo Recomendadas
+          </h4>
           {userFocus && userFocus !== 'Conhecimentos Gerais' && (
-            <span className="block mt-2 text-primary font-semibold">
-              🎯 Priorizando: {userFocus}
+            <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+              Foco: {userFocus}
             </span>
           )}
-        </p>
+        </div>
         
-        <div className="space-y-6">
+        <div className="space-y-4">
           {actionPlanOrdenado.map((action: StudyPlanAction, index: number) => {
-            // Verifica se esta ação é do foco principal do usuário
             const ehFocoPrincipal = action.area.toLowerCase().includes((userFocus || '').toLowerCase());
-            console.log(`🎯 DEBUG Card ${action.area} - ehFocoPrincipal:`, ehFocoPrincipal, 'userFocus:', userFocus);
             
-            // Determina o nível e a cor baseado no índice
-            const nivelInfo = index === 0 
-              ? { nivel: 'Nível Básico', emoji: '🟢', cor: 'green' }
-              : index === 1 
-              ? { nivel: 'Nível Intermediário', emoji: '🟡', cor: 'yellow' }
-              : index === 2 
-              ? { nivel: 'Nível Avançado', emoji: '🔴', cor: 'red' }
-              : { nivel: `Nível ${index + 1}`, emoji: '🔵', cor: 'blue' };
-
-            const borderColor = nivelInfo.cor === 'green' ? 'border-l-green-500' 
-              : nivelInfo.cor === 'yellow' ? 'border-l-yellow-500'
-              : nivelInfo.cor === 'red' ? 'border-l-red-500'
-              : 'border-l-blue-500';
+            // Cores mais sóbrias
+            const cores = [
+              { borderColor: 'border-l-blue-500', bgColor: 'bg-blue-50/50 dark:bg-blue-950/10' },
+              { borderColor: 'border-l-purple-500', bgColor: 'bg-purple-50/50 dark:bg-purple-950/10' },
+              { borderColor: 'border-l-emerald-500', bgColor: 'bg-emerald-50/50 dark:bg-emerald-950/10' },
+              { borderColor: 'border-l-amber-500', bgColor: 'bg-amber-50/50 dark:bg-amber-950/10' },
+              { borderColor: 'border-l-rose-500', bgColor: 'bg-rose-50/50 dark:bg-rose-950/10' },
+              { borderColor: 'border-l-indigo-500', bgColor: 'bg-indigo-50/50 dark:bg-indigo-950/10' },
+            ];
+            
+            const corInfo = cores[index % cores.length];
 
             return (
-              <Card key={index} className={`overflow-hidden border-l-4 ${borderColor} ${ehFocoPrincipal ? 'ring-2 ring-primary/30' : ''}`}>
+              <Card 
+                key={index} 
+                className={`border-l-4 ${corInfo.borderColor} ${corInfo.bgColor} ${ehFocoPrincipal ? 'ring-2 ring-primary/30' : ''} hover:shadow-md transition-shadow`}
+              >
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{action.emoji}</span>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-xl font-bold">{action.area}</CardTitle>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-background rounded-lg flex items-center justify-center shadow-sm">
+                      <span className="text-2xl">{action.emoji}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <CardTitle className="text-base font-bold">{action.area}</CardTitle>
                         {ehFocoPrincipal && (
-                          <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
-                            SEU FOCO
+                          <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded">
+                            Foco Principal
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {nivelInfo.emoji} {nivelInfo.nivel} • {(action.topics || []).length} {(action.topics || []).length === 1 ? 'assunto' : 'assuntos'}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {(action.topics || []).length} {(action.topics || []).length === 1 ? 'tópico' : 'tópicos'}
                       </p>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <Separator className="mb-4" />
+                <CardContent className="pt-0 pb-4">
                   <div className="space-y-3">
                     {(action.topics || []).map((topic: StudyPlanTopic, i: number) => {
                       const topicoEnriquecido = enriquecerTopico(action.area, topic, i);
                       return (
-                        <div key={i} className="space-y-1.5">
+                        <div key={i} className="p-3 bg-background/80 rounded-md border border-border/50">
                           <div className="flex items-start gap-2">
-                            <span className="flex-shrink-0 text-primary font-bold text-sm mt-0.5">
-                              {i + 1}.
+                            <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground font-semibold text-xs rounded">
+                              {i + 1}
                             </span>
-                            <div className="flex-1 space-y-1">
-                              <p className="font-semibold text-base leading-tight">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm leading-snug mb-1">
                                 {topicoEnriquecido.title}
                               </p>
                               {topicoEnriquecido.description && (
-                                <p className="text-sm text-muted-foreground leading-relaxed pl-4">
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                   {topicoEnriquecido.description}
                                 </p>
                               )}
                             </div>
                           </div>
-                          {i < (action.topics || []).length - 1 && (
-                            <Separator className="my-3" />
-                          )}
                         </div>
                       );
                     })}
@@ -391,16 +402,22 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
         </div>
       </div>
 
-      <Separator />
+      <Separator className="my-6" />
 
-      {/* Próximo Desafio */}
-      <div className="text-center space-y-3 p-6 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-background rounded-full mb-2">
-          <span className="text-2xl">🚀</span>
-          <h4 className="font-bold text-lg">{plan.nextChallenge?.title || 'Próxima Etapa'}</h4>
+      {/* Próximo Desafio - Compacto e Elegante */}
+      <div className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg border border-border">
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-background rounded-full shadow-sm">
+            <span className="text-lg">🎯</span>
+            <h4 className="font-bold text-sm">{plan.nextChallenge?.title || 'Próxima Etapa'}</h4>
+          </div>
+          <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+            {plan.nextChallenge?.suggestion || ''}
+          </p>
+          <p className="font-semibold text-primary text-sm">
+            {plan.motivation || '💪 Continue sua jornada de aprendizado!'}
+          </p>
         </div>
-        <p className="text-muted-foreground max-w-2xl mx-auto">{plan.nextChallenge?.suggestion || ''}</p>
-        <p className="font-bold text-primary text-lg mt-4">{plan.motivation || '💪 Continue sua jornada de aprendizado!'}</p>
       </div>
     </div>
   );
@@ -408,102 +425,52 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
 
 const StudyPlan = () => {
   const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(null);
-  const [isRefazerAtivo, setIsRefazerAtivo] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const navigate = useNavigate();
-  const { level, blocosCompletos, userFocus } = useGamification();
+  const { userFocus } = useGamification();
 
-  console.log('🎯 DEBUG StudyPlan Component - userFocus:', userFocus);
-
-  useEffect(() => {
-    // Função para corrigir o plano de estudo com o foco correto do usuário
-    const corrigirFocoDoPlano = (plan: StudyPlan, focoReal: string): StudyPlan => {
-      if (!plan) return plan;
+  const carregarPlano = async () => {
+    try {
+      setCarregando(true);
+      console.log('🔍 StudyPlan: Carregando plano de estudo...');
+      const resp = await apiClient.get('/users/me/');
+      console.log('🔍 StudyPlan: Resposta completa:', resp.data);
       
-      // Atualiza o título e greeting para refletir o foco correto
-      return {
-        ...plan,
-        title: `Plano de Estudo - Foco em ${focoReal}`,
-        greeting: `Olá! Com base no seu quiz, preparamos um plano de estudo focado em ${focoReal}, incluindo outras áreas importantes.`,
-      };
-    };
-    
-    (async () => {
-      try {
-        // Try loading from server first
-        console.log('🎯 DEBUG: Carregando plano do servidor...');
-        const resp = await apiClient.get('/users/me/');
-        console.log('🎯 DEBUG: Resposta recebida:', resp.data);
-        console.log('🎯 DEBUG: Profile:', resp.data?.profile);
-        console.log('🎯 DEBUG: Profile.focus:', resp.data?.profile?.focus);
-        console.log('🎯 DEBUG: Profile.study_plan:', resp.data?.profile?.study_plan);
-        
-        let serverPlan = resp.data?.profile?.study_plan;
-        if (typeof serverPlan === 'string') {
-          console.log('🎯 DEBUG: Plano é string, fazendo parse...');
-          try {
-            serverPlan = JSON.parse(serverPlan);
-            console.log('🎯 DEBUG: Parse bem-sucedido:', serverPlan);
-          } catch (e) {
-            console.error('🎯 DEBUG: Erro no parse:', e);
-            serverPlan = null;
-          }
+      let serverPlan = resp.data?.profile?.study_plan;
+      console.log('🔍 StudyPlan: study_plan bruto:', serverPlan);
+      console.log('🔍 StudyPlan: Tipo do study_plan:', typeof serverPlan);
+      
+      if (typeof serverPlan === 'string') {
+        try {
+          serverPlan = JSON.parse(serverPlan);
+          console.log('🔍 StudyPlan: study_plan após parse:', serverPlan);
+        } catch (e) {
+          console.error('❌ StudyPlan: Erro ao fazer parse do plano:', e);
+          serverPlan = null;
         }
-        if (serverPlan && Object.keys(serverPlan).length > 0) {
-          console.log('🎯 DEBUG: Plano válido encontrado! Chaves:', Object.keys(serverPlan));
-          console.log('🎯 DEBUG: userFocus atual:', userFocus);
-          // Corrige o foco do plano para usar o foco real do usuário
-          const planCorrigido = corrigirFocoDoPlano(serverPlan, userFocus || 'Conhecimentos Gerais');
-          console.log('🎯 DEBUG: Plano corrigido:', planCorrigido);
-          setStudyPlan(planCorrigido);
-          setCarregando(false);
-          return;
-        } else {
-          console.log('🎯 DEBUG: Plano vazio ou inválido');
-          // if serverPlan exists but is empty object, treat as no plan
-          setStudyPlan(null);
-        }
-      } catch (e) {
-        // ignore and fallback to localStorage
-        console.error('🎯 DEBUG: Erro ao carregar do servidor:', e);
-        console.warn('Could not fetch study plan from server, falling back to localStorage', e);
       }
-
-      try {
-        const savedPlanString = localStorage.getItem('studyPlan');
-        if (savedPlanString) {
-          const savedPlan = JSON.parse(savedPlanString);
-          // Corrige o foco do plano para usar o foco real do usuário
-          const planCorrigido = corrigirFocoDoPlano(savedPlan, userFocus || 'Conhecimentos Gerais');
-          setStudyPlan(planCorrigido);
-        }
-      } catch (error) {
-        console.error("Falha ao carregar o plano de estudo do localStorage:", error);
-        setStudyPlan(null); // Garante que o estado é nulo se houver erro
-      } finally {
-        setCarregando(false);
+      
+      // Verifica se é um objeto vazio {} ou null
+      if (serverPlan && typeof serverPlan === 'object' && Object.keys(serverPlan).length > 0) {
+        console.log('✅ StudyPlan: Plano encontrado com', Object.keys(serverPlan).length, 'chaves');
+        setStudyPlan(serverPlan);
+        // Remove o flag após carregar com sucesso
+        sessionStorage.removeItem('justFinishedQuiz');
+      } else {
+        console.log('❌ StudyPlan: Nenhum plano encontrado ou plano vazio');
+        setStudyPlan(null);
       }
-    })();
-
-    // Leave isRefazerAtivo decision to separate effect that depends on studyPlan
-  }, [level, blocosCompletos, userFocus]);
-
-  // Decide if "Refazer Nivelamento" should be active:
-  // - Active if user has NO study plan (encorajar criar um)
-  // - OR if the current level's blocks are all complete
-  useEffect(() => {
-    const nivelAtualData = trilhaPrincipal.find(n => n.nivel === level);
-    const todosBlocosCompletos = nivelAtualData ? nivelAtualData.blocos.every(bloco => blocosCompletos.includes(bloco.id)) : false;
-    if (!studyPlan) {
-      setIsRefazerAtivo(true);
-    } else {
-      setIsRefazerAtivo(todosBlocosCompletos);
+    } catch (e) {
+      console.error('❌ StudyPlan: Erro ao carregar plano de estudo:', e);
+      setStudyPlan(null);
+    } finally {
+      setCarregando(false);
     }
-  }, [studyPlan, level, blocosCompletos]);
-
-  const handleNavigateToQuiz = () => {
-    navigate('/quiz-nivelamento');
   };
+
+  useEffect(() => {
+    carregarPlano();
+  }, []);
 
   if (carregando) {
     return <LoadingAnimation text="Carregando seu plano de estudo..." subtext="Aguarde enquanto buscamos seus dados." />;
@@ -511,146 +478,77 @@ const StudyPlan = () => {
 
   return (
     <TooltipProvider>
-      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-5xl">
         <Link to="/dashboard">
-          <Button variant="ghost" className="mb-6">
+          <Button variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Dashboard
+            Voltar
           </Button>
         </Link>
 
-        <main className="max-w-4xl mx-auto">
+        <main>
           {studyPlan ? (
-            // --- Visualização do Plano de Estudo Existente ---
-            <>
-              <Card className="mb-6">
-                <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-3xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
-                    Plano de Estudo Personalizado
-                  </CardTitle>
-                  <div className="text-center mt-3">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
-                      <span className="text-sm">🎯 Foco Principal:</span>
-                      <span className="font-bold text-primary text-base">{userFocus || 'Conhecimentos Gerais'}</span>
-                    </div>
-                    <p className="text-muted-foreground text-sm mt-2">
-                      Seu plano prioriza <strong>{userFocus || 'Conhecimentos Gerais'}</strong>, mas também inclui outras áreas essenciais
+            // --- Visualização do Plano de Estudo ---
+            <div className="space-y-6">
+              <Card className="border border-border shadow-sm">
+                <CardHeader className="pb-4 border-b">
+                  <div className="text-center space-y-3">
+                    <CardTitle className="text-2xl font-bold">
+                      Plano de Estudo Personalizado
+                    </CardTitle>
+                    {userFocus && userFocus !== 'Conhecimentos Gerais' && (
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
+                        <span className="text-sm">🎯</span>
+                        <span className="text-sm font-medium">Foco Principal:</span>
+                        <span className="text-sm font-bold text-primary">{userFocus}</span>
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+                      Recomendações baseadas no seu desempenho no quiz de nivelamento
                     </p>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <StudyPlanDisplay plan={studyPlan} userFocus={userFocus || 'Conhecimentos Gerais'} />
                 </CardContent>
               </Card>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              {/* Botão de Voltar */}
+              <div className="flex justify-center">
                 <Button 
+                  variant="outline"
                   size="lg" 
-                  className="bg-green-600 hover:bg-green-700 text-white"
                   onClick={() => navigate('/dashboard')}
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Ir para o Dashboard
+                  Ir para Dashboard
                 </Button>
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <Button 
-                        size="lg" 
-                        onClick={handleNavigateToQuiz} 
-                        disabled={!isRefazerAtivo}
-                      >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refazer Nivelamento
-                      </Button>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {isRefazerAtivo ? (
-                      <p>Parabéns! Você completou o nível e pode refazer o nivelamento.</p>
-                    ) : (
-                      <p>Complete todos os blocos do seu nível atual para refazer o nivelamento.</p>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
               </div>
-            </>
+            </div>
           ) : (
-            // --- Card para Fazer o Quiz de Nivelamento ---
-            <Card className="text-center p-8 sm:p-12 shadow-lg border-2 border-dashed">
-              <CardHeader>
-                <Rocket className="mx-auto h-20 w-20 text-primary mb-6 animate-pulse" />
-                <CardTitle className="text-3xl sm:text-4xl font-bold mb-3">
-                  Descubra Seu Caminho de Aprendizado!
-                </CardTitle>
-                {userFocus && (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mt-2">
-                    <span className="text-sm">🎯 Foco de Estudo:</span>
-                    <span className="font-bold text-primary">{userFocus}</span>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
-                  Faça nosso <strong>quiz de nivelamento inteligente</strong> e receba um plano de estudo 
-                  completamente personalizado, estruturado em <strong>3 níveis progressivos</strong>:
+            // --- Mensagem quando não há plano ---
+            <Card className="max-w-xl mx-auto">
+              <CardContent className="p-8 text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
+                  <BookOpenCheck className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-bold">Nenhum Plano Encontrado</h3>
+                <p className="text-sm text-muted-foreground">
+                  Complete o quiz de nivelamento para gerar seu plano de estudo personalizado.
                 </p>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-8">
-                  <Card className="p-4 bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
-                    <div className="text-3xl mb-2">🟢</div>
-                    <p className="font-bold text-sm">Básico</p>
-                    <p className="text-xs text-muted-foreground mt-1">Fundamentos essenciais</p>
-                  </Card>
-                  <Card className="p-4 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800">
-                    <div className="text-3xl mb-2">🟡</div>
-                    <p className="font-bold text-sm">Intermediário</p>
-                    <p className="text-xs text-muted-foreground mt-1">Consolidação do aprendizado</p>
-                  </Card>
-                  <Card className="p-4 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
-                    <div className="text-3xl mb-2">🔴</div>
-                    <p className="font-bold text-sm">Avançado</p>
-                    <p className="text-xs text-muted-foreground mt-1">Domínio completo</p>
-                  </Card>
-                </div>
-
-                <div className="bg-muted/50 rounded-lg p-6 space-y-3 text-left">
-                  <p className="font-semibold flex items-center gap-2">
-                    <span>✨</span> O que você vai receber:
-                  </p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary">📊</span>
-                      <span>Análise detalhada dos seus <strong>acertos e erros</strong></span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary">🎯</span>
-                      <span>Identificação das suas <strong>áreas fortes e fracas</strong></span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary">📚</span>
-                      <span>Roteiro progressivo: do <strong>básico ao avançado</strong></span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary">🚀</span>
-                      <span>Sugestões personalizadas para <strong>acelerar seu aprendizado</strong></span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <div className="flex gap-3 justify-center pt-2">
                   <Button 
-                    size="lg" 
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={carregarPlano}
+                    variant="outline"
+                    disabled={carregando}
+                  >
+                    {carregando ? 'Carregando...' : 'Recarregar'}
+                  </Button>
+                  <Button 
                     onClick={() => navigate('/dashboard')}
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Voltar ao Dashboard
-                  </Button>
-                  <Button size="lg" className="bg-gradient-growth" onClick={handleNavigateToQuiz}>
-                    <BookOpenCheck className="h-4 w-4 mr-2" />
-                    Iniciar Quiz de Nivelamento
+                    Voltar
                   </Button>
                 </div>
               </CardContent>
