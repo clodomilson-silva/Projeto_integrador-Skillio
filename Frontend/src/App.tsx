@@ -24,6 +24,7 @@ import Lesson from "./pages/Lesson";
 import EditProfile from "./pages/EditProfile";
 import StudyPlan from "./pages/StudyPlan";
 import Trilha from "./pages/Trilha";
+import QuickQuiz from "./pages/QuickQuiz";
 import PrivateRoute from "./components/PrivateRoute";
 import { GamificationProvider } from "@/hooks/useGamification";
 import FloatingTrilhaButton from "@/components/FloatingTrilhaButton";
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/quiz-nivelamento" element={<QuizNivelamento />} />
+                <Route path="/quiz-rapido" element={<QuickQuiz />} />
                 <Route path="/suporte" element={<Suporte />} />
                 <Route path="/study-plan" element={<StudyPlan />} />
                 <Route element={<PrivateRoute />}>

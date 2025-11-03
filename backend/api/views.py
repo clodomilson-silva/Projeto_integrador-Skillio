@@ -688,3 +688,45 @@ def get_user_avatar(request, user_id):
             return Response({'detail': 'Avatar not found'}, status=status.HTTP_404_NOT_FOUND)
     except User.DoesNotExist:
         return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def get_hero_stats(request):
+    """
+    Endpoint para obter estatísticas para a página Hero:
+    - Recorde de XP (usuário com maior XP)
+    - Número de jogadores online (usuários ativos nas últimas 24h)
+    """
+    try:
+        # Encontra o usuário com maior XP
+        top_user = User.objects.select_related('gamification', 'profile').filter(
+            gamification__isnull=False
+        ).order_by('-gamification__xp').first()
+        
+        record_holder = None
+        record_xp = 0
+        
+        if top_user and hasattr(top_user, 'gamification'):
+            record_holder = top_user.first_name or top_user.username
+            record_xp = int(top_user.gamification.xp)
+        
+        # Conta usuários ativos nas últimas 24 horas
+        last_24_hours = timezone.now() - timezone.timedelta(hours=24)
+        online_users = User.objects.filter(
+            activity_logs__date__gte=last_24_hours.date()
+        ).distinct().count()
+        
+        return Response({
+            'record': {
+                'holder': record_holder,
+                'xp': record_xp
+            },
+            'online_players': online_users
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'record': {'holder': None, 'xp': 0},
+            'online_players': 0
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
