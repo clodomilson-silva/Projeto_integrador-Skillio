@@ -730,3 +730,54 @@ def get_hero_stats(request):
             'record': {'holder': None, 'xp': 0},
             'online_players': 0
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def get_public_user(request, user_id):
+    """
+    Endpoint público para obter dados de qualquer usuário (sem informações sensíveis).
+    Usado para exibir perfis públicos a partir do ranking.
+    """
+    try:
+        user = get_object_or_404(
+            User.objects.select_related('profile', 'gamification'),
+            id=user_id
+        )
+        
+        # Serializa apenas dados públicos
+        foto_url = None
+        if hasattr(user, 'profile') and user.profile.foto:
+            foto_url = f"data:image/png;base64,{base64.b64encode(user.profile.foto).decode('utf-8')}"
+        
+        # Obtém achievements desbloqueados
+        achievements = []
+        if hasattr(user, 'userachievement_set'):
+            for ua in user.userachievement_set.select_related('achievement').all():
+                achievements.append({
+                    'id': ua.achievement.id,
+                    'name': ua.achievement.name,
+                    'description': ua.achievement.description,
+                    'icon': ua.achievement.icon,
+                    'unlocked_at': ua.unlocked_at.isoformat() if ua.unlocked_at else None
+                })
+        
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name or user.username,
+            'profile': {
+                'foto': foto_url,
+                'focus': user.profile.focus if hasattr(user, 'profile') else None
+            },
+            'gamification': {
+                'level': user.gamification.level if hasattr(user, 'gamification') else 1,
+                'xp': int(user.gamification.xp) if hasattr(user, 'gamification') else 0
+            },
+            'achievements': achievements
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({
+            'error': 'Usuário não encontrado',
+            'detail': str(e)
+        }, status=status.HTTP_404_NOT_FOUND)

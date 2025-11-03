@@ -25,6 +25,7 @@ import EditProfile from "./pages/EditProfile";
 import StudyPlan from "./pages/StudyPlan";
 import Trilha from "./pages/Trilha";
 import QuickQuiz from "./pages/QuickQuiz";
+import PublicProfile from "./pages/PublicProfile";
 import PrivateRoute from "./components/PrivateRoute";
 import { GamificationProvider } from "@/hooks/useGamification";
 import FloatingTrilhaButton from "@/components/FloatingTrilhaButton";
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="/game/:blocoId" element={<Game />} />
                 <Route path="/lesson/:subjectId" element={<Lesson />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/:userId" element={<PublicProfile />} />
                 <Route path="/edit-profile" element={<EditProfile />} />
                 <Route path="/ranking" element={<Ranking />} />
                 <Route path="/settings" element={<Settings />} />

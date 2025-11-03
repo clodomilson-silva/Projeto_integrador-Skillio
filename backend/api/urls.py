@@ -2,7 +2,7 @@ from django.urls import path
 from .views import CreateUserView, UserProfileView, UpdatePerformanceView, ActivityLogView, AddXpView, CompleteQuestView, CompleteBlockView, GenerateStudyPlanView
 from .views import LoseHeartView, ResetHeartsView, RefillHeartsView
 from .views import StudyPlanView
-from .views import DeleteAccountView, RankingView, get_user_avatar, get_hero_stats
+from .views import DeleteAccountView, RankingView, get_user_avatar, get_hero_stats, get_public_user
 
 urlpatterns = [
     path("users/register/", CreateUserView.as_view(), name="register"),
@@ -21,4 +21,5 @@ urlpatterns = [
     path('ranking/', RankingView.as_view(), name='ranking'),
     path('avatar/<int:user_id>/', get_user_avatar, name='user-avatar'),
     path('hero-stats/', get_hero_stats, name='hero-stats'),
+    path('users/<int:user_id>/', get_public_user, name='public-user'),
 ]

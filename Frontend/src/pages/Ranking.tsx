@@ -22,29 +22,31 @@ const getPositionIcon = (position: number) => {
 
 // Card de um jogador no ranking
 const RankingCard = ({ player, isCurrentUser }: { player: RankedUser, isCurrentUser: boolean }) => (
-  <GameCard className={`p-4 transition-all ${isCurrentUser ? 'border-2 border-primary shadow-lg' : ''}`}>
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3 sm:gap-4">
-        <div className="flex items-center justify-center w-10 h-10">
-          {getPositionIcon(player.rank)}
-        </div>
-        <Avatar className="w-12 h-12">
-          <AvatarImage src={player.avatar || undefined} alt={player.name} />
-          <AvatarFallback>{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h3 className={`font-bold ${isCurrentUser ? 'text-primary' : ''}`}>{player.name}</h3>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Star className="w-4 h-4 text-amber-400" />
-            <span>Nível {player.level}</span>
+  <Link to={`/profile/${player.id}`}>
+    <GameCard className={`p-4 transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer ${isCurrentUser ? 'border-2 border-primary shadow-lg' : ''}`}>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center justify-center w-10 h-10">
+            {getPositionIcon(player.rank)}
+          </div>
+          <Avatar className="w-12 h-12">
+            <AvatarImage src={player.avatar || undefined} alt={player.name} />
+            <AvatarFallback>{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className={`font-bold ${isCurrentUser ? 'text-primary' : ''}`}>{player.name}</h3>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Star className="w-4 h-4 text-amber-400" />
+              <span>Nível {player.level}</span>
+            </div>
           </div>
         </div>
+        <div className="text-right">
+          <div className="font-bold text-lg">{player.xp.toLocaleString()} XP</div>
+        </div>
       </div>
-      <div className="text-right">
-        <div className="font-bold text-lg">{player.xp.toLocaleString()} XP</div>
-      </div>
-    </div>
-  </GameCard>
+    </GameCard>
+  </Link>
 );
 
 // Componente que renderiza uma lista de ranking (pódio + resto)
@@ -93,16 +95,18 @@ const RankingList = ({
       {podium.length > 0 && (
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           {podium.map((player) => (
-            <GameCard key={player.id} className={`p-6 text-center border-2 ${player.rank === 1 ? 'border-yellow-400' : player.rank === 2 ? 'border-gray-300' : 'border-amber-500'}`}>
-              <div className="mb-3">{getPositionIcon(player.rank)}</div>
-              <Avatar className="w-20 h-20 mx-auto mb-3">
-                <AvatarImage src={player.avatar || undefined} alt={player.name} />
-                <AvatarFallback className="text-2xl">{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <h3 className="font-bold text-lg">{player.name}</h3>
-              <p className="text-sm text-muted-foreground">Nível {player.level}</p>
-              <p className="text-xl font-bold mt-1">{player.xp.toLocaleString()} XP</p>
-            </GameCard>
+            <Link key={player.id} to={`/profile/${player.id}`}>
+              <GameCard className={`p-6 text-center border-2 hover:scale-105 transition-transform cursor-pointer ${player.rank === 1 ? 'border-yellow-400' : player.rank === 2 ? 'border-gray-300' : 'border-amber-500'}`}>
+                <div className="mb-3">{getPositionIcon(player.rank)}</div>
+                <Avatar className="w-20 h-20 mx-auto mb-3">
+                  <AvatarImage src={player.avatar || undefined} alt={player.name} />
+                  <AvatarFallback className="text-2xl">{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <h3 className="font-bold text-lg">{player.name}</h3>
+                <p className="text-sm text-muted-foreground">Nível {player.level}</p>
+                <p className="text-xl font-bold mt-1">{player.xp.toLocaleString()} XP</p>
+              </GameCard>
+            </Link>
           ))}
         </div>
       )}
