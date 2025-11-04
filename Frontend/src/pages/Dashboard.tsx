@@ -314,7 +314,7 @@ const Dashboard = () => {
             <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-sm sm:text-base">
               <span className="flex items-center text-muted-foreground"><Star className="w-4 h-4 mr-1 text-amber-400"/>Nível: <b className="ml-1 text-primary">{level}</b></span>
               <span className="flex items-center text-muted-foreground"><Trophy className="w-4 h-4 mr-1 text-amber-400"/>Pontos: <b className="ml-1 text-primary">{xp} XP</b></span>
-              {streak && streak > 0 && <span className="flex items-center text-muted-foreground"><Flame className="w-4 h-4 mr-1 text-orange-500"/>Sequência: {streak} dias</span>}
+              {streak && streak > 0 && <span className="flex items-center text-muted-foreground"><Flame className="w-4 h-4 mr-1 text-secondary"/>Sequência: {streak} dias</span>}
             </div>
           </div>
         </div>
@@ -478,8 +478,8 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {dailyQuests && dailyQuests.map(quest => (
-                    <div key={quest.quest.id} className={`flex items-center gap-4 p-3 rounded-lg transition-all ${quest.is_completed ? 'bg-green-500/10' : 'bg-muted/50'}`}>
-                        <Checkbox id={quest.quest.id} checked={quest.is_completed} disabled className="data-[state=checked]:border-green-500 data-[state=checked]:bg-green-500" />
+                    <div key={quest.quest.id} className={`flex items-center gap-4 p-3 rounded-lg transition-all ${quest.is_completed ? 'bg-secondary/10' : 'bg-muted/50'}`}>
+                        <Checkbox id={quest.quest.id} checked={quest.is_completed} disabled className="data-[state=checked]:border-secondary data-[state=checked]:bg-secondary" />
                         <label htmlFor={quest.quest.id} className={`flex-1 text-sm ${quest.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                         {quest.quest.description}
                         </label>

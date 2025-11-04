@@ -279,10 +279,10 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               {/* Áreas de Atenção */}
-              <div className="space-y-3 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-900">
+              <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border/50">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🎯</span>
-                  <p className="font-semibold text-sm text-orange-900 dark:text-orange-100">
+                  <p className="font-semibold text-sm text-foreground">
                     Pontos de Atenção
                   </p>
                 </div>
@@ -290,7 +290,7 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
                   {focusPoints.map((point, idx) => (
                     <span 
                       key={idx} 
-                      className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 rounded-md text-xs font-medium"
+                      className="px-3 py-1 bg-secondary/10 text-secondary rounded-md text-xs font-medium"
                     >
                       {point}
                     </span>
@@ -299,14 +299,14 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
               </div>
 
               {/* Ponto Forte */}
-              <div className="space-y-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-900">
+              <div className="space-y-3 p-4 bg-secondary/5 dark:bg-secondary/10 rounded-lg border border-secondary/30 dark:border-secondary/20">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">✓</span>
-                  <p className="font-semibold text-sm text-green-900 dark:text-green-100">
+                  <p className="font-semibold text-sm text-secondary dark:text-secondary">
                     Ponto Forte
                   </p>
                 </div>
-                <span className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-md text-xs font-medium">
+                <span className="inline-block px-3 py-1 bg-secondary/10 dark:bg-secondary/20 text-secondary dark:text-secondary rounded-md text-xs font-medium">
                   {plan.analysis.strength || 'Identificando...'}
                 </span>
               </div>
@@ -333,14 +333,14 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
           {actionPlanOrdenado.map((action: StudyPlanAction, index: number) => {
             const ehFocoPrincipal = action.area.toLowerCase().includes((userFocus || '').toLowerCase());
             
-            // Cores mais sóbrias
+            // Cores modernas do design system
             const cores = [
-              { borderColor: 'border-l-blue-500', bgColor: 'bg-blue-50/50 dark:bg-blue-950/10' },
-              { borderColor: 'border-l-purple-500', bgColor: 'bg-purple-50/50 dark:bg-purple-950/10' },
-              { borderColor: 'border-l-emerald-500', bgColor: 'bg-emerald-50/50 dark:bg-emerald-950/10' },
-              { borderColor: 'border-l-amber-500', bgColor: 'bg-amber-50/50 dark:bg-amber-950/10' },
-              { borderColor: 'border-l-rose-500', bgColor: 'bg-rose-50/50 dark:bg-rose-950/10' },
-              { borderColor: 'border-l-indigo-500', bgColor: 'bg-indigo-50/50 dark:bg-indigo-950/10' },
+              { borderColor: 'border-l-primary', bgColor: 'bg-primary/5' },
+              { borderColor: 'border-l-secondary', bgColor: 'bg-secondary/5' },
+              { borderColor: 'border-l-accent', bgColor: 'bg-accent/5' },
+              { borderColor: 'border-l-warning', bgColor: 'bg-warning/5' },
+              { borderColor: 'border-l-destructive', bgColor: 'bg-destructive/5' },
+              { borderColor: 'border-l-success', bgColor: 'bg-success/5' },
             ];
             
             const corInfo = cores[index % cores.length];
