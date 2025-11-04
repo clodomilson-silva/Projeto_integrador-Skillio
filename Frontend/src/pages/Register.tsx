@@ -114,12 +114,14 @@ const Register = () => {
       });
       navigate("/quiz-nivelamento");
 
-    } catch (error: any) {
+    } catch (error) {
       let description = "Ocorreu um erro inesperado. Tente novamente.";
-      if (error.response && error.response.data) {
-        try {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
+        if (axiosError.response?.data) {
+          try {
             // Tenta extrair a mensagem de erro do DRF
-            const errors = error.response.data;
+            const errors = axiosError.response.data;
             const errorKey = Object.keys(errors)[0];
             const errorMessages = errors[errorKey];
             // Se for um erro de validação, será um array.
@@ -127,8 +129,9 @@ const Register = () => {
             const message = Array.isArray(errorMessages) ? errorMessages[0] : errorMessages;
             // O DRF retorna "user with this email already exists."
             description = message.replace("user with this email already exists.", "Já existe uma conta com este e-mail.");
-        } catch {
+          } catch {
             description = "Não foi possível processar o erro retornado pelo servidor."
+          }
         }
       }
       toast({
@@ -147,7 +150,7 @@ const Register = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-gradient-growth rounded-full shadow-green-glow"><User className="h-8 w-8 text-white" /></div>
+            <div className="p-3 bg-gradient-wisdom rounded-full shadow-orange-glow"><User className="h-8 w-8 text-white" /></div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">Criar Conta</h1>
           <p className="text-muted-foreground mt-2">Junte-se ao Skillio e comece a aprender</p>
@@ -188,7 +191,7 @@ const Register = () => {
                 <input type="checkbox" id="aceitouTermos" checked={aceitouTermos} onChange={e => setAceitouTermos(e.target.checked)} className="form-checkbox h-5 w-5 text-primary rounded border-border/50 focus:ring-2 focus:ring-primary mr-2" disabled={isLoading} />
                 <Label htmlFor="aceitouTermos">Aceito os termos e condições</Label>
               </div>
-              <Button type="submit" className="w-full bg-gradient-growth" disabled={isLoading || !(aceitouTermos && name && email && password && confirmPassword)}>Avançar</Button>
+              <Button type="submit" className="w-full" disabled={isLoading || !(aceitouTermos && name && email && password && confirmPassword)}>Avançar</Button>
               <div className="text-center mt-4"><p className="text-sm text-muted-foreground">Já possui conta? <Link to="/login" className="text-primary hover:underline">Login</Link></p></div>
             </form>
           )}
@@ -213,7 +216,7 @@ const Register = () => {
                 <Label htmlFor="profissao">Profissão <span className="text-muted-foreground">(Opcional)</span></Label>
                 <Input id="profissao" type="text" value={profissao} onChange={e => setProfissao(e.target.value)} placeholder="Sua profissão" disabled={isLoading} />
               </div>
-              <Button type="submit" className="w-full bg-gradient-growth" disabled={isLoading}>Avançar</Button>
+              <Button type="submit" className="w-full" disabled={isLoading}>Avançar</Button>
             </form>
           )}
 
@@ -224,7 +227,7 @@ const Register = () => {
                 <Input id="foco" type="text" value={foco} onChange={e => setFoco(e.target.value)} placeholder="Digite seu foco principal (ex: ENEM, Lógica...)" list="opcoesFoco" disabled={isLoading} />
                 <datalist id="opcoesFoco">{opcoesFoco.map((s, i) => <option key={i} value={s} />)}</datalist>
               </div>
-              <Button type="submit" className="w-full bg-gradient-growth" disabled={isLoading}>Avançar</Button>
+              <Button type="submit" className="w-full" disabled={isLoading}>Avançar</Button>
             </form>
           )}
 
@@ -235,7 +238,7 @@ const Register = () => {
                 <Input id="foto" type="file" accept="image/*" onChange={handleFotoChange} disabled={isLoading} />
                 {fotoPreview && <img src={fotoPreview} alt="Preview" className="mt-2 w-24 h-24 rounded-full object-cover mx-auto" />}
               </div>
-              <Button type="submit" className="w-full bg-gradient-growth" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}
               </Button>

@@ -115,7 +115,7 @@ const EditProfile = () => {
       }
     };
     fetchUserData();
-  }, [logout, toast]);
+  }, [logout, toast, isAccountDeleted]);
 
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -147,7 +147,7 @@ const EditProfile = () => {
     }
 
     // Log para depuração
-    for (let [key, value] of formData.entries()) {
+    for (const [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
 
@@ -196,9 +196,10 @@ const EditProfile = () => {
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-      } catch (error: any) {
+      } catch (error) {
         console.error("Erro ao alterar a senha:", error);
-        const errorMessage = error.response?.data?.detail || "Ocorreu um erro desconhecido.";
+        const axiosError = error as { response?: { data?: { detail?: string } } };
+        const errorMessage = axiosError.response?.data?.detail || "Ocorreu um erro desconhecido.";
         toast({
           title: "Erro ao alterar a senha",
           description: errorMessage,
@@ -241,9 +242,10 @@ const EditProfile = () => {
       
       navigate("/profile");
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro ao salvar o perfil:", error);
-      const errorData = error.response?.data;
+      const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
+      const errorData = axiosError.response?.data;
       let description = "Ocorreu um erro desconhecido.";
       if (errorData) {
         // Pega a primeira chave de erro (ex: 'email', 'profile.focus')
@@ -281,7 +283,7 @@ const EditProfile = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-gradient-growth rounded-full shadow-green-glow">
+            <div className="p-3 bg-gradient-wisdom rounded-full shadow-orange-glow">
               <User className="h-8 w-8 text-white" />
             </div>
           </div>
@@ -403,7 +405,7 @@ const EditProfile = () => {
                 </div>
             </div>
 
-            <Button type="submit" className="w-full bg-gradient-growth">Salvar Alterações</Button>
+            <Button type="submit" className="w-full">Salvar Alterações</Button>
           </form>
         </Card>
         <div className="mt-6 space-y-4">
