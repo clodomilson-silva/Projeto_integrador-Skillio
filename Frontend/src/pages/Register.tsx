@@ -114,12 +114,14 @@ const Register = () => {
       });
       navigate("/quiz-nivelamento");
 
-    } catch (error: any) {
+    } catch (error) {
       let description = "Ocorreu um erro inesperado. Tente novamente.";
-      if (error.response && error.response.data) {
-        try {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
+        if (axiosError.response?.data) {
+          try {
             // Tenta extrair a mensagem de erro do DRF
-            const errors = error.response.data;
+            const errors = axiosError.response.data;
             const errorKey = Object.keys(errors)[0];
             const errorMessages = errors[errorKey];
             // Se for um erro de validação, será um array.
@@ -127,8 +129,9 @@ const Register = () => {
             const message = Array.isArray(errorMessages) ? errorMessages[0] : errorMessages;
             // O DRF retorna "user with this email already exists."
             description = message.replace("user with this email already exists.", "Já existe uma conta com este e-mail.");
-        } catch {
+          } catch {
             description = "Não foi possível processar o erro retornado pelo servidor."
+          }
         }
       }
       toast({

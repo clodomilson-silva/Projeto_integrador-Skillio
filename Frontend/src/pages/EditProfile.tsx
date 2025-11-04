@@ -115,7 +115,7 @@ const EditProfile = () => {
       }
     };
     fetchUserData();
-  }, [logout, toast]);
+  }, [logout, toast, isAccountDeleted]);
 
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -147,7 +147,7 @@ const EditProfile = () => {
     }
 
     // Log para depuração
-    for (let [key, value] of formData.entries()) {
+    for (const [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
 
@@ -196,9 +196,10 @@ const EditProfile = () => {
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-      } catch (error: any) {
+      } catch (error) {
         console.error("Erro ao alterar a senha:", error);
-        const errorMessage = error.response?.data?.detail || "Ocorreu um erro desconhecido.";
+        const axiosError = error as { response?: { data?: { detail?: string } } };
+        const errorMessage = axiosError.response?.data?.detail || "Ocorreu um erro desconhecido.";
         toast({
           title: "Erro ao alterar a senha",
           description: errorMessage,
@@ -241,9 +242,10 @@ const EditProfile = () => {
       
       navigate("/profile");
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro ao salvar o perfil:", error);
-      const errorData = error.response?.data;
+      const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
+      const errorData = axiosError.response?.data;
       let description = "Ocorreu um erro desconhecido.";
       if (errorData) {
         // Pega a primeira chave de erro (ex: 'email', 'profile.focus')
