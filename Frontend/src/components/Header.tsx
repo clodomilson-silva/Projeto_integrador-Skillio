@@ -268,7 +268,7 @@ const Header = () => {
                 {/* Avatar e botão Sair - Visíveis em todas as telas */}
                 <Link to="/profile">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={userProfile?.foto || undefined} />
+                    <AvatarImage src={userProfile?.foto || undefined} className="object-cover" />
                     <AvatarFallback>{userProfile?.first_name ? userProfile.first_name.charAt(0) : 'U'}</AvatarFallback>
                   </Avatar>
                 </Link>
