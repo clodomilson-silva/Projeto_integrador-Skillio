@@ -99,7 +99,7 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-card/50 backdrop-blur-sm">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
           {/* Menu Hambúrguer - Mobile */}
           <div className="lg:hidden">
@@ -199,7 +199,7 @@ const Header = () => {
           {/* Logo - Centralizado em mobile, à esquerda em desktop */}
           <div className="flex items-center space-x-3 lg:flex-none absolute left-1/2 transform -translate-x-1/2 lg:static lg:transform-none">
             <Link to="/">
-              <img src="/logoSkillio2.svg" alt="Skillio" className="h-12 w-18 rounded-md object-cover" />
+              <img src="/logoSkillio2.svg" alt="Skillio" className="h-16 w-24 rounded-md object-cover" />
             </Link>
           </div>
 

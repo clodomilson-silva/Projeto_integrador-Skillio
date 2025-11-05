@@ -58,6 +58,7 @@ class UserPerformance(models.Model):
 class ActivityLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activity_logs')
     date = models.DateField()
+    timestamp = models.DateTimeField(auto_now_add=True, null=True)  # Novo campo para rastreamento em tempo real
     type = models.CharField(max_length=10, choices=[('pratica', 'Prática'), ('falha', 'Falha')])
 
     class Meta:

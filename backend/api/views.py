@@ -704,12 +704,13 @@ def get_hero_stats(request):
     """
     Endpoint OTIMIZADO para obter estatísticas para a página Hero:
     - Recorde de XP (usuário com maior XP)
-    - Número de jogadores online (usuários ativos nas últimas 24h)
+    - Número de jogadores online (usuários ativos nos últimos 15 minutos)
     
     OTIMIZAÇÕES:
     - only() para buscar apenas campos necessários
     - Limita query a apenas 1 usuário para recorde
     - Count otimizado com distinct()
+    - Rastreamento em tempo real usando ActivityLog.timestamp
     """
     try:
         # OTIMIZADO: Busca apenas o top 1 com os campos necessários
@@ -724,10 +725,13 @@ def get_hero_stats(request):
             record_holder = top_user.first_name or top_user.username
             record_xp = int(top_user.gamification.xp)
         
-        # OTIMIZADO: Count direto com distinct() ao invés de buscar todos os usuários
-        last_24_hours = timezone.now() - timezone.timedelta(hours=24)
+        # TEMPO REAL: Conta usuários ativos nos últimos 15 minutos
+        # ActivityLog agora tem timestamp (DateTimeField) para rastreamento preciso
+        # Filtra apenas registros com timestamp válido (não None)
+        last_15_minutes = timezone.now() - timezone.timedelta(minutes=15)
         online_users = User.objects.filter(
-            activity_logs__date__gte=last_24_hours.date()
+            activity_logs__timestamp__isnull=False,
+            activity_logs__timestamp__gte=last_15_minutes
         ).distinct().count()
         
         return Response({
