@@ -299,14 +299,14 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
               </div>
 
               {/* Ponto Forte */}
-              <div className="space-y-3 p-4 bg-secondary/5 dark:bg-secondary/10 rounded-lg border border-secondary/30 dark:border-secondary/20">
+              <div className="space-y-3 p-4 bg-green-500/5 dark:bg-green-500/10 rounded-lg border border-green-500/30 dark:border-green-500/20">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">✓</span>
-                  <p className="font-semibold text-sm text-secondary dark:text-secondary">
+                  <p className="font-semibold text-sm text-green-600 dark:text-green-500">
                     Ponto Forte
                   </p>
                 </div>
-                <span className="inline-block px-3 py-1 bg-secondary/10 dark:bg-secondary/20 text-secondary dark:text-secondary rounded-md text-xs font-medium">
+                <span className="inline-block px-3 py-1 bg-green-500/10 dark:bg-green-500/20 text-green-600 dark:text-green-500 rounded-md text-xs font-medium">
                   {plan.analysis.strength || 'Identificando...'}
                 </span>
               </div>
