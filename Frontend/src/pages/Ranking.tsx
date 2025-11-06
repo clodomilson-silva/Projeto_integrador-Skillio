@@ -2,13 +2,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/ui/game-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRanking, RankedUser } from "@/hooks/useRanking";
-import { useTopicCategorizer } from "@/hooks/useTopicCategorizer";
-import { ArrowLeft, ArrowRight, Award, Crown, Medal, Star, Trophy, Loader2 } from "lucide-react";
-import { useEffect, useState, useMemo, useRef } from "react";
-import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { RankedUser, useRanking } from "@/hooks/useRanking";
+import { useTopicCategorizer } from "@/hooks/useTopicCategorizer";
+import { cn } from "@/lib/utils";
+import { ArrowLeft, ArrowRight, Award, Crown, Loader2, Medal, Star, Trophy } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 // Ícone para as 3 primeiras posições
 const getPositionIcon = (position: number) => {
