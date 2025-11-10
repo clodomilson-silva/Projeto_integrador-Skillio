@@ -483,6 +483,15 @@ cd backend
 call venv\Scripts\activate.bat
 python manage.py runserver 192.168.0.89:8000
 
+
+ou 
+
+
+
+cd backend
+call venv\Scripts\activate.bat
+python manage.py runserver 192.168.206.80:8000
+
 # Frontend (outro terminal)
 cd Frontend
 npm run dev -- --host 0.0.0.0
