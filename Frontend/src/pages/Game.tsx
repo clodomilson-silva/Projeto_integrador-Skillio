@@ -333,6 +333,18 @@ const Game = () => {
         <GameCard variant="subject" className="p-8 text-center max-w-md bg-card">
           {playerLost ? (
             <>
+              {/* GIF de Derrota */}
+              <div className="mb-6 rounded-lg overflow-hidden shadow-2xl">
+                <img 
+                  src="/videos/defeat.gif" 
+                  alt="Derrota"
+                  className="w-full h-48 object-cover"
+                  onError={(e) => {
+                    // Se o GIF falhar ao carregar, esconde o elemento
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
               <HeartCrack className="h-20 w-20 mx-auto mb-6 text-red-500" />
               <h2 className="text-4xl font-bold mb-8 text-foreground">Quiz Encerrado!</h2>
               <div className="space-y-6 mb-8">
@@ -394,6 +406,18 @@ const Game = () => {
             </>
           ) : (
             <>
+              {/* GIF de Vitória */}
+              <div className="mb-6 rounded-lg overflow-hidden shadow-2xl">
+                <img 
+                  src="/videos/victory.gif" 
+                  alt="Vitória"
+                  className="w-full h-48 object-cover"
+                  onError={(e) => {
+                    // Se o GIF falhar ao carregar, esconde o elemento
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
               <Trophy className="h-16 w-16 mx-auto mb-6 text-warning" />
               <h2 className="text-3xl font-bold mb-4">{isTrailGame ? 'Bloco Concluído!' : 'Quiz Finalizado!'}</h2>
               {isTrailGame ? (

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview dos GIFs do Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .gif-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #f59e0b;
+        }
+        h2 {
+            color: #10b981;
+        }
+        img {
+            width: 100%;
+            max-width: 640px;
+            height: 360px;
+            border-radius: 8px;
+            display: block;
+            margin: 20px auto;
+            background: #000;
+            object-fit: cover;
+        }
+        .info {
+            background: #374151;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .info p {
+            margin: 8px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #065f46;
+            color: #d1fae5;
+        }
+        .error {
+            background: #991b1b;
+            color: #fee2e2;
+        }
+        code {
+            background: #1f2937;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .advantages {
+            background: #1e3a8a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .advantages h3 {
+            color: #93c5fd;
+            margin-top: 0;
+        }
+        .advantages li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Preview dos GIFs do Quiz</h1>
+    
+    <div class="advantages">
+        <h3>✨ Por que GIF é melhor que vídeo:</h3>
+        <ul>
+            <li>✅ <strong>10x mais leve</strong> - 300KB vs 3MB (carrega instantâneamente)</li>
+            <li>✅ <strong>Loop automático</strong> - Repete sozinho sem configuração</li>
+            <li>✅ <strong>Funciona em TODOS os navegadores</strong> - 100% compatível</li>
+            <li>✅ <strong>Sem problemas de codec</strong> - Não precisa MP4/WebM</li>
+            <li>✅ <strong>Milhões disponíveis grátis</strong> - GIPHY, Tenor, etc</li>
+            <li>✅ <strong>Mais fácil de implementar</strong> - Apenas tag &lt;img&gt;</li>
+        </ul>
+    </div>
+    
+    <div class="gif-container">
+        <h2>🏆 GIF de Vitória (victory.gif)</h2>
+        <img 
+            src="victory.gif" 
+            alt="Vitória" 
+            id="victory-gif"
+            onerror="this.style.display='none'; document.getElementById('victory-status').className='status error'; document.getElementById('victory-status').textContent='❌ GIF não encontrado. Adicione victory.gif aqui!';"
+            onload="document.getElementById('victory-status').className='status success'; document.getElementById('victory-status').textContent='✅ GIF de vitória carregado com sucesso!';"
+        />
+        <div class="info">
+            <p><strong>Quando aparece:</strong> Quando o jogador completa o bloco com sucesso</p>
+            <p><strong>Formato:</strong> GIF animado</p>
+            <p><strong>Duração:</strong> 2-4 segundos (loop automático)</p>
+            <p><strong>Tamanho ideal:</strong> 300-800 KB</p>
+            <p><strong>Conteúdo sugerido:</strong> Celebração, confetes, troféu, fogos</p>
+        </div>
+        <div id="victory-status" class="status error">⏳ Aguardando GIF...</div>
+    </div>
+
+    <div class="gif-container">
+        <h2>💔 GIF de Derrota (defeat.gif)</h2>
+        <img 
+            src="defeat.gif" 
+            alt="Derrota" 
+            id="defeat-gif"
+            onerror="this.style.display='none'; document.getElementById('defeat-status').className='status error'; document.getElementById('defeat-status').textContent='❌ GIF não encontrado. Adicione defeat.gif aqui!';"
+            onload="document.getElementById('defeat-status').className='status success'; document.getElementById('defeat-status').textContent='✅ GIF de derrota carregado com sucesso!';"
+        />
+        <div class="info">
+            <p><strong>Quando aparece:</strong> Quando o jogador perde (5 erros ou sem vidas)</p>
+            <p><strong>Formato:</strong> GIF animado</p>
+            <p><strong>Duração:</strong> 2-4 segundos (loop automático)</p>
+            <p><strong>Tamanho ideal:</strong> 300-800 KB</p>
+            <p><strong>Conteúdo sugerido:</strong> "Try again", motivacional, "não desista"</p>
+        </div>
+        <div id="defeat-status" class="status error">⏳ Aguardando GIF...</div>
+    </div>
+
+    <div class="gif-container">
+        <h2>📝 Como Baixar GIFs (Super Fácil!)</h2>
+        
+        <h3 style="margin-top: 30px;">🎨 Método 1: GIPHY (Mais Fácil)</h3>
+        <div class="info">
+            <p><strong>1.</strong> Acesse: <a href="https://giphy.com/" target="_blank" style="color: #60a5fa;">giphy.com</a></p>
+            <p><strong>2.</strong> Busque por: "celebration victory" ou "try again motivation"</p>
+            <p><strong>3.</strong> Clique no GIF que você gostou</p>
+            <p><strong>4.</strong> Botão direito → "Salvar imagem como..."</p>
+            <p><strong>5.</strong> Renomeie para <code>victory.gif</code> ou <code>defeat.gif</code></p>
+            <p><strong>6.</strong> Coloque na pasta: <code>Frontend/public/videos/</code></p>
+        </div>
+
+        <h3 style="margin-top: 30px;">🔍 Sugestões de Busca:</h3>
+        <div class="info">
+            <p><strong>Vitória:</strong></p>
+            <ul>
+                <li>"celebration confetti" - Confetes e celebração</li>
+                <li>"trophy winner" - Troféu animado</li>
+                <li>"fireworks success" - Fogos de artifício</li>
+                <li>"achievement unlocked" - Conquista desbloqueada</li>
+                <li>"level up animation" - Subir de nível</li>
+            </ul>
+            <p><strong>Derrota:</strong></p>
+            <ul>
+                <li>"try again motivation" - Tente novamente</li>
+                <li>"never give up" - Não desista</li>
+                <li>"you can do it" - Você consegue</li>
+                <li>"keep going" - Continue tentando</li>
+                <li>"game over retry" - Tentar novamente</li>
+            </ul>
+        </div>
+
+        <h3 style="margin-top: 30px;">🌐 Outros Sites Gratuitos:</h3>
+        <div class="info">
+            <p>🎬 <strong>Tenor:</strong> <a href="https://tenor.com/" target="_blank" style="color: #60a5fa;">tenor.com</a></p>
+            <p>🎨 <strong>Gfycat:</strong> <a href="https://gfycat.com/" target="_blank" style="color: #60a5fa;">gfycat.com</a></p>
+            <p>✨ <strong>LottieFiles:</strong> <a href="https://lottiefiles.com/" target="_blank" style="color: #60a5fa;">lottiefiles.com</a></p>
+        </div>
+
+        <h3 style="margin-top: 30px;">⚡ Se o GIF estiver muito grande:</h3>
+        <div class="info">
+            <p>Use <a href="https://ezgif.com/optimize" target="_blank" style="color: #60a5fa;">ezgif.com/optimize</a> para reduzir o tamanho</p>
+            <p>Dimensões ideais: 640x360 ou 480x270</p>
+            <p>Tamanho máximo recomendado: 1MB</p>
+        </div>
+    </div>
+
+    <div class="gif-container">
+        <h2>💡 Dicas Importantes</h2>
+        <div class="info">
+            <p>✅ Prefira GIFs curtos (2-4 segundos) que fazem loop bem</p>
+            <p>✅ Evite GIFs com texto em inglês (ou escolha sem texto)</p>
+            <p>✅ Teste no preview.html antes de usar no app</p>
+            <p>✅ GIFs coloridos e animados funcionam melhor</p>
+            <p>✅ Se possível, mantenha abaixo de 800KB</p>
+        </div>
+    </div>
+
+</body>
+</html>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .video-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #f59e0b;
+        }
+        h2 {
+            color: #10b981;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: 360px;
+            border-radius: 8px;
+            display: block;
+            margin: 20px auto;
+            background: #000;
+        }
+        .info {
+            background: #374151;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .info p {
+            margin: 8px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #065f46;
+            color: #d1fae5;
+        }
+        .error {
+            background: #991b1b;
+            color: #fee2e2;
+        }
+        code {
+            background: #1f2937;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Preview dos Vídeos do Quiz</h1>
+    
+    <div class="video-container">
+        <h2>🏆 Vídeo de Vitória (victory.mp4)</h2>
+        <video controls autoplay muted loop id="victory-video">
+            <source src="victory.mp4" type="video/mp4">
+            <source src="victory.webm" type="video/webm">
+            Seu navegador não suporta a tag de vídeo.
+        </video>
+        <div class="info">
+            <p><strong>Quando aparece:</strong> Quando o jogador completa o bloco com sucesso</p>
+            <p><strong>Formato:</strong> MP4 (H.264) ou WebM</p>
+            <p><strong>Duração recomendada:</strong> 3-5 segundos</p>
+            <p><strong>Conteúdo sugerido:</strong> Celebração, confetes, troféu brilhante</p>
+        </div>
+        <div id="victory-status" class="status"></div>
+    </div>
+
+    <div class="video-container">
+        <h2>💔 Vídeo de Derrota (defeat.mp4)</h2>
+        <video controls autoplay muted loop id="defeat-video">
+            <source src="defeat.mp4" type="video/mp4">
+            <source src="defeat.webm" type="video/webm">
+            Seu navegador não suporta a tag de vídeo.
+        </video>
+        <div class="info">
+            <p><strong>Quando aparece:</strong> Quando o jogador perde (5 erros ou sem vidas)</p>
+            <p><strong>Formato:</strong> MP4 (H.264) ou WebM</p>
+            <p><strong>Duração recomendada:</strong> 3-5 segundos</p>
+            <p><strong>Conteúdo sugerido:</strong> Mensagem motivacional, "tente novamente"</p>
+        </div>
+        <div id="defeat-status" class="status"></div>
+    </div>
+
+    <div class="video-container">
+        <h2>📝 Instruções de Uso</h2>
+        <div class="info">
+            <p><strong>1.</strong> Baixe seus vídeos de celebração e derrota (sites gratuitos na lista abaixo)</p>
+            <p><strong>2.</strong> Renomeie para <code>victory.mp4</code> e <code>defeat.mp4</code></p>
+            <p><strong>3.</strong> Coloque os arquivos na pasta: <code>Frontend/public/videos/</code></p>
+            <p><strong>4.</strong> Os vídeos aparecerão automaticamente no quiz!</p>
+        </div>
+        
+        <h3 style="margin-top: 30px;">🎬 Sites para Baixar Vídeos Gratuitos:</h3>
+        <div class="info">
+            <p>🌟 <strong>Pexels:</strong> <a href="https://www.pexels.com/videos/" target="_blank" style="color: #60a5fa;">www.pexels.com/videos</a></p>
+            <p>🎨 <strong>Pixabay:</strong> <a href="https://pixabay.com/videos/" target="_blank" style="color: #60a5fa;">pixabay.com/videos</a></p>
+            <p>🎞️ <strong>Mixkit:</strong> <a href="https://mixkit.co/free-stock-video/" target="_blank" style="color: #60a5fa;">mixkit.co/free-stock-video</a></p>
+            <p>📹 <strong>Videvo:</strong> <a href="https://www.videvo.net/" target="_blank" style="color: #60a5fa;">www.videvo.net</a></p>
+        </div>
+
+        <h3 style="margin-top: 30px;">🔍 Palavras-chave para buscar:</h3>
+        <div class="info">
+            <p><strong>Vitória:</strong> "celebration", "success", "trophy", "confetti", "fireworks", "winner", "achievement"</p>
+            <p><strong>Derrota:</strong> "try again", "motivational", "comeback", "never give up", "keep going"</p>
+        </div>
+    </div>
+
+    <script>
+        // Verifica se os vídeos carregaram corretamente
+        const victoryVideo = document.getElementById('victory-video');
+        const defeatVideo = document.getElementById('defeat-video');
+        const victoryStatus = document.getElementById('victory-status');
+        const defeatStatus = document.getElementById('defeat-status');
+
+        victoryVideo.addEventListener('loadeddata', () => {
+            victoryStatus.className = 'status success';
+            victoryStatus.textContent = '✅ Vídeo de vitória carregado com sucesso!';
+        });
+
+        victoryVideo.addEventListener('error', () => {
+            victoryStatus.className = 'status error';
+            victoryStatus.textContent = '❌ Vídeo de vitória não encontrado. Adicione victory.mp4 na pasta videos/';
+        });
+
+        defeatVideo.addEventListener('loadeddata', () => {
+            defeatStatus.className = 'status success';
+            defeatStatus.textContent = '✅ Vídeo de derrota carregado com sucesso!';
+        });
+
+        defeatVideo.addEventListener('error', () => {
+            defeatStatus.className = 'status error';
+            defeatStatus.textContent = '❌ Vídeo de derrota não encontrado. Adicione defeat.mp4 na pasta videos/';
+        });
+    </script>
+</body>
+</html>
