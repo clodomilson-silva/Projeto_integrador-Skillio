@@ -102,10 +102,12 @@ const AppNavigator = () => {
           animation: 'slide_from_right',
           contentStyle: {backgroundColor: '#0a0a0a'},
         }}
+        initialRouteName="Hero"
       >
         {!isAuthenticated ? (
           // Auth Stack
           <>
+            <Stack.Screen name="Hero" component={require('@screens/HeroScreen').default} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>

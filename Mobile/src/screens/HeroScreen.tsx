@@ -18,6 +18,8 @@ interface HeroStats {
 type RootStackParamList = {
   Trilha: undefined;
   QuizNivelamento: undefined;
+  Register: undefined;
+  Login: undefined;
 };
 
 const HeroScreen = () => {
@@ -56,6 +58,12 @@ const HeroScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.ctaOutline} onPress={() => navigation.navigate('QuizNivelamento')}>
             <Text style={styles.ctaOutlineText}>Quiz Rápido</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.ctaOutline} onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.ctaOutlineText}>Registrar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.ctaOutline} onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.ctaOutlineText}>Entrar</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.statsRow}>
