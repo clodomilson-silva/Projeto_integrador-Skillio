@@ -1,35 +1,19 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./App.{js,jsx,ts,tsx}', './src/**/*.{js,jsx,ts,tsx}'],
+  content: [
+    './App.{js,jsx,ts,tsx}',
+    './src/**/*.{js,jsx,ts,tsx}'
+  ],
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#3b82f6',
-          foreground: '#ffffff',
-        },
-        secondary: {
-          DEFAULT: '#f59e0b',
-          foreground: '#ffffff',
-        },
+        primary: '#3b82f6',
+        secondary: '#f59e0b',
         background: '#0a0a0a',
-        foreground: '#fafafa',
-        card: {
-          DEFAULT: '#1a1a1a',
-          foreground: '#fafafa',
-        },
-        muted: {
-          DEFAULT: '#262626',
-          foreground: '#a3a3a3',
-        },
-        accent: {
-          DEFAULT: '#22d3ee',
-          foreground: '#0a0a0a',
-        },
-        destructive: {
-          DEFAULT: '#ef4444',
-          foreground: '#ffffff',
-        },
+        card: '#1a1a1a',
+        muted: '#262626',
+        accent: '#22d3ee',
+        destructive: '#ef4444',
         border: '#262626',
         input: '#262626',
         ring: '#3b82f6',
@@ -37,15 +21,9 @@ module.exports = {
         success: '#22c55e',
       },
       borderRadius: {
-        lg: '12px',
-        md: '8px',
-        sm: '4px',
-      },
-      fontFamily: {
-        regular: ['System'],
-        medium: ['System'],
-        semibold: ['System'],
-        bold: ['System'],
+        lg: 12,
+        md: 8,
+        sm: 4,
       },
     },
   },

@@ -1,17 +1,22 @@
-import React from 'react';
-import {StatusBar, SafeAreaView, StyleSheet} from 'react-native';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {AuthProvider} from './src/contexts/AuthContext';
-import AppNavigator from './src/navigation/AppNavigator';
+import React from "react";
+import { StatusBar, SafeAreaView, StyleSheet, Text } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 function App(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
-        <AuthProvider>
-          <AppNavigator />
-        </AuthProvider>
+        <Text
+          style={{
+            color: "#fff",
+            fontSize: 24,
+            textAlign: "center",
+            marginTop: 40,
+          }}
+        >
+          Teste Expo Renderizando!
+        </Text>
       </SafeAreaView>
     </GestureHandlerRootView>
   );
@@ -20,7 +25,7 @@ function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: "#0a0a0a",
   },
 });
 

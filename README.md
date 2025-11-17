@@ -557,3 +557,34 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 ---
 
 Para dúvidas ou suporte, entre em contato com a equipe de desenvolvimento.
+
+# Progressive Web App (PWA)
+
+A interface web (Frontend) agora suporta PWA! Você pode instalar o Skillio como aplicativo no seu celular ou computador.
+
+**Como usar:**
+- Acesse o site pelo navegador (Chrome, Edge, Firefox, etc)
+- Procure o botão "Instalar" ou use o menu do navegador para adicionar à tela inicial
+- O app funciona offline e pode receber atualizações automáticas
+
+**Funcionalidades PWA:**
+- Instalação como app nativo
+- Ícone personalizado
+- Suporte offline básico
+- Atualização automática via service worker
+
+**Como testar localmente:**
+1. Execute o Frontend normalmente:
+   ```cmd
+   cd Frontend
+   npm run dev -- --host 0.0.0.0
+   ```
+2. Acesse pelo navegador: `http://localhost:5173` ou pelo IP da rede
+3. Instale o app usando o navegador
+
+**Observação:**
+- O PWA está disponível apenas na interface web (pasta Frontend)
+- As pastas "mobile" e "mobile22" não são afetadas
+- Para ícones personalizados, substitua os arquivos `Frontend/public/pwa-192x192.png` e `Frontend/public/pwa-512x512.png` por suas imagens
+
+---

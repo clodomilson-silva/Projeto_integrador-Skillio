@@ -18,6 +18,8 @@ import EditProfileScreen from '@screens/EditProfile';
 import SuporteScreen from '@screens/Suporte';
 import QuizPersonalizadoScreen from '@screens/QuizPersonalizado';
 
+import HeroScreen from '@screens/HeroScreen';
+import MenuFooter from '@components/MenuFooter';
 import {RootStackParamList, MainTabsParamList} from '@types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -96,36 +98,39 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          animation: 'slide_from_right',
-          contentStyle: {backgroundColor: '#0a0a0a'},
-        }}
-        initialRouteName="Hero"
-      >
-        {!isAuthenticated ? (
-          // Auth Stack
-          <>
-            <Stack.Screen name="Hero" component={require('@screens/HeroScreen').default} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-          </>
-        ) : (
-          // Main Stack
-          <>
-            <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="StudyPlan" component={StudyPlanScreen} />
-            <Stack.Screen name="Game" component={GameScreen} />
-            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-            <Stack.Screen name="Suporte" component={SuporteScreen} />
-            <Stack.Screen
-              name="QuizPersonalizado"
-              component={QuizPersonalizadoScreen}
-            />
-          </>
-        )}
-      </Stack.Navigator>
+      <>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animation: 'slide_from_right',
+            contentStyle: {backgroundColor: '#0a0a0a'},
+          }}
+          initialRouteName="Hero"
+        >
+          {!isAuthenticated ? (
+            // Auth Stack
+            <>
+              <Stack.Screen name="Hero" component={HeroScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+            </>
+          ) : (
+            // Main Stack
+            <>
+              <Stack.Screen name="MainTabs" component={MainTabs} />
+              <Stack.Screen name="StudyPlan" component={StudyPlanScreen} />
+              <Stack.Screen name="Game" component={GameScreen} />
+              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              <Stack.Screen name="Suporte" component={SuporteScreen} />
+              <Stack.Screen
+                name="QuizPersonalizado"
+                component={QuizPersonalizadoScreen}
+              />
+            </>
+          )}
+        </Stack.Navigator>
+        {isAuthenticated && <MenuFooter />}
+      </>
     </NavigationContainer>
   );
 };

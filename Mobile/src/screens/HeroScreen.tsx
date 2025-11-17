@@ -39,79 +39,41 @@ const HeroScreen = () => {
   }, []);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.badge}>
-          <View style={styles.badgeDot} />
-          <Text style={styles.badgeText}>Plataforma Educacional Gamificada</Text>
-        </View>
-        <Text style={styles.title}>
-          Aprenda Brincando com o <Text style={styles.gradient}>Skillio</Text>
-        </Text>
-        <Text style={styles.description}>
-          Transforme seus estudos em uma <Text style={styles.bold}>aventura emocionante</Text>. Jogue, aprenda e conquiste conhecimento em diversas disciplinas.
-        </Text>
-        <View style={styles.ctaRow}>
-          <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('Trilha')}>
-            <Ionicons name="play" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.ctaButtonText}>Começar a Jogar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaOutline} onPress={() => navigation.navigate('QuizNivelamento')}>
-            <Text style={styles.ctaOutlineText}>Quiz Rápido</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaOutline} onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.ctaOutlineText}>Registrar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaOutline} onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.ctaOutlineText}>Entrar</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>5+</Text>
-            <Text style={styles.statLabel}>Disciplinas</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>1000+</Text>
-            <Text style={styles.statLabel}>Perguntas</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>∞</Text>
-            <Text style={styles.statLabel}>Diversão</Text>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.mascotCard}>
+          <View style={styles.mascotBg} />
+          <Image source={mascot} style={styles.mascotImg} />
+          <View style={styles.heroStatsCards}>
+            <View style={styles.heroCard}>
+              <Ionicons name="trophy" size={28} color="#fbbf24" style={styles.heroCardIcon} />
+              {loading ? (
+                <ActivityIndicator size="small" color="#737373" />
+              ) : stats?.record.holder ? (
+                <View>
+                  <Text style={styles.heroCardLabel}>Recorde Atual</Text>
+                  <Text style={styles.heroCardValue}>{stats.record.holder} • {stats.record.xp} XP</Text>
+                </View>
+              ) : (
+                <Text style={styles.heroCardValue}>Seja o primeiro no ranking!</Text>
+              )}
+            </View>
+            <View style={styles.heroCard}>
+              <Ionicons name="people" size={28} color="#3b82f6" style={styles.heroCardIcon} />
+              {loading ? (
+                <ActivityIndicator size="small" color="#737373" />
+              ) : (
+                <View>
+                  <Text style={styles.heroCardLabel}>Jogadores Online</Text>
+                  <Text style={styles.heroCardValue}>{stats?.online_players || 0} ativos agora</Text>
+                </View>
+              )}
+            </View>
           </View>
         </View>
-      </View>
-      <View style={styles.mascotCard}>
-        <View style={styles.mascotBg} />
-        <Image source={mascot} style={styles.mascotImg} />
-        <View style={styles.heroStatsCards}>
-          <View style={styles.heroCard}>
-            <Ionicons name="trophy" size={28} color="#fbbf24" style={styles.heroCardIcon} />
-            {loading ? (
-              <ActivityIndicator size="small" color="#737373" />
-            ) : stats?.record.holder ? (
-              <View>
-                <Text style={styles.heroCardLabel}>Recorde Atual</Text>
-                <Text style={styles.heroCardValue}>{stats.record.holder} • {stats.record.xp} XP</Text>
-              </View>
-            ) : (
-              <Text style={styles.heroCardValue}>Seja o primeiro no ranking!</Text>
-            )}
-          </View>
-          <View style={styles.heroCard}>
-            <Ionicons name="people" size={28} color="#3b82f6" style={styles.heroCardIcon} />
-            {loading ? (
-              <ActivityIndicator size="small" color="#737373" />
-            ) : (
-              <View>
-                <Text style={styles.heroCardLabel}>Jogadores Online</Text>
-                <Text style={styles.heroCardValue}>{stats?.online_players || 0} ativos agora</Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+      {/* Rodapé fixo removido para debug */}
+    </View>
   );
 };
 
@@ -124,11 +86,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 32,
   },
-  header: {
-    width: '100%',
+  headerFixed: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#0a0a0a',
     alignItems: 'center',
-    paddingTop: 32,
-    paddingBottom: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+    zIndex: 10,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
   badge: {
     flexDirection: 'row',
