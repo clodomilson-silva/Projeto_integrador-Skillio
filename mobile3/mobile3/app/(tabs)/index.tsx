@@ -7,8 +7,9 @@ import {
   Image,
   ActivityIndicator,
   ScrollView,
-  SafeAreaView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import { User, UserCircle } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { LinearTextGradient } from "react-native-text-gradient";
@@ -23,6 +24,7 @@ interface HeroStats {
 
 export default function Hero() {
 
+  const navigation = useNavigation<any>();
   const [stats, setStats] = useState<HeroStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [shouldAnimate, setShouldAnimate] = useState(true); // Animação simplificada
@@ -61,7 +63,7 @@ export default function Hero() {
             locations={[0, 0.5, 1]}
             colors={["#3b82f6", "#22d3ee", "#e75327"]}
           >
-            Skillio
+            <Text style={styles.gradient}>Skillio</Text>
           </LinearTextGradient>
         </Text>
       )}
@@ -75,15 +77,15 @@ export default function Hero() {
 
       {/* CTAs */}
       <View style={styles.ctaRow}>
-        <TouchableOpacity style={styles.ctaButton} onPress={handleStartPlaying}>
+        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate("Register")}> 
           <User size={20} color="#fff" style={{ marginRight: 8 }} />
           <Text style={styles.ctaButtonText}>Cadastrar</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.ctaOutline}
-          onPress={() => alert("Login")}
+          onPress={() => navigation.navigate("Login")}
         >
-          <Text style={styles.ctaOutlineText}>Entar</Text>
+          <Text style={styles.ctaOutlineText}>Entrar</Text>
         </TouchableOpacity>
       </View>
 

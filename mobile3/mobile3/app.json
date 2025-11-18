@@ -23,6 +23,7 @@
       "output": "static",
       "favicon": "./assets/images/logoSkillio2.png"
     },
+    "jsEngine": "hermes",
     "plugins": [
       "expo-router",
       [
