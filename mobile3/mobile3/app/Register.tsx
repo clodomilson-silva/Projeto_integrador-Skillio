@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, StyleSheet, ScrollView, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useRouter } from 'expo-router';
 import axios from "axios";
-// import { useAuth } from "@/contexts/AuthContext";
-const useAuth = () => ({ login: () => {} }); // Placeholder
+import { useAuth } from './providers/AuthProvider';
 
 
 const TermosCondicoes = () => (
@@ -27,6 +26,7 @@ const opcoesFoco = ["ENEM", "Lógica", "Direito", "Português", "Matemática", "
 
 const Register = () => {
   const navigation = useNavigation<any>();
+  const router = useRouter();
   const { login } = useAuth();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -165,7 +165,7 @@ const Register = () => {
             <TouchableOpacity style={styles.button} onPress={handleAvancar} disabled={isLoading || !(aceitouTermos && name && email && password && confirmPassword)}>
               {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Avançar</Text>}
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")}> <Text style={styles.link}>Já possui conta? Login</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/Login')}> <Text style={styles.link}>Já possui conta? Entrar</Text></TouchableOpacity>
           </View>
         )}
         {step === 2 && (
@@ -217,11 +217,14 @@ const Register = () => {
             </TouchableOpacity>
           </View>
         )}
-        <TouchableOpacity onPress={() => navigation.navigate("Index")}><Text style={styles.link}>← Voltar para o início</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/' as any)}><Text style={styles.link}>← Voltar para o início</Text></TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
+
+
+
 
 const styles = StyleSheet.create({
   container: {

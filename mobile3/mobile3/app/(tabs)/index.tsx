@@ -9,9 +9,8 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { User, UserCircle } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from 'expo-router';
+import { User } from "lucide-react-native";
 import { LinearTextGradient } from "react-native-text-gradient";
 
 interface HeroStats {
@@ -24,7 +23,7 @@ interface HeroStats {
 
 export default function Hero() {
 
-  const navigation = useNavigation<any>();
+  const router = useRouter();
   const [stats, setStats] = useState<HeroStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [shouldAnimate, setShouldAnimate] = useState(true); // Animação simplificada
@@ -56,16 +55,16 @@ export default function Hero() {
       {shouldAnimate ? (
         <Text style={styles.title}>Aprenda Brincando com o Skillio</Text>
       ) : (
-        <Text style={styles.title}>
-          Aprenda Brincando com o{' '}
+        <View style={{ alignItems: 'center' }}>
+          <Text style={styles.title}>Aprenda Brincando com o</Text>
           <LinearTextGradient
             style={styles.gradient}
             locations={[0, 0.5, 1]}
             colors={["#3b82f6", "#22d3ee", "#e75327"]}
           >
-            <Text style={styles.gradient}>Skillio</Text>
+            <Text style={[styles.gradient, { fontSize: 32 }]}> Skillio</Text>
           </LinearTextGradient>
-        </Text>
+        </View>
       )}
 
       {/* Description */}
@@ -77,13 +76,13 @@ export default function Hero() {
 
       {/* CTAs */}
       <View style={styles.ctaRow}>
-        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate("Register")}> 
+        <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/Register')}> 
           <User size={20} color="#fff" style={{ marginRight: 8 }} />
           <Text style={styles.ctaButtonText}>Cadastrar</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.ctaOutline}
-          onPress={() => navigation.navigate("Login")}
+          onPress={() => router.push('/Login')}
         >
           <Text style={styles.ctaOutlineText}>Entrar</Text>
         </TouchableOpacity>

@@ -12,9 +12,9 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.skillio.app",
       "adaptiveIcon": {
         "backgroundColor": "transparent"
-       
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
