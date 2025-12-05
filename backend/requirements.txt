@@ -28,3 +28,6 @@ django-storage-supabase
 google-generativeai==0.5.4
 google-api-python-client==2.134.0
 drf-yasg==1.21.7
+gunicorn==21.2.0
+whitenoise==6.6.0
+dj-database-url==2.1.0

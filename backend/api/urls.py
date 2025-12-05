@@ -3,8 +3,10 @@ from .views import CreateUserView, UserProfileView, UpdatePerformanceView, Activ
 from .views import LoseHeartView, ResetHeartsView, RefillHeartsView
 from .views import StudyPlanView
 from .views import DeleteAccountView, RankingView, get_user_avatar, get_hero_stats, get_public_user, get_user_basic_info
+from .health import health_check
 
 urlpatterns = [
+    path("health/", health_check, name="health-check"),  # Health check para Render
     path("users/register/", CreateUserView.as_view(), name="register"),
     path("users/me/", UserProfileView.as_view(), name="user-detail"),
     path("users/me/basic/", get_user_basic_info, name="user-basic-info"),  # Endpoint leve
