@@ -71,7 +71,6 @@ services:
     name: skillio-frontend
     runtime: static
     plan: free
-    region: oregon
     buildCommand: |
       cd Frontend
       npm install
