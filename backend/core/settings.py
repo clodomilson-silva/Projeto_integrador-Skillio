@@ -95,6 +95,13 @@ DATABASES = {
     )
 }
 
+# Configurações otimizadas para AWS RDS com alta latência
+DATABASES['default']['OPTIONS'] = {
+    'connect_timeout': 30,  # Timeout de conexão (30 segundos)
+    'options': '-c statement_timeout=300000'  # Timeout de query (5 minutos)
+}
+DATABASES['default']['CONN_MAX_AGE'] = 0  # Desabilita pool persistente para evitar conexões travadas
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

@@ -146,6 +146,9 @@ const Trilha = () => {
                                 // Apenas o card desbloqueado (não completo) tem borda verde
                                 const isCurrentCard = status === 'desbloqueado' && !hasNoHearts;
 
+                                // Usa o índice dentro do nível (1-15) para repetir as mesmas imagens em todos os níveis
+                                const indiceImagem = i + 1;
+
                                 return (
                                     <motion.div
                                         key={bloco.id}
@@ -165,7 +168,7 @@ const Trilha = () => {
                                                 >
                                                     <div className="relative w-24 h-24">
                                                         <img
-                                                            src={`/Group ${indiceGlobal + 1}.svg`}
+                                                            src={`/Group ${indiceImagem}.svg`}
                                                             alt={bloco.titulo}
                                                             className="w-full h-full rounded-xl object-cover"
                                                         />

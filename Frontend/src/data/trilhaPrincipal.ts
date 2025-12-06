@@ -6,7 +6,7 @@ export interface Bloco {
 
 export interface NivelTrilha {
   nivel: number;       // The level number (1 to 30)
-  titulo: string;      // Ex: "Level 1: First Steps"
+  titulo: string;      // Ex: "Nível 1: First Steps"
   blocos: Bloco[];     // The list of 15 blocks
 }
 
@@ -16,7 +16,7 @@ export function gerarTrilhaPrincipal(): NivelTrilha[] {
   for (let i = 1; i <= 30; i++) {
     const nivelAtual: NivelTrilha = {
       nivel: i,
-      titulo: `Level ${i}`,
+      titulo: `Nível ${i}`,
       blocos: [],
     };
 
