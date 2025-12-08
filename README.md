@@ -102,58 +102,48 @@ stop.bat      # Windows: Para ambos os servidores
    cd projeto_integrador
    ```
 
-### Opção 1: Execução com Docker (Recomendado)
+### Opção 1: Execução com Docker (Recomendado) 🐳
 
-Esta é a forma mais simples de executar o projeto completo, pois configura automaticamente todos os serviços necessários.
+**A forma mais simples e confiável de executar o projeto!**
 
-#### Passos:
+✅ **Configurado para acesso em rede (PC, celular, tablet)**
+✅ **Usa AWS RDS (sem PostgreSQL local)**
+✅ **Scripts automatizados**
 
-1. **Certifique-se de que o Docker está instalado e rodando**
-
-2. **Execute o projeto:**
-   ```bash
-   docker-compose up --build
-   ```
-
-3. **Acesse as aplicações:**
-   - **Frontend**: http://localhost:3000
-   - **Backend API**: http://localhost:8000
-   - **Swagger UI**: http://localhost:8000/swagger/
-   - **ReDoc**: http://localhost:8000/redoc/
-   - **Admin Django**: http://localhost:8000/admin
-
-#### Acesso em Outro Dispositivo/Rede
-
-Para acessar de outro PC na mesma rede:
-
-1. **Descubra o IP do seu computador:**
-   - Windows: `ipconfig` no CMD
-   - Linux/Mac: `ifconfig` ou `ip addr` no terminal
-
-2. **Substitua `localhost` pelo seu IP:**
-   - Frontend: `http://SEU_IP:3000`
-   - Backend: `http://SEU_IP:8000`
-
-3. **Configure o firewall** para permitir conexões nas portas 3000 e 8000.
-
-#### Comandos Úteis do Docker
+#### 🚀 Início Rápido:
 
 ```bash
-# Parar os containers
-docker-compose down
-
-# Ver logs em tempo real
-docker-compose logs -f
-
-# Reconstruir e executar
-docker-compose up --build --force-recreate
-
-# Executar em background
-docker-compose up -d
-
-# Remover volumes (dados do banco)
-docker-compose down -v
+docker-start.bat     # Inicia tudo automaticamente
 ```
+
+#### 📊 Acessar:
+
+**Do próprio PC:**
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
+
+**De outro PC/celular (mesma WiFi):**
+1. Descubra seu IP: `ipconfig` (ex: 192.168.15.7)
+2. Frontend: `http://192.168.15.7:5173`
+3. Backend: `http://192.168.15.7:8000`
+
+#### 🛠️ Scripts Disponíveis:
+
+```bash
+docker-start.bat          # Inicia containers
+docker-stop.bat           # Para containers
+docker-logs.bat           # Ver logs
+docker-rebuild.bat        # Rebuild completo
+docker-diagnostico.bat    # Diagnóstico de rede
+```
+
+#### 📚 Documentação Completa:
+
+- **Guia Docker**: `DOCKER_README.md`
+- **Acesso em Rede**: `NETWORK_ACCESS_GUIDE.md`
+- **Resumo**: `DOCKER_NETWORK_SUMMARY.md`
+
+---
 
 ### Opção 2: Execução Local (Desenvolvimento)
 

@@ -53,8 +53,10 @@ Thumbs.db
 README.md
 Documentacao/
 
-# Mobile
+# Mobile (ignorar completamente)
+Mobile/
 mobile/
+mobile3/
 
 # Docker
 docker-compose*.yml
