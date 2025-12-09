@@ -3,6 +3,7 @@ from .views import CreateUserView, UserProfileView, UpdatePerformanceView, Activ
 from .views import LoseHeartView, ResetHeartsView, RefillHeartsView
 from .views import StudyPlanView
 from .views import DeleteAccountView, RankingView, get_user_avatar, get_hero_stats, get_public_user, get_user_basic_info
+from .views import get_profile_card, public_profile_page
 from .health import health_check
 
 urlpatterns = [
@@ -23,6 +24,8 @@ urlpatterns = [
     path('users/me/delete-account/', DeleteAccountView.as_view(), name='delete-account'),
     path('ranking/', RankingView.as_view(), name='ranking'),
     path('avatar/<int:user_id>/', get_user_avatar, name='user-avatar'),
+    path('users/<int:user_id>/card.png', get_profile_card, name='public-profile-card'),
+    path('users/<int:user_id>/public/', public_profile_page, name='public-profile-page'),
     path('hero-stats/', get_hero_stats, name='hero-stats'),
     path('users/<int:user_id>/', get_public_user, name='public-user'),
 ]

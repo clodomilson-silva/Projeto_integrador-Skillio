@@ -379,7 +379,7 @@ const EditProfile = () => {
                   <img 
                     src={fotoPreview} 
                     alt="Preview da foto de perfil" 
-                    className="w-48 h-28 rounded-full object-cover border-4 border-primary/20 shadow-lg" 
+                    className="w-48 h-48 rounded-full object-cover border-4 border-primary/20 shadow-lg" 
                   />
                 </div>
               )}

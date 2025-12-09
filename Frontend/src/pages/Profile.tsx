@@ -54,6 +54,7 @@ const Profile = () => {
   const { logout } = useAuth();
 
   const [userInfo, setUserInfo] = useState({
+    id: null as number | null,
     name: '',
     email: '',
     focus: '',
@@ -89,6 +90,7 @@ const Profile = () => {
         const { data } = response;
 
         setUserInfo({
+          id: data.id,
           name: data.first_name,
           email: data.email,
           focus: data.profile.focus,
@@ -134,21 +136,52 @@ const Profile = () => {
   }, []);
 
   const handleShare = async () => {
-    const profileText = `Meu Perfil Skillio:\nNome: ${userInfo.name}\nNível: ${level}\nXP: ${xp}\nBlocos Completos: ${blocosCompletos?.length || 0}`;
-
+    const publicUrl = userInfo.id ? `${window.location.origin}/api/v1/users/${userInfo.id}/public/` : window.location.href;
+    const profileText = `Meu Perfil Skillio:\nNome: ${userInfo.name}\nNível: ${level}\nXP: ${xp}\nBlocos Completos: ${blocosCompletos?.length || 0}\n${publicUrl}`;
+    // Tenta usar Web Share API primeiro (mobile/native)
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Meu Perfil Skillio', text: profileText, url: window.location.href });
-        toast({ title: "Perfil compartilhado!" });
+        await navigator.share({ title: 'Meu Perfil Skillio', text: profileText, url: publicUrl });
+        toast({ title: 'Perfil compartilhado!' });
+        return;
       } catch (error) {
-        toast({ title: "Falha ao compartilhar", variant: "destructive" });
+        // Se o usuário fechou o diálogo ou houve erro, continuamos para tentar copiar
+        console.warn('navigator.share error:', error);
       }
-    } else {
-      navigator.clipboard.writeText(profileText).then(() => {
-        toast({ title: "Perfil copiado para a área de transferência!" });
-      }).catch(() => {
-        toast({ title: "Falha ao copiar perfil", variant: "destructive" });
+    }
+
+    // Função utilitária de fallback para copiar texto (clipboard API ou execCommand)
+    const copyToClipboard = (text: string) => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+      }
+
+      return new Promise<void>((resolve, reject) => {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          // evita flash na tela
+          textarea.style.position = 'fixed';
+          textarea.style.left = '-9999px';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textarea);
+          if (successful) resolve();
+          else reject(new Error('copy command was unsuccessful'));
+        } catch (e) {
+          reject(e);
+        }
       });
+    };
+
+    try {
+      await copyToClipboard(profileText);
+      toast({ title: 'Link público copiado para a área de transferência!' });
+    } catch (err) {
+      console.error('Erro ao copiar perfil:', err);
+      toast({ title: 'Falha ao copiar link público', variant: 'destructive' });
     }
   };
 

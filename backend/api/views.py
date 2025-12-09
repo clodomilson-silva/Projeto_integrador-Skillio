@@ -12,6 +12,9 @@ import base64
 from django.conf import settings
 import google.generativeai as genai
 import json
+import io
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+from django.http import HttpResponse
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -695,6 +698,210 @@ def get_user_avatar(request, user_id):
         else:
             # Retorna 404 se não tiver foto
             return Response({'detail': 'Avatar not found'}, status=status.HTTP_404_NOT_FOUND)
+    except User.DoesNotExist:
+        return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def get_profile_card(request, user_id):
+    """
+    Gera dinamicamente um cartão visual do perfil como PNG (og:image friendly).
+    Retorna 1200x630 PNG com avatar, nome e stats básicos.
+    """
+    try:
+        user = get_object_or_404(User.objects.select_related('profile', 'gamification'), id=user_id)
+
+        # Tamanho padrão OG
+        width, height = 1200, 630
+        bg_color = (250, 250, 255)
+
+        img = Image.new('RGBA', (width, height), bg_color)
+        draw = ImageDraw.Draw(img)
+
+        # Carrega avatar se existir
+        avatar_size = 280
+        avatar_x = 80
+        avatar_y = (height - avatar_size) // 2
+
+        if hasattr(user, 'profile') and user.profile and user.profile.foto:
+            try:
+                avatar_bytes = io.BytesIO(user.profile.foto)
+                avatar = Image.open(avatar_bytes).convert('RGBA')
+                avatar = ImageOps.fit(avatar, (avatar_size, avatar_size), centering=(0.5, 0.5))
+                # Máscara circular
+                mask = Image.new('L', (avatar_size, avatar_size), 0)
+                mask_draw = ImageDraw.Draw(mask)
+                mask_draw.ellipse((0, 0, avatar_size, avatar_size), fill=255)
+                img.paste(avatar, (avatar_x, avatar_y), mask)
+            except Exception:
+                # Se falhar ao processar avatar, cai para fallback
+                avatar = None
+        else:
+            avatar = None
+
+        # Se não há avatar, desenha círculo com iniciais
+        if avatar is None:
+            circle_color = (59, 130, 246)  # azul
+            mask = Image.new('RGBA', (avatar_size, avatar_size), (0, 0, 0, 0))
+            mask_draw = ImageDraw.Draw(mask)
+            mask_draw.ellipse((0, 0, avatar_size, avatar_size), fill=circle_color)
+            img.paste(mask, (avatar_x, avatar_y), mask)
+
+            initials = ''.join([part[0] for part in (user.first_name or user.username).split()][:2]).upper()
+            try:
+                font = ImageFont.truetype(str(settings.BASE_DIR / 'fonts' / 'Inter-Bold.ttf'), 72)
+            except Exception:
+                font = ImageFont.load_default()
+            w, h = draw.textsize(initials, font=font)
+            draw.text((avatar_x + (avatar_size - w) / 2, avatar_y + (avatar_size - h) / 2), initials, fill='white', font=font)
+
+        # Texto: nome, level e xp
+        try:
+            title_font = ImageFont.truetype(str(settings.BASE_DIR / 'fonts' / 'Inter-Bold.ttf'), 56)
+            subtitle_font = ImageFont.truetype(str(settings.BASE_DIR / 'fonts' / 'Inter-Regular.ttf'), 32)
+        except Exception:
+            title_font = ImageFont.load_default()
+            subtitle_font = ImageFont.load_default()
+
+        text_x = avatar_x + avatar_size + 60
+        text_y = avatar_y + 20
+
+        display_name = (user.first_name or user.username)
+        draw.text((text_x, text_y), display_name, fill=(20, 20, 20), font=title_font)
+
+        # Gamification info
+        level = getattr(user.gamification, 'level', 1) if hasattr(user, 'gamification') else 1
+        xp = int(getattr(user.gamification, 'xp', 0)) if hasattr(user, 'gamification') else 0
+        sub_text = f"Nível {level} • {xp} XP"
+        draw.text((text_x, text_y + 90), sub_text, fill=(80, 80, 80), font=subtitle_font)
+
+        # Pequena linha inferior com site
+        footer_font = subtitle_font
+        footer_text = getattr(settings, 'SITE_NAME', 'Skillio')
+        fw, fh = draw.textsize(footer_text, font=footer_font)
+        draw.text((width - fw - 40, height - fh - 30), footer_text, fill=(120, 120, 120), font=footer_font)
+
+        output = io.BytesIO()
+        img.convert('RGB').save(output, format='PNG', optimize=True)
+        output.seek(0)
+
+        return HttpResponse(output.read(), content_type='image/png')
+
+    except User.DoesNotExist:
+        return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def public_profile_page(request, user_id):
+    """
+    Retorna uma página pública básica do perfil com meta tags Open Graph
+    apontando para o `card.png` gerado acima.
+    """
+    try:
+        user = get_object_or_404(User, id=user_id)
+
+        card_url = request.build_absolute_uri(f"/api/users/{user_id}/card.png")
+        profile_url = request.build_absolute_uri(f"/api/v1/users/{user_id}/public/")
+
+        # Dados para exibição
+        level = getattr(user.gamification, 'level', 1) if hasattr(user, 'gamification') else 1
+        xp = int(getattr(user.gamification, 'xp', 0)) if hasattr(user, 'gamification') else 0
+        streak = getattr(user.gamification, 'streak', 0) if hasattr(user, 'gamification') else 0
+        display_name = user.first_name or user.username
+
+        # Frase de convite customizável
+        invite_text = getattr(settings, 'PROFILE_INVITE_PHRASE', 'Junte-se a mim no Skillio e comece a aprender de forma divertida e gamificada!')
+
+        og_description = f"{display_name} — Nível {level} • {xp} XP • {streak} dias em sequência"
+
+        html = f"""
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta property="og:title" content="{display_name} — Skillio" />
+    <meta property="og:description" content="{og_description} - {invite_text}" />
+    <meta property="og:image" content="{card_url}" />
+    <meta property="og:type" content="profile" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Perfil público — {display_name}</title>
+    <style>
+        :root{{--bg:#f3f4f6;--card:#ffffff;--muted:#6b7280;--accent:#3b82f6}}
+        html,body{{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial}}
+        body{{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;color:#0f172a}}
+        .card{{width:100%;max-width:900px;background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(2,6,23,0.08);display:flex;gap:28px;overflow:hidden}}
+        .left{{flex:0 0 420px;background:linear-gradient(180deg,rgba(59,130,246,0.06),transparent);display:flex;align-items:center;justify-content:center;padding:32px}}
+        .right{{flex:1;padding:32px;display:flex;flex-direction:column;justify-content:center}}
+        .avatar-wrap{{width:220px;height:220px;border-radius:20px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(180deg,var(--accent),#60a5fa);box-shadow:0 8px 20px rgba(59,130,246,0.12)}}
+        .avatar-wrap img{{width:100%;height:100%;object-fit:cover}}
+        h1{{margin:0;font-size:32px;color:#0b1220}}
+        .meta{{margin-top:8px;color:var(--muted);font-size:15px}}
+        .lead{{margin-top:18px;color:#334155;font-size:16px;line-height:1.45}}
+        .actions{{margin-top:22px;display:flex;gap:12px;align-items:center}}
+        .btn{{padding:10px 16px;border-radius:10px;border:0;cursor:pointer;font-weight:600}}
+        .btn-primary{{background:var(--accent);color:white;box-shadow:0 6px 18px rgba(59,130,246,0.18)}}
+        .btn-ghost{{background:transparent;border:1px solid #e6edf9;color:var(--accent)}}
+        .card-image{{width:100%;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}}
+
+        @media (max-width:880px){{
+            .card{{flex-direction:column}}
+            .left{{flex:0 0 auto;padding:20px}}
+            .avatar-wrap{{width:160px;height:160px;border-radius:16px}}
+        }}
+    </style>
+</head>
+<body>
+    <div class="card" role="article" aria-label="Perfil público {display_name}">
+        <div class="left">
+            <div style="text-align:center">
+                <div class="avatar-wrap">
+                    <img src="{card_url}" alt="{display_name} card image" />
+                </div>
+                <div style="margin-top:14px;color:var(--muted);font-size:13px">{footer_text}</div>
+            </div>
+        </div>
+        <div class="right">
+            <h1>{display_name}</h1>
+            <div class="meta">Nível {level} • {xp} XP • {streak} dias em sequência</div>
+            <p class="lead">{invite_text}</p>
+
+            <div class="actions">
+                <button class="btn btn-primary" onclick="shareProfile()">Compartilhar</button>
+                <button class="btn btn-ghost" onclick="copyLink()">Copiar link</button>
+            </div>
+
+            <div style="margin-top:18px;color:var(--muted);font-size:13px">Abra este link em um app de mensagens para ver a prévia com imagem.</div>
+        </div>
+    </div>
+
+    <script>
+        const profileUrl = "{profile_url}";
+        async function shareProfile(){{
+            if(navigator.share){{
+                try{{
+                    await navigator.share({{title: '{display_name} — Skillio', text: '{invite_text}', url: profileUrl}});
+                }}catch(e){{}}
+            }} else {{
+                copyLink();
+                alert('Link copiado para a área de transferência');
+            }}
+        }}
+        function copyLink(){{
+            if(navigator.clipboard && navigator.clipboard.writeText){{
+                navigator.clipboard.writeText(profileUrl);
+            }} else {{
+                const t = document.createElement('textarea'); t.value = profileUrl; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+            }}
+        }}
+    </script>
+</body>
+</html>
+"""
+
+        return HttpResponse(html, content_type='text/html')
     except User.DoesNotExist:
         return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 

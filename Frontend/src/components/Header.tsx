@@ -101,103 +101,8 @@ const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-card/50 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
-          {/* Menu Hambúrguer - Mobile */}
-          <div className="lg:hidden">
-            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[280px]">
-                <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
-                </SheetHeader>
-                <nav className="flex flex-col space-y-4 mt-6">
-                  {location.pathname !== "/" && (
-                    <Link to="/" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
-                      Início
-                    </Link>
-                  )}
-                  {isAuthenticated && location.pathname !== "/dashboard" && (
-                    <Link to="/dashboard" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
-                      Meu Desempenho
-                    </Link>
-                  )}
-                  {location.pathname !== "/subjects" && (
-                    <Link to="/subjects" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
-                      Explorar
-                    </Link>
-                  )}
-                  {location.pathname !== "/ranking" && (
-                    <Link to="/ranking" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
-                      Ranking
-                    </Link>
-                  )}
-                  {location.pathname !== "/about" && (
-                    <Link to="/about" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
-                      Sobre Nós
-                    </Link>
-                  )}
-                  
-                  {/* Estatísticas Mobile */}
-                  {isAuthenticated && (
-                    <div className="pt-4 border-t space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Vidas</span>
-                        <div className={`flex items-center gap-2 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                          <Heart className="w-4 h-4" />
-                          <span>{hearts}</span>
-                        </div>
-                      </div>
-                      
-                      {streak > 0 && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Sequência</span>
-                          <div className="flex items-center gap-2 text-sm font-bold text-secondary">
-                            <Flame className="w-4 h-4" />
-                            <span>{streak} dias</span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Nível</span>
-                        <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
-                          <Star className="w-4 h-4" />
-                          <span>{level}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>XP</span>
-                          <span>{xp.toFixed(0)} / {xpForNextLevel}</span>
-                        </div>
-                        <Progress value={progressPercentage} className="h-2" />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Botão Sair - Mobile */}
-                  {isAuthenticated && (
-                    <div className="pt-4 border-t">
-                      <Button 
-                        variant="outline" 
-                        className="w-full border-primary/50" 
-                        onClick={handleLogout}
-                      >
-                        Sair
-                      </Button>
-                    </div>
-                  )}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* Logo - Centralizado em mobile, à esquerda em desktop */}
-          <div className="flex items-center space-x-3 lg:flex-none absolute left-1/2 transform -translate-x-1/2 lg:static lg:transform-none">
+          {/* Logo - À esquerda */}
+          <div className="flex items-center space-x-3">
             <Link to="/">
               <img src="/logoSkillio2.svg" alt="Skillio" className="h-10 w-22 rounded-md object-cover" />
             </Link>
@@ -212,7 +117,7 @@ const Header = () => {
             {location.pathname !== "/about" && <Link to="/about" className="text-foreground hover:text-primary transition-colors">Sobre Nós</Link>}
           </nav>
           
-          {/* Área direita - Stats e Perfil */}
+          {/* Área direita - Stats, Perfil e Menu Hambúrguer */}
           <div className="flex items-center space-x-2">
             {isAuthenticated ? (
               <>
@@ -265,50 +170,169 @@ const Header = () => {
                   </div>
                 </div>
 
-                {/* Avatar e botão Sair - Visíveis em todas as telas */}
+                {/* Avatar - Visível em todas as telas */}
                 <Link to="/profile">
                   <Avatar className="h-9 w-9">
                     <AvatarImage src={userProfile?.foto || undefined} className="object-cover" />
                     <AvatarFallback>{userProfile?.first_name ? userProfile.first_name.charAt(0) : 'U'}</AvatarFallback>
                   </Avatar>
                 </Link>
+
+                {/* Botão Sair Desktop */}
                 <Button variant="outline" size="sm" className="border-primary/50 hidden lg:inline-flex" onClick={handleLogout}>Sair</Button>
+
+                {/* Menu Hambúrguer Mobile - Autenticado */}
+                <div className="lg:hidden">
+                  <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Menu className="h-6 w-6" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-[280px]">
+                      <SheetHeader>
+                        <SheetTitle>Menu</SheetTitle>
+                      </SheetHeader>
+                      <nav className="flex flex-col space-y-4 mt-6">
+                        {location.pathname !== "/" && (
+                          <Link to="/" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Início
+                          </Link>
+                        )}
+                        {location.pathname !== "/dashboard" && (
+                          <Link to="/dashboard" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Meu Desempenho
+                          </Link>
+                        )}
+                        {location.pathname !== "/subjects" && (
+                          <Link to="/subjects" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Explorar
+                          </Link>
+                        )}
+                        {location.pathname !== "/ranking" && (
+                          <Link to="/ranking" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Ranking
+                          </Link>
+                        )}
+                        {location.pathname !== "/about" && (
+                          <Link to="/about" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Sobre Nós
+                          </Link>
+                        )}
+                        
+                        {/* Estatísticas Mobile */}
+                        <div className="pt-4 border-t space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Vidas</span>
+                            <div className={`flex items-center gap-2 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                              <Heart className="w-4 h-4" />
+                              <span>{hearts}</span>
+                            </div>
+                          </div>
+                          
+                          {streak > 0 && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">Sequência</span>
+                              <div className="flex items-center gap-2 text-sm font-bold text-secondary">
+                                <Flame className="w-4 h-4" />
+                                <span>{streak} dias</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Nível</span>
+                            <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
+                              <Star className="w-4 h-4" />
+                              <span>{level}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>XP</span>
+                              <span>{xp.toFixed(0)} / {xpForNextLevel}</span>
+                            </div>
+                            <Progress value={progressPercentage} className="h-2" />
+                          </div>
+                        </div>
+                        
+                        {/* Botão Sair - Mobile */}
+                        <div className="pt-4 border-t">
+                          <Button 
+                            variant="outline" 
+                            className="w-full border-primary/50" 
+                            onClick={handleLogout}
+                          >
+                            Sair
+                          </Button>
+                        </div>
+                      </nav>
+                    </SheetContent>
+                  </Sheet>
+                </div>
               </>
             ) : (
               <>
-                {/* Botões de login/cadastro - Visíveis acima de 571px */}
-                <div className="hidden min-[571px]:flex items-center space-x-2">
+                {/* Botões de login/cadastro - Visíveis em desktop */}
+                <div className="hidden lg:flex items-center space-x-2">
                   {location.pathname !== '/login' && <Link to="/login"><Button variant="outline" size="sm">Entrar</Button></Link>}
                   {location.pathname !== '/register' && <Link to="/register"><Button size="sm" className="bg-secondary hover:bg-secondary/90 text-white shadow-orange-glow"><User className="h-4 w-4 mr-1" />Cadastrar</Button></Link>}
                 </div>
 
-                {/* Menu dropdown com ícone de perfil - Visível abaixo de 571px */}
-                <div className="min-[571px]:hidden">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                {/* Menu Hambúrguer Mobile - Não Autenticado */}
+                <div className="lg:hidden">
+                  <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                    <SheetTrigger asChild>
                       <Button variant="ghost" size="icon">
-                        <UserCircle className="h-10 w-10" />
+                        <Menu className="h-6 w-6" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {location.pathname !== '/login' && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/login" className="w-full cursor-pointer flex items-center">
-                            <UserCircle className="h-4 w-4 mr-2" />
-                            Entrar
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-[280px]">
+                      <SheetHeader>
+                        <SheetTitle>Menu</SheetTitle>
+                      </SheetHeader>
+                      <nav className="flex flex-col space-y-4 mt-6">
+                        {location.pathname !== "/" && (
+                          <Link to="/" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Início
                           </Link>
-                        </DropdownMenuItem>
-                      )}
-                      {location.pathname !== '/register' && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/register" className="w-full cursor-pointer">
-                            <User className="h-4 w-4 mr-2" />
-                            Cadastrar
+                        )}
+                        {location.pathname !== "/subjects" && (
+                          <Link to="/subjects" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Explorar
                           </Link>
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        )}
+                        {location.pathname !== "/ranking" && (
+                          <Link to="/ranking" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Ranking
+                          </Link>
+                        )}
+                        {location.pathname !== "/about" && (
+                          <Link to="/about" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            Sobre Nós
+                          </Link>
+                        )}
+                        
+                        {/* Botões de autenticação no menu mobile */}
+                        <div className="pt-4 border-t space-y-2">
+                          {location.pathname !== '/login' && (
+                            <Link to="/login" onClick={closeMenu} className="block">
+                              <Button variant="outline" className="w-full">Entrar</Button>
+                            </Link>
+                          )}
+                          {location.pathname !== '/register' && (
+                            <Link to="/register" onClick={closeMenu} className="block">
+                              <Button className="w-full bg-secondary hover:bg-secondary/90 text-white">
+                                <User className="h-4 w-4 mr-2" />
+                                Cadastrar
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                      </nav>
+                    </SheetContent>
+                  </Sheet>
                 </div>
               </>
             )}
