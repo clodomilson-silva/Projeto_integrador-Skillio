@@ -329,8 +329,8 @@ const Game = () => {
     const playerLost = isTrailGame && (mistakes >= 5 || hearts <= 0);
 
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <GameCard variant="subject" className="p-8 text-center max-w-md bg-card">
+      <div className="min-h-screen bg-background flex items-center justify-center px-2 sm:px-4">
+        <GameCard variant="subject" className="p-4 sm:p-6 md:p-8 text-center max-w-md w-full mx-2 sm:mx-4 bg-card">
           {playerLost ? (
             <>
               {/* GIF de Derrota */}
@@ -345,59 +345,59 @@ const Game = () => {
                   }}
                 />
               </div>
-              <HeartCrack className="h-20 w-20 mx-auto mb-6 text-red-500" />
-              <h2 className="text-4xl font-bold mb-8 text-foreground">Quiz Encerrado!</h2>
-              <div className="space-y-6 mb-8">
-                <div className="bg-red-500/10 border-2 border-red-500/30 p-4 rounded-lg">
+              <HeartCrack className="h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-4 sm:mb-6 text-red-500" />
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 md:mb-8 text-foreground">Quiz Encerrado!</h2>
+              <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
+                <div className="bg-red-500/10 border-2 border-red-500/30 p-3 sm:p-4 rounded-lg">
                   {mistakes >= 5 ? (
                     <>
-                      <p className="text-xl font-bold text-foreground">
+                      <p className="text-base sm:text-lg md:text-xl font-bold text-foreground break-words">
                         Você cometeu <span className="text-red-500">5 erros</span>
                       </p>
-                      <p className="text-base text-foreground/80 mt-2">
+                      <p className="text-sm sm:text-base text-foreground/80 mt-2 break-words">
                         e perdeu todas as suas chances
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-xl font-bold text-foreground">
+                      <p className="text-base sm:text-lg md:text-xl font-bold text-foreground break-words">
                         Você ficou <span className="text-red-500">sem vidas</span>
                       </p>
-                      <p className="text-base text-foreground/80 mt-2">
+                      <p className="text-sm sm:text-base text-foreground/80 mt-2 break-words">
                         e não conseguiu completar o bloco
                       </p>
                     </>
                   )}
                 </div>
                 
-                <div className="bg-red-500/10 border-2 border-red-500/30 p-4 rounded-lg">
-                  <p className="text-lg font-bold text-red-600 dark:text-red-400">
+                <div className="bg-red-500/10 border-2 border-red-500/30 p-3 sm:p-4 rounded-lg">
+                  <p className="text-base sm:text-lg font-bold text-red-600 dark:text-red-400 break-words">
                     ❌ XP descartado
                   </p>
-                  <p className="text-sm text-foreground/70 mt-1">
+                  <p className="text-xs sm:text-sm text-foreground/70 mt-1 break-words">
                     O XP só é salvo ao completar todas as 15 perguntas
                   </p>
                 </div>
                 
-                <div className="bg-yellow-500/10 border-2 border-yellow-500/30 p-4 rounded-lg">
-                  <p className="text-lg font-bold text-foreground">
+                <div className="bg-yellow-500/10 border-2 border-yellow-500/30 p-3 sm:p-4 rounded-lg">
+                  <p className="text-base sm:text-lg font-bold text-foreground break-words">
                     ⚠️ Bloco não completado
                   </p>
-                  <p className="text-sm text-foreground/70 mt-1">
+                  <p className="text-xs sm:text-sm text-foreground/70 mt-1 break-words">
                     Complete todas as 15 perguntas com vidas para desbloquear o próximo bloco!
                   </p>
                 </div>
                 
-                <p className="text-lg font-semibold text-foreground">
+                <p className="text-base sm:text-lg font-semibold text-foreground break-words">
                   💪 Não desanime! Tente novamente e melhore seu desempenho.
                 </p>
               </div>
-              <div className="bg-blue-500/15 border-2 border-blue-500/40 p-5 rounded-xl mb-8 shadow-lg">
-                <div className="flex items-start gap-3 text-left">
-                  <span className="text-3xl flex-shrink-0">💡</span>
+              <div className="bg-blue-500/15 border-2 border-blue-500/40 p-3 sm:p-4 md:p-5 rounded-xl mb-6 sm:mb-8 shadow-lg">
+                <div className="flex items-start gap-2 sm:gap-3 text-left">
+                  <span className="text-2xl sm:text-3xl flex-shrink-0">💡</span>
                   <div>
-                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400 mb-2">Dica Importante</p>
-                    <p className="text-base font-medium text-foreground">
+                    <p className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 mb-1 sm:mb-2 break-words">Dica Importante</p>
+                    <p className="text-sm sm:text-base font-medium text-foreground break-words">
                       Revise o conteúdo e volte mais preparado!
                     </p>
                   </div>
@@ -418,26 +418,26 @@ const Game = () => {
                   }}
                 />
               </div>
-              <Trophy className="h-16 w-16 mx-auto mb-6 text-warning" />
-              <h2 className="text-3xl font-bold mb-4">{isTrailGame ? 'Bloco Concluído!' : 'Quiz Finalizado!'}</h2>
+              <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 sm:mb-6 text-warning" />
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 break-words">{isTrailGame ? 'Bloco Concluído!' : 'Quiz Finalizado!'}</h2>
               {isTrailGame ? (
                 <>
-                  <div className="bg-green-500/10 border-2 border-green-500/30 p-6 rounded-lg mb-6">
-                    <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                  <div className="bg-green-500/10 border-2 border-green-500/30 p-4 sm:p-6 rounded-lg mb-4 sm:mb-6">
+                    <p className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
                       +{pendingXp} XP
                     </p>
-                    <p className="text-sm text-foreground/70">
+                    <p className="text-xs sm:text-sm text-foreground/70 break-words">
                       {sessionAnswers.correct} de 15 perguntas certas × 10 XP
                     </p>
                   </div>
-                  <p className="text-lg text-muted-foreground mb-4">
+                  <p className="text-base sm:text-lg text-muted-foreground mb-3 sm:mb-4 break-words">
                     🎉 Parabéns! Você completou o bloco!
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-2xl font-bold my-4">XP Final: {score}</p>
-                  <p className="text-muted-foreground mb-4">Parabéns! Continue assim! 🎉</p>
+                  <p className="text-xl sm:text-2xl font-bold my-3 sm:my-4">XP Final: {score}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 break-words">Parabéns! Continue assim! 🎉</p>
                 </>
               )}
             </>
@@ -478,7 +478,7 @@ const Game = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <div className="flex justify-between items-center mb-8">
           <Link to={isTrailGame ? "/trilha" : "/subjects"}>
             <Button variant="ghost">
@@ -503,18 +503,18 @@ const Game = () => {
           <Progress value={progress} className="h-3" />
         </div>
 
-        <div className="max-w-2xl mx-auto mb-8">
-          <GameCard variant={timeLeft > 10 ? "default" : "warning"} className="p-6 text-center">
-            <Clock className={`h-8 w-8 mx-auto mb-2 ${timeLeft <= 5 ? 'animate-pulse' : ''}`} />
-            <div className="text-3xl font-bold">{timeLeft}</div>
-            <div className="text-sm text-muted-foreground">segundos</div>
+        <div className="max-w-2xl mx-auto mb-4 sm:mb-8">
+          <GameCard variant={timeLeft > 10 ? "default" : "warning"} className="p-4 sm:p-6 text-center">
+            <Clock className={`h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 ${timeLeft <= 5 ? 'animate-pulse' : ''}`} />
+            <div className="text-2xl sm:text-3xl font-bold">{timeLeft}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">segundos</div>
           </GameCard>
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <GameCard variant="subject" className="p-8 mb-8">
-            <h2 className="text-2xl font-bold text-center mb-8">{question.question}</h2>
-            <div className="grid gap-4">
+          <GameCard variant="subject" className="p-4 sm:p-6 md:p-8 mb-4 sm:mb-8">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center mb-4 sm:mb-6 md:mb-8 break-words">{question.question}</h2>
+            <div className="grid gap-3 sm:gap-4">
               {question.options.map((option: string, index: number) => {
                 let variant: "default" | "success" | "destructive" = "default";
                 let bgClass = "";
@@ -534,15 +534,15 @@ const Game = () => {
                     key={index}
                     variant={variant === "default" ? "outline" : variant}
                     className={cn(
-                      "h-16 text-lg justify-start px-6 transition-all duration-300",
+                      "min-h-[3.5rem] sm:h-16 text-sm sm:text-base md:text-lg justify-start px-3 sm:px-4 md:px-6 transition-all duration-300 whitespace-normal text-left leading-tight py-2",
                       !showResult && "hover:bg-primary/10 hover:border-primary hover:scale-[1.02] hover:shadow-md",
                       bgClass
                     )}
                     onClick={() => !showResult && handleAnswer(index)}
                     disabled={showResult}
                   >
-                    <span className="font-bold mr-4">{String.fromCharCode(65 + index)}</span>
-                    {option}
+                    <span className="font-bold mr-2 sm:mr-3 md:mr-4 flex-shrink-0">{String.fromCharCode(65 + index)}</span>
+                    <span className="break-words">{option}</span>
                   </Button>
                 );
               })}
