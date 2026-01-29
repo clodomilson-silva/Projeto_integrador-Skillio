@@ -217,6 +217,13 @@ Para desenvolvimento, você pode executar cada parte separadamente.
    python manage.py runserver 192.168.0.89:8000
    ```
 
+   
+    ```bash
+   python manage.py runserver 192.168.206.160:800
+   ```
+
+   
+
    (Substitua pelo seu IP)
    
    ✅ Acesse do PC: http://192.168.0.89:8000
