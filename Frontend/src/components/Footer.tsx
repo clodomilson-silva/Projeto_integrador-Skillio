@@ -1,8 +1,25 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GameCard } from "@/components/ui/game-card";
 import { BookOpen, Heart } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Footer = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Função para lidar com clique nas disciplinas
+  const handleSubjectClick = (e: React.MouseEvent, subjectId: string) => {
+    e.preventDefault();
+    
+    if (!isAuthenticated) {
+      // Redireciona para login com redirect para a disciplina
+      navigate(`/login?redirect=/lesson/${subjectId}`);
+    } else {
+      // Se logado, vai direto para a aula
+      navigate(`/lesson/${subjectId}`);
+    }
+  };
+
   return (
     <footer className="bg-card/50 border-t py-12 px-4">
       <div className="container mx-auto">
@@ -25,10 +42,42 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Explorar</h4>
             <ul className="space-y-2 text-muted-foreground">
-              <li><Link to="#" className="hover:text-primary transition-colors">Matemática</Link></li>
-              <li><Link to="#" className="hover:text-primary transition-colors">Português</Link></li>
-              <li><Link to="#" className="hover:text-primary transition-colors">Ciências</Link></li>
-              <li><Link to="#" className="hover:text-primary transition-colors">História</Link></li>
+              <li>
+                <Link 
+                  to="#" 
+                  onClick={(e) => handleSubjectClick(e, "matematica")}
+                  className="hover:text-primary transition-colors"
+                >
+                  Matemática
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="#" 
+                  onClick={(e) => handleSubjectClick(e, "portugues")}
+                  className="hover:text-primary transition-colors"
+                >
+                  Português
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="#" 
+                  onClick={(e) => handleSubjectClick(e, "ingles")}
+                  className="hover:text-primary transition-colors"
+                >
+                  Inglês
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="#" 
+                  onClick={(e) => handleSubjectClick(e, "espanhol")}
+                  className="hover:text-primary transition-colors"
+                >
+                  Espanhol
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -48,7 +97,7 @@ const Footer = () => {
             Feito com <Heart className="h-4 w-4 text-red-500" /> pela equipe EdGame
           </p> */}
           <p className="text-sm mt-2">
-            © 2025 Skillio. Todos os direitos reservados.
+            © 2026 Skillio. Todos os direitos reservados.
           </p>
         </div>
       </div>

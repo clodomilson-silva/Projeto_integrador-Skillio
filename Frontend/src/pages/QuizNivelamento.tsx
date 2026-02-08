@@ -5,12 +5,15 @@ import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Star, Target, Award, TrendingUp, TrendingDown, SkipForward, BookOpenCheck } from 'lucide-react';
+import { Star, Target, Award, TrendingUp, TrendingDown, SkipForward, BookOpenCheck, WifiOff } from 'lucide-react';
 import { useGamification } from "@/hooks/useGamification";
 import apiClient from '@/api/axios';
 import { usePerformance } from "@/hooks/usePerformance";
 import { Separator } from "@/components/ui/separator";
 import LoadingAnimation from "@/components/ui/LoadingAnimation";
+import { checkInternetConnection } from "@/utils/networkStatus";
+import { gerarQuizOffline } from "@/data/offlineQuizQuestions";
+import { gerarPlanoEstudoOffline, salvarPlanoLocal } from "@/utils/offlineStudyPlan";
 
 // Tipo seguro para perguntas do quiz
 type PerguntaQuiz = {
@@ -233,6 +236,7 @@ const QuizNivelamento = () => {
   const [erro, setErro] = useState<string | null>(null);
   const [quizResults, setQuizResults] = useState({ acertos: 0, total: 0, xpGanhos: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modoOffline, setModoOffline] = useState(false);
   
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
@@ -306,55 +310,69 @@ const QuizNivelamento = () => {
         return;
       }
 
-      const fallbackPerguntas = [
-          {pergunta: 'Qual animal é conhecido como o "rei da selva"?', alternativas: ['Tigre', 'Leão', 'Elefante', 'Urso'], resposta: 1, area: 'Biologia'},
-          {pergunta: 'Qual a fórmula da água?', alternativas: ['CO2', 'H2O', 'O2', 'N2'], resposta: 1, area: 'Biologia'},
-          {pergunta: 'Qual processo as plantas usam para converter luz em energia?', alternativas: ['Respiração', 'Fotossíntese', 'Transpiração', 'Digestão'], resposta: 1, area: 'Biologia'},
-          {pergunta: 'Qual a capital da França?', alternativas: ['Londres', 'Berlim', 'Madri', 'Paris'], resposta: 3, area: 'Geografia'},
-          {pergunta: 'Qual o maior continente do mundo?', alternativas: ['África', 'Europa', 'Ásia', 'América'], resposta: 2, area: 'Geografia'},
-          {pergunta: 'Qual o rio mais longo do mundo?', alternativas: ['Nilo', 'Amazonas', 'Yangtzé', 'Mississipi'], resposta: 1, area: 'Geografia'},
-          {pergunta: 'Quem escreveu "Dom Quixote"?', alternativas: ['Shakespeare', 'Cervantes', 'Dante', 'Homero'], resposta: 1, area: 'História'},
-          {pergunta: 'Em que ano começou a Segunda Guerra Mundial?', alternativas: ['1914', '1939', '1945', '1929'], resposta: 1, area: 'História'},
-          {pergunta: 'Qual civilização construiu as pirâmides de Gizé?', alternativas: ['Romana', 'Grega', 'Egípcia', 'Maia'], resposta: 2, area: 'História'},
-          {pergunta: 'O que significa a sigla "CPU" em um computador?', alternativas: ['Unidade Central de Processamento', 'Placa de Vídeo', 'Memória RAM', 'Fonte de Energia'], resposta: 0, area: 'Informática'},
-          {pergunta: 'Qual empresa desenvolveu o sistema operacional Windows?', alternativas: ['Apple', 'Google', 'Microsoft', 'Linux'], resposta: 2, area: 'Informática'},
-          {pergunta: 'O que é um "phishing"?', alternativas: ['Um tipo de vírus', 'Um ataque para roubar informações', 'Uma peça de hardware', 'Um software de edição'], resposta: 1, area: 'Informática'},
-          {pergunta: 'Qual a tradução de "book" para o português?', alternativas: ['Livro', 'Caneta', 'Mesa', 'Cadeira'], resposta: 0, area: 'Inglês'},
-          {pergunta: 'Como se diz "obrigado" em inglês?', alternativas: ['Hello', 'Goodbye', 'Thank you', 'Sorry'], resposta: 2, area: 'Inglês'},
-          {pergunta: 'O que significa "cat" em inglês?', alternativas: ['Cachorro', 'Gato', 'Pássaro', 'Peixe'], resposta: 1, area: 'Inglês'},
-          {pergunta: 'Se um trem viaja a 100 km/h, que distância ele percorre em 2 horas?', alternativas: ['100 km', '150 km', '200 km', '250 km'], resposta: 2, area: 'Lógica'},
-          {pergunta: 'Qual o próximo número na sequência: 2, 4, 6, 8, ...?', alternativas: ['9', '10', '11', '12'], resposta: 1, area: 'Lógica'},
-          {pergunta: 'Se todo A é B e todo B é C, então:', alternativas: ['Todo C é A', 'Nenhum A é C', 'Todo A é C', 'Algum A não é C'], resposta: 2, area: 'Lógica'},
-          {pergunta: 'Um pai tem o dobro da idade do filho. Juntos, eles têm 60 anos. Qual a idade do pai?', alternativas: ['30', '40', '45', '50'], resposta: 1, area: 'Lógica'},
-          {pergunta: 'Quanto é 7 multiplicado por 8?', alternativas: ['49', '54', '56', '63'], resposta: 2, area: 'Matemática'},
-          {pergunta: 'Qual o resultado de 10 - (2 + 3)?', alternativas: ['5', '6', '7', '8'], resposta: 0, area: 'Matemática'},
-          {pergunta: 'Se um círculo tem um raio de 5 cm, qual o seu diâmetro?', alternativas: ['5 cm', '10 cm', '15 cm', '25 cm'], resposta: 1, area: 'Matemática'},
-          {pergunta: 'Qual o sinônimo de "rápido"?', alternativas: ['Lento', 'Veloz', 'Grande', 'Pequeno'], resposta: 1, area: 'Português'},
-          {pergunta: 'Qual o coletivo de "cães"?', alternativas: ['Alcateia', 'Manada', 'Matilha', 'Cardume'], resposta: 2, area: 'Português'},
-          {pergunta: 'Qual a classe gramatical da palavra "bonito"?', alternativas: ['Substantivo', 'Verbo', 'Adjetivo', 'Advérbio'], resposta: 2, area: 'Português'}
-      ];
+      // Verifica se há conexão com a internet
+      console.log('🔍 Verificando conexão com a internet...');
+      const temInternet = await checkInternetConnection();
+      
+      if (!temInternet) {
+        console.log('🔴 Sem internet - usando quiz offline');
+        setModoOffline(true);
+        const perguntasOffline = gerarQuizOffline(foco);
+        setPerguntasNivelamento(perguntasOffline);
+        setCarregando(false);
+        toast({
+          title: 'Modo Offline Ativado',
+          description: 'Sem conexão com internet. Usando perguntas pré-definidas.',
+          variant: 'default'
+        });
+        return;
+      }
+      
+      console.log('🟢 Internet disponível - tentando gerar perguntas com IA');
 
       if (!API_KEY) {
-        setErro("API Key do Google não configurada. Verifique seu arquivo .env. Usando um quiz de exemplo.");
-        setPerguntasNivelamento(orderPerguntas(fallbackPerguntas, foco));
+        console.warn('⚠️ API Key do Google não configurada - usando modo offline');
+        setModoOffline(true);
+        const perguntasOffline = gerarQuizOffline(foco);
+        setPerguntasNivelamento(perguntasOffline);
         setCarregando(false);
+        toast({
+          title: 'Modo Offline Ativado',
+          description: 'API Key não configurada. Usando perguntas pré-definidas.',
+          variant: 'default'
+        });
         return;
       }
 
       setCarregando(true);
       setErro(null);
-      const perguntas = await gerarPerguntasGemini(escolaridadePrompt, foco, idade);
-      if (perguntas && perguntas.length > 0) { // Check for any number of questions
-        const orderedPerguntas = orderPerguntas(perguntas, foco);
-        setPerguntasNivelamento(orderedPerguntas);
-        localStorage.setItem(cacheKey, JSON.stringify(orderedPerguntas));
-      } else {
-        setErro("Falha ao gerar perguntas com IA. Usando um quiz de exemplo.");
-        setPerguntasNivelamento(orderPerguntas(fallbackPerguntas, foco));
+      
+      try {
+        const perguntas = await gerarPerguntasGemini(escolaridadePrompt, foco, idade);
+        if (perguntas && perguntas.length > 0) {
+          console.log('✅ Perguntas geradas com IA com sucesso');
+          const orderedPerguntas = orderPerguntas(perguntas, foco);
+          setPerguntasNivelamento(orderedPerguntas);
+          localStorage.setItem(cacheKey, JSON.stringify(orderedPerguntas));
+          setModoOffline(false);
+        } else {
+          throw new Error('IA não retornou perguntas válidas');
+        }
+      } catch (error) {
+        console.warn('⚠️ Falha na geração com IA, usando modo offline:', error);
+        setModoOffline(true);
+        const perguntasOffline = gerarQuizOffline(foco);
+        setPerguntasNivelamento(perguntasOffline);
+        toast({
+          title: 'Usando Perguntas Locais',
+          description: 'A IA não está disponível no momento. Usando perguntas pré-definidas.',
+          variant: 'default'
+        });
       }
+      
       setCarregando(false);
     })();
-  }, [userFocus]);
+  }, [userFocus, toast]);
 
   const calcularPlanoEstudo = useCallback(() => {
     const analise: Record<string, { acertos: number; erros: number; pulos: number }> = {};
@@ -423,13 +441,37 @@ const QuizNivelamento = () => {
             // Gerar plano de estudo e AGUARDAR a conclusão
             setGerandoPlano(true);
             try {
-              console.log(`QuizNivelamento: Gerando plano de estudo...`);
-              await apiClient.post('/users/me/generate-study-plan/', {
-                analise,
-                maxStreak,
-                maxErrorStreak,
-              });
-              console.log(`QuizNivelamento: Plano de estudo gerado com sucesso!`);
+              // Verifica se há internet para decidir como gerar o plano
+              const temInternet = await checkInternetConnection();
+              
+              if (temInternet && !modoOffline) {
+                // Gera plano com IA (online)
+                console.log(`QuizNivelamento: Gerando plano de estudo com IA...`);
+                await apiClient.post('/users/me/generate-study-plan/', {
+                  analise,
+                  maxStreak,
+                  maxErrorStreak,
+                });
+                console.log(`QuizNivelamento: Plano de estudo gerado com IA com sucesso!`);
+              } else {
+                // Gera plano localmente (offline)
+                console.log(`QuizNivelamento: Gerando plano de estudo offline...`);
+                const userName = localStorage.getItem('userName') || 'Estudante';
+                const planoOffline = gerarPlanoEstudoOffline(
+                  analise,
+                  maxStreak,
+                  maxErrorStreak,
+                  userName
+                );
+                salvarPlanoLocal(planoOffline);
+                console.log(`QuizNivelamento: Plano de estudo offline gerado e salvo!`);
+                
+                toast({
+                  title: 'Plano Gerado Offline',
+                  description: 'Seu plano de estudos foi criado localmente e está disponível.',
+                  variant: 'default'
+                });
+              }
               
               // Após gerar o plano, navega automaticamente para a tela do plano
               setTimeout(() => {
@@ -438,12 +480,38 @@ const QuizNivelamento = () => {
               
             } catch (e) {
               console.error('Failed to trigger study plan generation', e);
-              toast({ 
-                title: "Erro", 
-                description: "Não foi possível gerar seu plano de estudo. Tente novamente.", 
-                variant: "destructive" 
-              });
-              setGerandoPlano(false);
+              
+              // Fallback: tenta gerar offline mesmo em caso de erro
+              try {
+                console.log('🔄 Tentando gerar plano offline como fallback...');
+                const userName = localStorage.getItem('userName') || 'Estudante';
+                const planoOffline = gerarPlanoEstudoOffline(
+                  analise,
+                  maxStreak,
+                  maxErrorStreak,
+                  userName
+                );
+                salvarPlanoLocal(planoOffline);
+                console.log('✅ Plano offline gerado como fallback');
+                
+                toast({
+                  title: 'Plano Gerado Localmente',
+                  description: 'Não foi possível conectar ao servidor, mas seu plano foi criado localmente.',
+                  variant: 'default'
+                });
+                
+                setTimeout(() => {
+                  navigate('/study-plan');
+                }, 1000);
+              } catch (fallbackError) {
+                console.error('❌ Falha no fallback offline:', fallbackError);
+                toast({ 
+                  title: "Erro", 
+                  description: "Não foi possível gerar seu plano de estudo. Tente novamente.", 
+                  variant: "destructive" 
+                });
+                setGerandoPlano(false);
+              }
             }
           } catch (e) {
             console.error('Failed to persist quiz data:', e);
@@ -455,7 +523,7 @@ const QuizNivelamento = () => {
         }
       })();
     }
-  }, [finalizado, quizProcessado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance, addXp, resetHearts, navigate]);
+  }, [finalizado, quizProcessado, calcularPlanoEstudo, toast, maxStreak, maxErrorStreak, updatePerformance, addXp, resetHearts, navigate, modoOffline]);
 
   const proximaPergunta = (resposta: number | null) => {
     const perguntaAtual = perguntasNivelamento[indice];
@@ -484,8 +552,8 @@ const QuizNivelamento = () => {
   if (carregando) {
     return (
       <LoadingAnimation 
-        text="Preparando seu Quiz de nivelamento!" 
-        subtext="Gerando 25 perguntas personalizadas com IA..." 
+        text={modoOffline ? "Preparando Quiz Offline..." : "Preparando seu Quiz de nivelamento!"} 
+        subtext={modoOffline ? "Carregando perguntas pré-definidas..." : "Gerando 25 perguntas personalizadas com IA..."} 
       />
     );
   }
@@ -572,6 +640,15 @@ const QuizNivelamento = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="p-6 sm:p-8 max-w-2xl w-full shadow-elevated">
         {erro && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert"><strong className="font-bold">Erro!</strong><span className="block sm:inline"> {erro}</span></div>}
+        {modoOffline && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 px-4 py-3 rounded relative mb-4 flex items-center gap-2" role="alert">
+            <WifiOff className="h-4 w-4 flex-shrink-0" />
+            <div>
+              <strong className="font-bold">Modo Offline: </strong>
+              <span className="block sm:inline">Usando perguntas pré-definidas. Seus resultados serão salvos normalmente.</span>
+            </div>
+          </div>
+        )}
         <>
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">

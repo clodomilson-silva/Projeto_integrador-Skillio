@@ -4,10 +4,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { ArrowLeft, BookOpenCheck } from 'lucide-react';
+import { ArrowLeft, BookOpenCheck, WifiOff } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { Separator } from '@/components/ui/separator';
 import LoadingAnimation from '@/components/ui/LoadingAnimation';
+import { recuperarPlanoLocal } from '@/utils/offlineStudyPlan';
 
 // Tipos do Plano de Estudo (espelhado de QuizNivelamento.tsx)
 type StudyPlanTopic = {
@@ -426,6 +427,7 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
 const StudyPlan = () => {
   const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [planoOffline, setPlanoOffline] = useState(false);
   const navigate = useNavigate();
   const { userFocus } = useGamification();
 
@@ -433,33 +435,52 @@ const StudyPlan = () => {
     try {
       setCarregando(true);
       console.log('🔍 StudyPlan: Carregando plano de estudo...');
-      const resp = await apiClient.get('/users/me/');
-      console.log('🔍 StudyPlan: Resposta completa:', resp.data);
       
-      let serverPlan = resp.data?.profile?.study_plan;
-      console.log('🔍 StudyPlan: study_plan bruto:', serverPlan);
-      console.log('🔍 StudyPlan: Tipo do study_plan:', typeof serverPlan);
-      
-      if (typeof serverPlan === 'string') {
-        try {
-          serverPlan = JSON.parse(serverPlan);
-          console.log('🔍 StudyPlan: study_plan após parse:', serverPlan);
-        } catch (e) {
-          console.error('❌ StudyPlan: Erro ao fazer parse do plano:', e);
-          serverPlan = null;
+      try {
+        const resp = await apiClient.get('/users/me/');
+        console.log('🔍 StudyPlan: Resposta completa:', resp.data);
+        
+        let serverPlan = resp.data?.profile?.study_plan;
+        console.log('🔍 StudyPlan: study_plan bruto:', serverPlan);
+        console.log('🔍 StudyPlan: Tipo do study_plan:', typeof serverPlan);
+        
+        if (typeof serverPlan === 'string') {
+          try {
+            serverPlan = JSON.parse(serverPlan);
+            console.log('🔍 StudyPlan: study_plan após parse:', serverPlan);
+          } catch (e) {
+            console.error('❌ StudyPlan: Erro ao fazer parse do plano:', e);
+            serverPlan = null;
+          }
         }
+        
+        // Verifica se é um objeto vazio {} ou null
+        if (serverPlan && typeof serverPlan === 'object' && Object.keys(serverPlan).length > 0) {
+          console.log('✅ StudyPlan: Plano encontrado no servidor com', Object.keys(serverPlan).length, 'chaves');
+          setStudyPlan(serverPlan);
+          setPlanoOffline(false);
+          // Remove o flag após carregar com sucesso
+          sessionStorage.removeItem('justFinishedQuiz');
+          return;
+        }
+      } catch (e) {
+        console.warn('⚠️ StudyPlan: Erro ao buscar plano do servidor:', e);
       }
       
-      // Verifica se é um objeto vazio {} ou null
-      if (serverPlan && typeof serverPlan === 'object' && Object.keys(serverPlan).length > 0) {
-        console.log('✅ StudyPlan: Plano encontrado com', Object.keys(serverPlan).length, 'chaves');
-        setStudyPlan(serverPlan);
-        // Remove o flag após carregar com sucesso
-        sessionStorage.removeItem('justFinishedQuiz');
+      // Se não encontrou no servidor, tenta recuperar do localStorage
+      console.log('🔍 StudyPlan: Tentando recuperar plano local...');
+      const planoLocal = recuperarPlanoLocal();
+      
+      if (planoLocal) {
+        console.log('✅ StudyPlan: Plano local encontrado');
+        setStudyPlan(planoLocal);
+        setPlanoOffline(true);
       } else {
-        console.log('❌ StudyPlan: Nenhum plano encontrado ou plano vazio');
+        console.log('❌ StudyPlan: Nenhum plano encontrado (servidor ou local)');
         setStudyPlan(null);
+        setPlanoOffline(false);
       }
+      
     } catch (e) {
       console.error('❌ StudyPlan: Erro ao carregar plano de estudo:', e);
       setStudyPlan(null);
@@ -490,6 +511,15 @@ const StudyPlan = () => {
           {studyPlan ? (
             // --- Visualização do Plano de Estudo ---
             <div className="space-y-6">
+              {planoOffline && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 px-4 py-3 rounded-lg flex items-center gap-2">
+                  <WifiOff className="h-4 w-4 flex-shrink-0" />
+                  <div>
+                    <strong className="font-bold">Plano Gerado Localmente: </strong>
+                    <span className="text-sm">Este plano foi criado sem conexão com a internet. Quando online, você pode gerar um plano ainda mais personalizado com IA.</span>
+                  </div>
+                </div>
+              )}
               <Card className="border border-border shadow-sm">
                 <CardHeader className="pb-4 border-b">
                   <div className="text-center space-y-3">
