@@ -6,10 +6,26 @@ import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
+// Só renderiza o ReCaptcha se a chave estiver configurada
+const AppWithProviders = () => (
+  <AuthProvider>
+    <App />
+  </AuthProvider>
+);
+
 createRoot(document.getElementById("root")!).render(
-    <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
-        <AuthProvider>
-            <App />
-        </AuthProvider>
+  RECAPTCHA_SITE_KEY ? (
+    <GoogleReCaptchaProvider 
+      reCaptchaKey={RECAPTCHA_SITE_KEY}
+      scriptProps={{
+        async: true,
+        defer: true,
+        appendTo: 'head',
+      }}
+    >
+      <AppWithProviders />
     </GoogleReCaptchaProvider>
+  ) : (
+    <AppWithProviders />
+  )
 );

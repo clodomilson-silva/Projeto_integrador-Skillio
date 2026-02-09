@@ -15,6 +15,8 @@ import json
 import io
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from django.http import HttpResponse
+import requests
+import os
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -1052,3 +1054,142 @@ def get_user_basic_info(request):
             'error': 'Erro ao buscar dados básicos',
             'detail': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ==================== Recuperação de Senha (Django) ====================
+
+@api_view(['POST'])
+def forgot_password(request):
+    """
+    Inicia o processo de recuperação de senha.
+    Gera um código de 6 dígitos e envia por email usando EmailJS.
+    
+    Body: {
+        "email": "usuario@email.com"
+    }
+    """
+    import random
+    from django.core.cache import cache
+    from django.contrib.auth.models import User
+    
+    email = request.data.get('email')
+    
+    if not email:
+        return Response({
+            'error': 'Email é obrigatório'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Verificar se o usuário existe
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Por segurança, não revelamos se o email existe ou não
+        return Response({
+            'message': 'Se este email estiver cadastrado, você receberá um código de verificação em alguns minutos.'
+        }, status=status.HTTP_200_OK)
+    
+    # Gerar código de 6 dígitos
+    code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    
+    # Salvar código no cache por 10 minutos
+    cache_key = f'reset_password_{email}'
+    cache.set(cache_key, code, 600)  # 10 minutos
+    
+    print(f'🔐 Código gerado para {email}: {code}')
+    
+    # Retornar código para o frontend enviar email
+    # EmailJS só funciona em aplicações browser (não aceita chamadas de backend)
+    return Response({
+        'message': 'Código gerado com sucesso.',
+        'code': code,
+        'email': email,
+        'username': user.username
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def reset_password(request):
+    """
+    Confirma a redefinição de senha com o código recebido.
+    
+    Body: {
+        "email": "usuario@email.com",
+        "code": "123456",
+        "new_password": "NovaSenha123!"
+    }
+    """
+    from django.core.cache import cache
+    from django.contrib.auth.models import User
+    
+    email = request.data.get('email')
+    code = request.data.get('code')
+    new_password = request.data.get('new_password')
+    
+    if not all([email, code, new_password]):
+        return Response({
+            'error': 'Email, código e nova senha são obrigatórios'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Verificar código no cache
+    cache_key = f'reset_password_{email}'
+    cached_code = cache.get(cache_key)
+    
+    if not cached_code:
+        return Response({
+            'error': 'Código expirado. Solicite um novo código.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    if cached_code != code:
+        return Response({
+            'error': 'Código de verificação inválido.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Atualizar senha
+    try:
+        user = User.objects.get(email=email)
+        user.set_password(new_password)
+        user.save()
+        
+        # Remover código do cache
+        cache.delete(cache_key)
+        
+        return Response({
+            'message': 'Senha redefinida com sucesso!'
+        }, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({
+            'error': 'Usuário não encontrado.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ==================== Progresso e Gamificação ====================
+
+
+@api_view(['POST'])
+def resend_code(request):
+    """
+    Reenvia o código de verificação.
+    
+    Body: {
+        "email": "usuario@email.com"
+    }
+    """
+    from .cognito_service import cognito_service
+    
+    email = request.data.get('email')
+    
+    if not email:
+        return Response({
+            'error': 'Email é obrigatório'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    result = cognito_service.resend_confirmation_code(email)
+    
+    if result['success']:
+        return Response({
+            'message': result['message']
+        }, status=status.HTTP_200_OK)
+    else:
+        return Response({
+            'error': result['message']
+        }, status=status.HTTP_400_BAD_REQUEST)

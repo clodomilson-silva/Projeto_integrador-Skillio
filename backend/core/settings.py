@@ -95,6 +95,18 @@ DATABASES = {
     )
 }
 
+# Suporte para psycopg3 (Python 3.14+)
+# O Django 5.2+ suporta tanto psycopg2 quanto psycopg3
+try:
+    import psycopg  # psycopg3
+    DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+except ImportError:
+    try:
+        import psycopg2  # psycopg2
+        DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+    except ImportError:
+        pass  # Sem driver PostgreSQL instalado
+
 # Configurações otimizadas para AWS RDS com alta latência
 DATABASES['default']['OPTIONS'] = {
     'connect_timeout': 30,  # Timeout de conexão (30 segundos)
@@ -257,3 +269,19 @@ if DEBUG:
     # Show SQL queries in console for debugging
     # LOGGING['loggers']['django.db.backends']['level'] = 'DEBUG'
     pass
+
+
+# ==================== AWS Cognito Configuration ====================
+# Configure estas variáveis no arquivo .env ou nas variáveis de ambiente
+AWS_COGNITO_REGION = os.environ.get('AWS_COGNITO_REGION', 'us-east-1')
+AWS_COGNITO_USER_POOL_ID = os.environ.get('AWS_COGNITO_USER_POOL_ID', '')
+AWS_COGNITO_APP_CLIENT_ID = os.environ.get('AWS_COGNITO_APP_CLIENT_ID', '')
+AWS_COGNITO_APP_CLIENT_SECRET = os.environ.get('AWS_COGNITO_APP_CLIENT_SECRET', '')
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+
+# ==================== EmailJS Configuration ====================
+# Para envio de emails de recuperação de senha
+EMAILJS_SERVICE_ID = os.environ.get('EMAILJS_SERVICE_ID', '')
+EMAILJS_TEMPLATE_ID = os.environ.get('EMAILJS_TEMPLATE_ID', '')
+EMAILJS_USER_ID = os.environ.get('EMAILJS_USER_ID', '')

@@ -10,6 +10,10 @@ O **Skillio** é uma plataforma educacional gamificada desenvolvida para auxilia
 - **Dashboard Interativo**: Visualização de progresso e estatísticas.
 - **Sistema de Quiz**: Avaliações adaptativas para nivelamento.
 - **Perfil do Usuário**: Gerenciamento de perfil com foto e estatísticas.
+- **🔐 Recuperação de Senha**: Sistema completo de "Esqueci minha senha" com AWS Cognito
+  - Envio de código por email
+  - Redefinição segura de senha
+  - Códigos com expiração automática
 
 ## 🏗️ Arquitetura do Projeto
 
@@ -541,8 +545,19 @@ O projeto possui documentação interativa da API usando **Swagger/OpenAPI**.
 
 ## 📚 Documentação Adicional
 
+### Guias Gerais
 - [Documentacao/](./Documentacao/) - Documentação específica do projeto
 - [TODO.md](./TODO.md) - Lista de tarefas pendentes
+
+### 🔐 Recuperação de Senha (AWS Cognito)
+- **[🚀 Tutorial Rápido (15 min)](./Docs/AWS_COGNITO_QUICK_TUTORIAL.md)** - Configure AWS Cognito rapidamente
+- **[📖 Guia Completo](./Docs/AWS_COGNITO_SETUP.md)** - Documentação detalhada com troubleshooting
+- **[⚡ Guia de Início Rápido](./Docs/PASSWORD_RESET_QUICKSTART.md)** - Visão geral da implementação
+
+### Outros Guias
+- [Docs/](./Docs/) - Todos os guias de configuração e deploy
+- [DOCKER_README.md](./Docs/DOCKER_README.md) - Guia Docker
+- [RENDER_DEPLOY.md](./Docs/RENDER_DEPLOY.md) - Deploy no Render
 
 ## 🤝 Contribuição
 

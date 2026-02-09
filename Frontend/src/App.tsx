@@ -15,6 +15,7 @@ import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import EditProfile from "./pages/EditProfile";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Game from "./pages/Game";
 import Index from "./pages/Index";
 import Lesson from "./pages/Lesson";
@@ -64,6 +65,7 @@ const App = () => (
                   <Route path="/register" element={<Register />} />
                   <Route path="/termos-condicoes" element={<TermosCondicoesDetalhado />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/quiz-nivelamento" element={<QuizNivelamento />} />
                   <Route path="/quiz-rapido" element={<QuickQuiz />} />
