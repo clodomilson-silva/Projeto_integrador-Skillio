@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.validators import UniqueValidator
 from django.utils import timezone
+from .validators import validate_safe_content
 import base64
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,6 +48,24 @@ class UserSerializer(serializers.ModelSerializer):
         if value.lower() != 'true':
             raise ValidationError("Você deve aceitar os termos e condições para se registrar.")
         return True
+    
+    def validate_first_name(self, value):
+        """Valida nome do usuário."""
+        if value:
+            return validate_safe_content(value, "nome")
+        return value
+    
+    def validate_profession(self, value):
+        """Valida profissão do usuário."""
+        if value:
+            return validate_safe_content(value, "profissão")
+        return value
+    
+    def validate_focus(self, value):
+        """Valida foco de estudo do usuário."""
+        if value:
+            return validate_safe_content(value, "foco de estudo")
+        return value
 
     def create(self, validated_data):
         # Separamos os dados que pertencem ao UserProfile

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from "@/hooks/use-toast";
+import { ContentFilter } from '@/utils/contentFilter';
 import { ArrowLeft, Eye, EyeOff, Loader2, Trash2, User } from 'lucide-react';
 import { useEffect, useState } from "react";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
@@ -148,6 +149,33 @@ const EditProfile = () => {
   const handleSave = async () => {
     setIsLoading(true);
 
+    // ===== VALIDAÇÃO DE CONTEÚDO SEGURO =====
+    const fieldsToValidate = [
+      { value: name, name: 'Nome' },
+      { value: profissao, name: 'Profissão' },
+      { value: foco, name: 'Foco' }
+    ];
+
+    for (const field of fieldsToValidate) {
+      if (field.value) {
+        const validation = ContentFilter.isSafe(field.value);
+        if (!validation.safe) {
+          toast({
+            title: `${field.name} inválido`,
+            description: validation.reason || "Conteúdo inapropriado detectado",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+    }
+
+    // Sanitiza os valores antes de enviar
+    const sanitizedName = ContentFilter.sanitize(name);
+    const sanitizedProfissao = ContentFilter.sanitize(profissao);
+    const sanitizedFoco = ContentFilter.sanitize(foco);
+
     let recaptchaToken = '';
     
     // Tenta executar o reCAPTCHA se disponível
@@ -161,14 +189,14 @@ const EditProfile = () => {
     }
 
     const formData = new FormData();
-    formData.append('first_name', name);
+    formData.append('first_name', sanitizedName);
     formData.append('email', email);
     if (dataNascimento) {
       formData.append('profile.birth_date', dataNascimento.toISOString().split('T')[0]);
     }
     formData.append('profile.educational_level', escolaridade);
-    formData.append('profile.profession', profissao);
-    formData.append('profile.focus', foco);
+    formData.append('profile.profession', sanitizedProfissao);
+    formData.append('profile.focus', sanitizedFoco);
     if (fotoFile) {
       formData.append('profile.foto', fotoFile);
     }

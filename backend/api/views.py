@@ -65,6 +65,8 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return user
 
     def update(self, request, *args, **kwargs):
+        from .validators import validate_safe_content
+        
         user = self.get_object()
         profile = user.profile
 
@@ -73,6 +75,11 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         email = request.data.get('email')
 
         if first_name is not None:
+            # Valida nome
+            try:
+                first_name = validate_safe_content(first_name, "nome")
+            except Exception as e:
+                return Response({'first_name': [str(e)]}, status=status.HTTP_400_BAD_REQUEST)
             user.first_name = first_name
         if email is not None:
             # Check if email is unique
@@ -95,8 +102,18 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         if educational_level is not None:
             profile.educational_level = educational_level
         if profession is not None:
+            # Valida profissão
+            try:
+                profession = validate_safe_content(profession, "profissão")
+            except Exception as e:
+                return Response({'profession': [str(e)]}, status=status.HTTP_400_BAD_REQUEST)
             profile.profession = profession
         if focus is not None:
+            # Valida foco
+            try:
+                focus = validate_safe_content(focus, "foco de estudo")
+            except Exception as e:
+                return Response({'focus': [str(e)]}, status=status.HTTP_400_BAD_REQUEST)
             profile.focus = focus
         if foto is not None and foto != '':
             try:
@@ -117,11 +134,28 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return Response(serializer.data)
 
 def gerar_plano_de_estudo(analise, escolaridade, foco, idade, max_streak, max_error_streak):
+    from .content_filter import ContentFilter
+    
     try:
         print(f"   🤖 gerar_plano_de_estudo: Iniciando...")
         print(f"      - Foco: '{foco}'")
         print(f"      - Escolaridade: '{escolaridade}'")
         print(f"      - Idade: {idade}")
+        
+        # VALIDA E SANITIZA O FOCO (proteção contra injection na IA)
+        if foco:
+            is_safe, reason = ContentFilter.is_safe(foco)
+            if not is_safe:
+                print(f"   ⚠️ Foco bloqueado: {reason}")
+                foco = "Conhecimentos Gerais"  # Fallback seguro
+            else:
+                foco = ContentFilter.sanitize(foco)
+        else:
+            foco = "Conhecimentos Gerais"
+        
+        # SANITIZA a escolaridade também
+        if escolaridade:
+            escolaridade = ContentFilter.sanitize(escolaridade)
         
         api_key = getattr(settings, 'GEMINI_API_KEY', None)
         if not api_key:

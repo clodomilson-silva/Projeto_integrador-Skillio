@@ -9,6 +9,7 @@ import { Eye, EyeOff, User, ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedDatePicker } from "@/components/ui/AnimatedDatePicker";
 import { useAuth } from "@/contexts/AuthContext";
+import { ContentFilter } from '@/utils/contentFilter';
 import apiClient from "@/api/axios";
 
 export const TermosCondicoes = () => (
@@ -82,16 +83,43 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // ===== VALIDAÇÃO DE CONTEÚDO SEGURO =====
+    const fieldsToValidate = [
+      { value: name, name: 'Nome' },
+      { value: profissao, name: 'Profissão' },
+      { value: foco, name: 'Foco' }
+    ];
+
+    for (const field of fieldsToValidate) {
+      if (field.value) {
+        const validation = ContentFilter.isSafe(field.value);
+        if (!validation.safe) {
+          toast({
+            title: `${field.name} inválido`,
+            description: validation.reason || "Conteúdo inapropriado detectado",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+    }
+
+    // Sanitiza os valores antes de enviar
+    const sanitizedName = ContentFilter.sanitize(name);
+    const sanitizedProfissao = profissao ? ContentFilter.sanitize(profissao) : '';
+    const sanitizedFoco = foco ? ContentFilter.sanitize(foco) : '';
+
     const formData = new FormData();
     formData.append('email', email);
     formData.append('password', password);
-    formData.append('first_name', name);
+    formData.append('first_name', sanitizedName);
     // Agrupando os dados do perfil para o serializer aninhado
     formData.append('terms_accepted', String(aceitouTermos));
     if (dataNascimento) formData.append('birth_date', dataNascimento.toISOString().split('T')[0]);
     if (escolaridade) formData.append('educational_level', escolaridade);
-    if (profissao) formData.append('profession', profissao);
-    if (foco) formData.append('focus', foco);
+    if (sanitizedProfissao) formData.append('profession', sanitizedProfissao);
+    if (sanitizedFoco) formData.append('focus', sanitizedFoco);
     if (fotoFile) formData.append('foto', fotoFile);
 
     try {
