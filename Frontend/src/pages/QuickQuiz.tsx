@@ -12,7 +12,6 @@ const QuickQuiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
-  const [xp, setXp] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
@@ -38,7 +37,6 @@ const QuickQuiz = () => {
 
     if (answerIndex === currentQuestion.correctAnswer) {
       setScore(score + 1);
-      setXp(xp + 10);
       setCorrectAnswers(correctAnswers + 1);
     } else {
       setWrongAnswers(wrongAnswers + 1);
@@ -64,7 +62,6 @@ const QuickQuiz = () => {
     setSelectedAnswer(null);
     setIsAnswered(false);
     setScore(0);
-    setXp(0);
     setCorrectAnswers(0);
     setWrongAnswers(0);
     setQuizFinished(false);
@@ -94,12 +91,8 @@ const QuickQuiz = () => {
               <p className="text-muted-foreground">Parabéns por testar seus conhecimentos!</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 py-6">
-              <div className="space-y-2">
-                <div className="text-4xl font-bold text-primary">{xp}</div>
-                <div className="text-sm text-muted-foreground">XP Ganho</div>
-              </div>
-              <div className="space-y-2">
+            <div className="py-6">
+              <div className="space-y-2 text-center">
                 <div className="text-4xl font-bold text-secondary">{accuracy}%</div>
                 <div className="text-sm text-muted-foreground">Precisão</div>
               </div>
@@ -166,10 +159,6 @@ const QuickQuiz = () => {
           </div>
           
           <div className="flex gap-4">
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              <Zap className="h-4 w-4 mr-1 text-yellow-500" />
-              {xp} XP
-            </Badge>
             <Badge variant="outline" className="text-lg px-4 py-2">
               {currentQuestionIndex + 1}/{totalQuestions}
             </Badge>

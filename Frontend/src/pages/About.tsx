@@ -87,7 +87,7 @@ const About = () => {
     },
     {
       name: "Diego Morgado",
-      role: "Gestora de Conteúdo",
+      role: "Gestor de Conteúdo",
       description: "Coordena a criação de materiais didáticos e curadoria de conteúdo educacional."
     },
     {

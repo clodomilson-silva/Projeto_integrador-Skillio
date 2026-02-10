@@ -80,7 +80,7 @@ const GamePreview = () => {
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   100 perguntas rápidas de Matemática, Português, História, Geografia e Ciências. 
-                  Sem necessidade de cadastro! Ganhe 10 XP por resposta certa.
+                  Sem necessidade de cadastro! 
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                   <span className="px-3 py-1 bg-primary/10 rounded-full text-sm font-medium">
@@ -90,7 +90,7 @@ const GamePreview = () => {
                     ✓ 100 perguntas variadas
                   </span>
                   <span className="px-3 py-1 bg-primary/10 rounded-full text-sm font-medium">
-                    ✓ Contador de XP
+                    ✓ Perguntas Aleatórias a cada jogo
                   </span>
                 </div>
               </div>
