@@ -2,11 +2,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { BookOpen, Users, Target, Award, Heart, Lightbulb, Globe, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookOpen, Users, Target, Award, Heart, Lightbulb, Globe, ChevronLeft, ChevronRight, Gamepad2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const About = () => {
+  const { isAuthenticated } = useAuth();
+  
   const features = [
     {
       icon: BookOpen,
@@ -202,10 +205,19 @@ const About = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register">
+              <Link to={isAuthenticated ? "/trilha" : "/login"}>
                 <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-white shadow-orange-glow">
-                  <Users className="mr-2 h-5 w-5" />
-                  Junte-se a Nós
+                  {isAuthenticated ? (
+                    <>
+                      <Gamepad2 className="mr-2 h-5 w-5" />
+                      Jogue Agora
+                    </>
+                  ) : (
+                    <>
+                      <Users className="mr-2 h-5 w-5" />
+                      Junte-se a Nós
+                    </>
+                  )}
                 </Button>
               </Link>
               <Link to="/subjects">
@@ -488,10 +500,19 @@ const About = () => {
             <p className="text-xl text-muted-foreground mb-8">
               Junte-se a milhares de estudantes que já descobriram uma nova forma de aprender.
             </p>
-            <Link to="/register">
+            <Link to={isAuthenticated ? "/trilha" : "/login"}>
               <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-white shadow-orange-glow">
-                <BookOpen className="mr-2 h-5 w-5" />
-                Começar Agora - É Grátis!
+                {isAuthenticated ? (
+                  <>
+                    <Gamepad2 className="mr-2 h-5 w-5" />
+                    Jogue Agora
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    Começar Agora - É Grátis!
+                  </>
+                )}
               </Button>
             </Link>
           </div>
