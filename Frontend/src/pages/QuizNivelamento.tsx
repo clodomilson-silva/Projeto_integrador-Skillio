@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Star, Target, Award, TrendingUp, TrendingDown, SkipForward, BookOpenCheck, WifiOff } from 'lucide-react';
+import { Star, Target, Award, TrendingUp, TrendingDown, SkipForward, BookOpenCheck, WifiOff, CloudOff } from 'lucide-react';
 import { useGamification } from "@/hooks/useGamification";
 import apiClient from '@/api/axios';
 import { usePerformance } from "@/hooks/usePerformance";
@@ -641,13 +642,13 @@ const QuizNivelamento = () => {
       <Card className="p-6 sm:p-8 max-w-2xl w-full shadow-elevated">
         {erro && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert"><strong className="font-bold">Erro!</strong><span className="block sm:inline"> {erro}</span></div>}
         {modoOffline && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 px-4 py-3 rounded relative mb-4 flex items-center gap-2" role="alert">
-            <WifiOff className="h-4 w-4 flex-shrink-0" />
-            <div>
-              <strong className="font-bold">Modo Offline: </strong>
-              <span className="block sm:inline">Usando perguntas pré-definidas. Seus resultados serão salvos normalmente.</span>
-            </div>
-          </div>
+          <Alert className="border-primary/30 bg-primary/5 dark:bg-primary/10 mb-4">
+            <CloudOff className="h-4 w-4 text-primary" />
+            
+            <AlertDescription className="text-muted-foreground">
+              Detectamos instabilidade na conexão,  seus resultados serão salvos normalmente.
+            </AlertDescription>
+          </Alert>
         )}
         <>
           <div className="mb-4">

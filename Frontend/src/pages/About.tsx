@@ -414,7 +414,7 @@ const About = () => {
                 </span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                Conheça as pessoas apaixonadas por educação que tornam o EdGame possível.
+                Conheça as pessoas apaixonadas por educação que tornam a Skillio possível.
               </p>
             </div>
 

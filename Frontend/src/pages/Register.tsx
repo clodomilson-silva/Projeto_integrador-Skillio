@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import EducacaoParticles from "@/components/EducacaoParticles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Eye, EyeOff, User, ArrowLeft, Loader2, Camera, Image as ImageIcon, UserCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedDatePicker } from "@/components/ui/AnimatedDatePicker";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,10 +37,26 @@ const Register = () => {
   const [foco, setFoco] = useState("");
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraTraseiraRef = useRef<HTMLInputElement>(null);
+  const cameraFrontalRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
+
+  // Detecta se está rodando como PWA ou em dispositivo móvel
+  const isPWAorMobile = () => {
+    // Verifica se está instalado como PWA
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                  ('standalone' in window.navigator && (window.navigator as { standalone?: boolean }).standalone === true);
+    
+    // Verifica se é dispositivo móvel
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                     (navigator.maxTouchPoints > 0 && window.innerWidth < 768);
+    
+    return isPWA || isMobile;
+  };
 
   const opcoesFoco = ["ENEM", "Lógica", "Direito", "Português", "Matemática", "Programação", "História"];
 
@@ -74,9 +90,49 @@ const Register = () => {
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validação de tamanho (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "A foto deve ter no máximo 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Validação de tipo
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Por favor, selecione uma imagem",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       setFotoFile(file);
       setFotoPreview(URL.createObjectURL(file));
     }
+  };
+
+  const abrirGaleria = () => {
+    fileInputRef.current?.click();
+  };
+
+  const abrirCameraTraseira = () => {
+    cameraTraseiraRef.current?.click();
+  };
+
+  const abrirCameraFrontal = () => {
+    cameraFrontalRef.current?.click();
+  };
+
+  const removerFoto = () => {
+    setFotoFile(null);
+    setFotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraTraseiraRef.current) cameraTraseiraRef.current.value = '';
+    if (cameraFrontalRef.current) cameraFrontalRef.current.value = '';
   };
 
   const handleCadastro = async (e: React.FormEvent) => {
@@ -261,11 +317,109 @@ const Register = () => {
 
           {step === 4 && (
             <form className="space-y-6 pt-10" onSubmit={handleCadastro}>
-              <div className="space-y-2">
-                <Label htmlFor="foto">Foto de perfil (Opcional)</Label>
-                <Input id="foto" type="file" accept="image/*" onChange={handleFotoChange} disabled={isLoading} />
-                {fotoPreview && <img src={fotoPreview} alt="Preview" className="mt-2 w-24 h-24 rounded-full object-cover mx-auto" />}
+              <div className="space-y-4">
+                <Label className="text-base">Foto de perfil <span className="text-muted-foreground text-sm">(Opcional)</span></Label>
+                
+                {/* Inputs ocultos */}
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFotoChange}
+                  className="hidden"
+                  disabled={isLoading}
+                />
+                <input 
+                  ref={cameraTraseiraRef}
+                  type="file" 
+                  accept="image/*" 
+                  capture="environment"
+                  onChange={handleFotoChange}
+                  className="hidden"
+                  disabled={isLoading}
+                />
+                <input 
+                  ref={cameraFrontalRef}
+                  type="file" 
+                  accept="image/*" 
+                  capture="user"
+                  onChange={handleFotoChange}
+                  className="hidden"
+                  disabled={isLoading}
+                />
+                
+                {/* Preview da foto */}
+                {fotoPreview ? (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                      <img 
+                        src={fotoPreview} 
+                        alt="Preview" 
+                        className="w-32 h-32 rounded-full object-cover border-4 border-primary/20 shadow-lg" 
+                      />
+                      <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-1 border border-border">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                    </div>
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      size="sm"
+                      onClick={removerFoto}
+                      disabled={isLoading}
+                    >
+                      Remover foto
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Interface para PWA/Mobile: Selfie e Galeria */}
+                    {isPWAorMobile() ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-24 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/50 transition-all"
+                          onClick={abrirCameraFrontal}
+                          disabled={isLoading}
+                        >
+                          <UserCircle className="h-6 w-6 text-primary" />
+                          <span className="text-sm font-medium">Selfie</span>
+                        </Button>
+                        
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-24 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/50 transition-all"
+                          onClick={abrirGaleria}
+                          disabled={isLoading}
+                        >
+                          <ImageIcon className="h-6 w-6 text-primary" />
+                          <span className="text-sm font-medium">Galeria</span>
+                        </Button>
+                      </div>
+                    ) : (
+                      /* Interface para Web Desktop: Apenas escolher foto */
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-24 flex flex-col gap-3 hover:bg-primary/5 hover:border-primary/50 transition-all"
+                        onClick={abrirGaleria}
+                        disabled={isLoading}
+                      >
+                        <ImageIcon className="h-8 w-8 text-primary" />
+                        <span className="font-medium">Escolher Foto</span>
+                        <span className="text-xs text-muted-foreground">Selecione uma imagem do seu computador</span>
+                      </Button>
+                    )}
+                  </>
+                )}
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  Adicione uma foto para personalizar seu perfil
+                </p>
               </div>
+              
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}

@@ -27,7 +27,7 @@ const Footer = () => {
           <div className="col-span-2">
             <div className="flex items-center space-x-3 mb-4">
               <img
-              src="/public/logoSkillio2.svg"
+              src="/logoSkillio2.svg"
               alt="Skillio"
               className="h-12 w-18 rounded-md object-cover"
             />

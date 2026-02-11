@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { ArrowLeft, BookOpenCheck, WifiOff } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowLeft, BookOpenCheck, WifiOff, CloudOff, Info } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { Separator } from '@/components/ui/separator';
 import LoadingAnimation from '@/components/ui/LoadingAnimation';
@@ -576,13 +577,15 @@ const StudyPlan = () => {
             // --- Visualização do Plano de Estudo ---
             <div className="space-y-6">
               {planoOffline && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 px-4 py-3 rounded-lg flex items-center gap-2">
-                  <WifiOff className="h-4 w-4 flex-shrink-0" />
-                  <div>
-                    <strong className="font-bold">Plano Gerado Localmente: </strong>
-                    <span className="text-sm">Este plano foi criado sem conexão com a internet. Quando online, você pode gerar um plano ainda mais personalizado com IA.</span>
-                  </div>
-                </div>
+                <Alert className="border-primary/30 bg-primary/5 dark:bg-primary/10">
+                  <CloudOff className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary font-semibold">
+                    Modo Estudo Offline Ativado
+                  </AlertTitle>
+                  <AlertDescription className="text-muted-foreground">
+                    Detectamos instabilidade na conexão. Seu plano foi gerado localmente com base no seu último desempenho.
+                  </AlertDescription>
+                </Alert>
               )}
               <Card className="border border-border shadow-sm">
                 <CardHeader className="pb-4 border-b">
