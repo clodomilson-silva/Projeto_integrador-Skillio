@@ -4,6 +4,12 @@ import axios from 'axios';
 const getBaseURL = () => {
     const hostname = window.location.hostname;
     
+    // Se tiver variável de ambiente configurada, usa ela (produção)
+    if (import.meta.env.VITE_API_URL) {
+        console.log('☁️ Modo Produção - Base URL:', import.meta.env.VITE_API_URL);
+        return import.meta.env.VITE_API_URL;
+    }
+    
     // Se estiver acessando via IP da rede (ex: 192.168.0.89)
     if (hostname.startsWith('192.168') || hostname.startsWith('10.') || hostname.startsWith('172.')) {
         const baseURL = `http://${hostname}:8000/api/v1`;
