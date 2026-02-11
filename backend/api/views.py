@@ -611,8 +611,8 @@ class RankingView(generics.GenericAPIView):
         """Helper method to safely get avatar URL"""
         try:
             if hasattr(user, 'profile') and user.profile and user.profile.foto:
-                # Retorna URL relativa para funcionar com CloudFront/HTTPS
-                return f'/api/v1/avatar/{user.id}/'
+                # Retorna URL absoluta para funcionar em desenvolvimento local e produção
+                return request.build_absolute_uri(f'/api/v1/avatar/{user.id}/')
         except Exception:
             pass
         return None
