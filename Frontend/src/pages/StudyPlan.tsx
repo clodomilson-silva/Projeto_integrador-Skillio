@@ -22,6 +22,13 @@ type StudyPlanAction = {
   topics: StudyPlanTopic[];
 };
 
+// Tipo do plano offline (formato antigo)
+type OfflineStudyPlanAction = {
+  title: string;
+  description: string;
+  priority: string;
+};
+
 type StudyPlan = {
   title: string;
   greeting: string;
@@ -30,7 +37,7 @@ type StudyPlan = {
     focusPoints: string[];
     strength: string;
   };
-  actionPlan: StudyPlanAction[];
+  actionPlan: (StudyPlanAction | OfflineStudyPlanAction)[];
   nextChallenge: {
     title: string;
     suggestion: string;
@@ -182,6 +189,35 @@ const enriquecerTopico = (area: string, topic: StudyPlanTopic, index: number): S
   return topic;
 };
 
+// Função para converter formato offline para o formato novo
+const converterActionOffline = (action: OfflineStudyPlanAction): StudyPlanAction => {
+  // Extrai o nome da área do título (ex: "Prioridade Máxima: Matemática" -> "Matemática")
+  const areaMatch = action.title.match(/:\s*(.+)$/);
+  const area = areaMatch ? areaMatch[1] : action.title;
+  
+  return {
+    area,
+    emoji: action.priority === 'ALTA' ? '🔥' : action.priority === 'MÉDIA' ? '⚡' : '📚',
+    topics: [
+      {
+        title: action.title,
+        description: action.description
+      }
+    ]
+  };
+};
+
+// Função para normalizar actionPlan (converter formato antigo se necessário)
+const normalizarActionPlan = (actions: (StudyPlanAction | OfflineStudyPlanAction)[]): StudyPlanAction[] => {
+  return actions.map(action => {
+    // Verifica se é formato offline (tem 'priority' ao invés de 'area')
+    if ('priority' in action && !('area' in action)) {
+      return converterActionOffline(action as OfflineStudyPlanAction);
+    }
+    return action as StudyPlanAction;
+  });
+};
+
 // Componente para renderizar o plano de estudo
 const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFocus: string }) => {
   // Defensive: se plan ou partes essenciais estiverem ausentes, não quebre a UI
@@ -202,21 +238,31 @@ const StudyPlanDisplay = ({ plan, userFocus }: { plan: StudyPlan | null; userFoc
     );
   }
 
-  const actionPlan: StudyPlanAction[] = Array.isArray(plan.actionPlan) ? plan.actionPlan : [];
+  const actionPlan: StudyPlanAction[] = Array.isArray(plan.actionPlan) 
+    ? normalizarActionPlan(plan.actionPlan) 
+    : [];
   const focusPoints: string[] = Array.isArray(plan.analysis?.focusPoints) ? plan.analysis.focusPoints : [];
   
   // Reorganiza o plano para priorizar o foco do usuário
   const reorganizarPlanoPorFoco = (actions: StudyPlanAction[], foco: string): StudyPlanAction[] => {
+    // 🛡️ VALIDAÇÃO: Remove undefined e ações sem 'area'
+    const validActions = actions.filter(a => a && a.area && typeof a.area === 'string');
+    
+    if (validActions.length === 0) {
+      console.warn('⚠️ Nenhuma ação válida encontrada no plano');
+      return [];
+    }
+    
     const focoLower = foco.toLowerCase();
     console.log('🎯 DEBUG StudyPlan - Reorganizando por foco:', { foco, focoLower });
-    console.log('🎯 DEBUG StudyPlan - Actions disponíveis:', actions.map(a => a.area));
+    console.log('🎯 DEBUG StudyPlan - Actions disponíveis:', validActions.map(a => a.area));
     
-    const acoesFoco = actions.filter(a => {
+    const acoesFoco = validActions.filter(a => {
       const match = a.area.toLowerCase().includes(focoLower);
       console.log(`  - "${a.area}" contains "${focoLower}"? ${match}`);
       return match;
     });
-    const acoesOutras = actions.filter(a => !a.area.toLowerCase().includes(focoLower));
+    const acoesOutras = validActions.filter(a => !a.area.toLowerCase().includes(focoLower));
     
     console.log('🎯 DEBUG StudyPlan - Ações do foco:', acoesFoco.map(a => a.area));
     console.log('🎯 DEBUG StudyPlan - Outras ações:', acoesOutras.map(a => a.area));
@@ -472,9 +518,27 @@ const StudyPlan = () => {
       const planoLocal = recuperarPlanoLocal();
       
       if (planoLocal) {
-        console.log('✅ StudyPlan: Plano local encontrado');
-        setStudyPlan(planoLocal);
-        setPlanoOffline(true);
+        // 🛡️ VALIDAÇÃO: Verifica se o plano local tem estrutura válida
+        const hasValidActionPlan = planoLocal.actionPlan && 
+                                   Array.isArray(planoLocal.actionPlan) &&
+                                   planoLocal.actionPlan.length > 0 &&
+                                   planoLocal.actionPlan.some(a => {
+                                     if (!a) return false;
+                                     // Aceita formato novo (area) ou antigo (title + priority)
+                                     return (a.area && typeof a.area === 'string') || 
+                                            (a.title && typeof a.title === 'string');
+                                   });
+        
+        if (hasValidActionPlan) {
+          console.log('✅ StudyPlan: Plano local encontrado e validado');
+          setStudyPlan(planoLocal);
+          setPlanoOffline(true);
+        } else {
+          console.warn('⚠️ StudyPlan: Plano local corrompido, limpando...');
+          localStorage.removeItem('offlineStudyPlan');
+          setStudyPlan(null);
+          setPlanoOffline(false);
+        }
       } else {
         console.log('❌ StudyPlan: Nenhum plano encontrado (servidor ou local)');
         setStudyPlan(null);
