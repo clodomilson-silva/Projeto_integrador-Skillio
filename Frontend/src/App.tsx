@@ -1,6 +1,7 @@
 import FloatingTrilhaButton from "@/components/FloatingTrilhaButton";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import { PWAPrompt } from "@/components/PWAPrompt";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -44,6 +45,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <PWAPrompt />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <GamificationProvider>
             <Header />
