@@ -37,7 +37,7 @@ echo ✅ Pacote criado: backend.tar.gz
 echo.
 echo 📡 Enviando para servidor EC2...
 
-scp -i skillio-key.pem backend.tar.gz ubuntu@3.142.80.221:~/
+scp -i skillio-key.pem backend.tar.gz ubuntu@54.227.194.67:~/
 
 if errorlevel 1 (
     echo ❌ Erro ao enviar arquivo!
@@ -50,7 +50,7 @@ echo ✅ Arquivo enviado!
 echo.
 echo 🔄 Aplicando atualização no servidor...
 
-ssh -i skillio-key.pem ubuntu@3.142.80.221 "cd ~/Projeto_integrador/backend && tar -xzf ~/backend.tar.gz && rm ~/backend.tar.gz && source ~/venv/bin/activate && pip install -r requirements_prod.txt --quiet && python manage.py migrate --settings=core.settings_production && python manage.py collectstatic --noinput --settings=core.settings_production --clear && sudo systemctl restart skillio"
+ssh -i skillio-key.pem ubuntu@54.227.194.67 "cd ~/Projeto_integrador/backend && tar -xzf ~/backend.tar.gz && rm ~/backend.tar.gz && source ~/venv/bin/activate && pip install -r requirements_prod.txt --quiet && python manage.py migrate --settings=core.settings_production && python manage.py collectstatic --noinput --settings=core.settings_production --clear && sudo systemctl restart skillio"
 
 if errorlevel 1 (
     echo ❌ Erro ao aplicar atualização!

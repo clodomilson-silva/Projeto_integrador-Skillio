@@ -25,7 +25,7 @@
    2. Digite: https://d3lxa11agu4uln.cloudfront.net
    3. Deve carregar o site com HTTPS (cadeado verde)
    4. Abra o Console (F12 no desktop):
-      - Deve mostrar: "☁️ Modo Produção - Base URL: http://3.142.80.221/api/v1"
+      - Deve mostrar: "☁️ Modo Produção - Base URL: http://54.227.194.67/api/v1"
    
    5. Teste funcionalidades:
       ✓ Cadastro
@@ -38,7 +38,7 @@
    Distribution ID: E2YV8BLYATEHPW
    Region: Global (Edge Locations)
    Origin: skillio-frontend-087736691624.s3-website.us-east-2.amazonaws.com
-   Backend: http://3.142.80.221
+   Backend: http://54.227.194.67
    
    Price Class: PriceClass_100 (USA, Canada, Europa)
    Cache: TTL 86400s (1 dia)

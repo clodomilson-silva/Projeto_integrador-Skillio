@@ -15,9 +15,9 @@
 ### 2️⃣ Localize sua instância
 
 1. No menu lateral esquerdo, click em **"Instances"** (Instâncias)
-2. Procure pela instância: **i-011652edaf0416223**
+2. Procure pela instância: **i-0832ea4e8f50447ec**
    - Nome pode aparecer como: `skillio-backend` ou similar
-   - IP Público: `3.142.80.221`
+   - IP Público: `54.227.194.67`
 3. Click na checkbox ao lado da instância para selecioná-la
 
 ---
@@ -177,9 +177,9 @@ Use o método de SSH tradicional (requer Git Bash ou WSL)
 ## ✅ APÓS A ATUALIZAÇÃO
 
 **Testar a API:**
-- http://3.142.80.221:8000
-- http://3.142.80.221:8000/api/health/
-- http://3.142.80.221:8000/admin
+- http://54.227.194.67:8000
+- http://54.227.194.67:8000/api/health/
+- http://54.227.194.67:8000/admin
 
 **Testar o Frontend:**
 - https://d3lxa11agu4uln.cloudfront.net

@@ -167,12 +167,12 @@ icacls skillio-key.pem /grant:r "%USERNAME%:R"
 
 ```cmd
 # Via AWS CLI
-aws ec2 describe-instances --instance-ids i-011652edaf0416223
+aws ec2 describe-instances --instance-ids i-0832ea4e8f50447ec
 ```
 
 ### URLs para testar depois do deploy
 
-- **Backend API:** http://3.142.80.221:8000
+- **Backend API:** http://54.227.194.67:8000
 - **Frontend (CloudFront):** https://d3lxa11agu4uln.cloudfront.net
 - **Frontend (S3):** http://skillio-frontend-087736691624.s3-website.us-east-2.amazonaws.com
 

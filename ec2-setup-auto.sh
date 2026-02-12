@@ -74,7 +74,7 @@ cat > ~/.env << EOF
 # Django
 DEBUG=0
 SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-ALLOWED_HOSTS=localhost,127.0.0.1,3.142.80.221,ec2-3-142-80-221.us-east-2.compute.amazonaws.com
+ALLOWED_HOSTS=localhost,127.0.0.1,54.227.194.67,ec2-54-227-194-67.compute-1.amazonaws.com
 
 # Database
 DB_ENGINE=django.db.backends.postgresql
@@ -90,7 +90,7 @@ DB_PORT=${DB_PORT}
 # RECAPTCHA_SECRET_KEY=sua-chave-aqui
 
 # CORS
-CORS_ALLOWED_ORIGINS=http://3.142.80.221,http://localhost:5173
+CORS_ALLOWED_ORIGINS=http://54.227.194.67,http://localhost:5173
 
 # Email (opcional)
 EMAIL_HOST=smtp.gmail.com

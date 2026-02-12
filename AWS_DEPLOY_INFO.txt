@@ -25,8 +25,8 @@ Security Groups: sg-08e9c4039ee2a4ec0, sg-08686732bc86f71c9
     🖥️  EC2 INSTANCE (BACKEND)
 ═══════════════════════════════════════════════════════════
 
-Instance ID:     i-011652edaf0416223
-IP Público:      3.142.80.221
+Instance ID:     i-0832ea4e8f50447ec
+IP Público:      54.227.194.67
 DNS Público:     ec2-3-142-80-221.us-east-2.compute.amazonaws.com
 IP Privado:      172.31.32.16
 Status:          running ✅
@@ -47,13 +47,13 @@ Portas Abertas:
 ═══════════════════════════════════════════════════════════
 
 Conectar via SSH:
-  ssh -i skillio-key.pem ubuntu@3.142.80.221
+  ssh -i skillio-key.pem ubuntu@54.227.194.67
 
 Testar Backend:
-  http://3.142.80.221/api/v1/
+  http://54.227.194.67/api/v1/
 
 Admin Django:
-  http://3.142.80.221/admin/
+  http://54.227.194.67/admin/
 
 ═══════════════════════════════════════════════════════════
     📝 PRÓXIMOS PASSOS
@@ -75,14 +75,14 @@ Bucket:          skillio-frontend-087736691624
 Região:          us-east-2 (Ohio)
 URL Pública:     http://skillio-frontend-087736691624.s3-website.us-east-2.amazonaws.com
 Status:          Online ✅
-API Backend:     http://3.142.80.221/api/v1
+API Backend:     http://54.227.194.67/api/v1
 Arquivos:        46 arquivos (3.78 MB)
 
 ═══════════════════════════════════════════════════════════
     🎉 DEPLOY COMPLETO!
 ═══════════════════════════════════════════════════════════
 
-✅ Backend Django rodando em: http://3.142.80.221/
+✅ Backend Django rodando em: http://54.227.194.67/
 ✅ Frontend React rodando em: http://skillio-frontend-087736691624.s3-website.us-east-2.amazonaws.com
 ✅ Banco de dados RDS PostgreSQL conectado
 ✅ PWA configurado (funciona offline)

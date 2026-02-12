@@ -44,7 +44,7 @@ aws configure
 
 ```bash
 # Backend
-ssh -i skillio-key.pem ubuntu@3.142.80.221
+ssh -i skillio-key.pem ubuntu@54.227.194.67
 cd ~/Projeto_integrador
 git config credential.helper store
 git pull origin Renan---AWS-Free-Tier
@@ -59,7 +59,7 @@ exit
 
 #### Backend:
 1. Acesse: https://console.aws.amazon.com/ec2
-2. Selecione instância `i-011652edaf0416223`
+2. Selecione instância `i-0832ea4e8f50447ec`
 3. Click em "Connect" → "EC2 Instance Connect"
 4. No terminal que abrir:
 ```bash
@@ -87,7 +87,7 @@ Configurar CI/CD para deploy automático a cada push. Quer que eu configure?
 1. ✅ **Instalar OpenSSH** (ou usar Git Bash)
 2. ✅ **Instalar AWS CLI**
 3. ✅ **Configurar AWS CLI** com suas credenciais
-4. ✅ **Testar conexão**: `ssh -i skillio-key.pem ubuntu@3.142.80.221`
+4. ✅ **Testar conexão**: `ssh -i skillio-key.pem ubuntu@54.227.194.67`
 5. ✅ **Rodar scripts de deploy**
 
 ---
@@ -108,7 +108,7 @@ Configurar CI/CD para deploy automático a cada push. Quer que eu configure?
 Após instalar as ferramentas, execute:
 ```cmd
 # 1. Testar SSH
-ssh -i skillio-key.pem ubuntu@3.142.80.221
+ssh -i skillio-key.pem ubuntu@54.227.194.67
 
 # 2. Se funcionar, atualizar backend
 deploy_backend_scp.bat
@@ -128,7 +128,7 @@ deploy_frontend_simple.bat
 - **CloudFront:** https://console.aws.amazon.com/cloudfront
 
 - **Frontend Deploy:** https://d3lxa11agu4uln.cloudfront.net
-- **Backend API:** http://3.142.80.221:8000
+- **Backend API:** http://54.227.194.67:8000
 
 ---
 
