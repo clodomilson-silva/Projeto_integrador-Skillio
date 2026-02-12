@@ -223,13 +223,8 @@ const ResetPassword = () => {
                 type="text"
                 value={code}
                 onChange={(e) => {
-                  const cleanedCode = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  setCode(cleanedCode);
-                }}
-                onPaste={(e) => {
-                  e.preventDefault();
-                  const pastedText = e.clipboardData.getData('text');
-                  const cleanedCode = pastedText.replace(/\D/g, '').slice(0, 6);
+                  // Remove espaços, hífen, e outros caracteres não-numéricos
+                  const cleanedCode = e.target.value.trim().replace(/\D/g, '').slice(0, 6);
                   setCode(cleanedCode);
                 }}
                 placeholder="000000"
