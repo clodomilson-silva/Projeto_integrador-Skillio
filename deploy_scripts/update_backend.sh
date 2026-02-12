@@ -51,22 +51,28 @@ fi
 pip install -r requirements_prod.txt
 
 # Verificar se dependências foram instaladas
-if ! python -c "import dj_database_url" 2>/dev/null; then
+if ! ~/venv/bin/python -c "import dj_database_url" 2>/dev/null; then
     echo "❌ Erro ao instalar dependências!"
     exit 1
 fi
 
 # Rodar migrações
 echo "🔄 Aplicando migrações..."
-python manage.py migrate
+~/venv/bin/python manage.py migrate
 
 # Criar tabela de cache (se não existir)
 echo "💾 Configurando cache..."
-python manage.py createcachetable 2>/dev/null || true
+~/venv/bin/python manage.py createcachetable 2>/dev/null || true
 
 # Coletar arquivos estáticos
 echo "📁 Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput --clear
+~/venv/bin/python manage.py collectstatic --noinput --clear
+
+# Atualizar arquivo de serviço
+echo "🔧 Atualizando configuração do systemd..."
+cd ~/Projeto_integrador
+sudo cp skillio.service /etc/systemd/system/
+sudo systemctl daemon-reload
 
 # Reiniciar serviço
 echo "🔄 Reiniciando serviço..."

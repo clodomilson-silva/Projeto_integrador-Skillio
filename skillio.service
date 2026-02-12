@@ -7,9 +7,9 @@ Type=simple
 User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/Projeto_integrador/backend
-Environment="PATH=/home/ubuntu/Projeto_integrador/backend/venv/bin"
+Environment="PATH=/home/ubuntu/venv/bin"
 EnvironmentFile=/home/ubuntu/.env
-ExecStart=/home/ubuntu/Projeto_integrador/backend/venv/bin/gunicorn \
+ExecStart=/home/ubuntu/venv/bin/gunicorn \
     --workers 3 \
     --bind 0.0.0.0:8000 \
     --timeout 300 \
