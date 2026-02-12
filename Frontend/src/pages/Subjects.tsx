@@ -6,19 +6,37 @@ import { ArrowLeft, Play } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { subjects } from "@/data/subjects";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGamification } from "@/hooks/useGamification";
+import { useToast } from "@/hooks/use-toast";
 
 const Subjects = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-
-  const handlePlayClick = (subjectId: string) => {
-    if (isAuthenticated) {
-      // Usuário está logado, vai direto para o jogo
-      navigate(`/game/${subjectId}`);
-    } else {
-      // Usuário NÃO está logado, redireciona para login com parâmetro redirect
+  const { hearts, refillHearts } = useGamification();
+  const { toast } = useToast();
+  const handlePlayClick = async (subjectId: string) => {
+    if (!isAuthenticated) {
       navigate(`/login?redirect=/game/${subjectId}`);
+      return;
     }
+
+    // Usuário autenticado: verifica vidas
+    if (typeof hearts === 'number' && hearts <= 0) {
+      toast({
+        title: 'Sem vidas disponíveis',
+        description: 'Você está sem vidas. As vidas recarregam automaticamente a cada 3 minutos.',
+        className: 'bg-yellow-500/10 border-yellow-500/50'
+      });
+      try {
+        await refillHearts();
+      } catch (e) {
+        // ignore
+      }
+      return;
+    }
+
+    // Possui vidas: navega para o jogo
+    navigate(`/game/${subjectId}`);
   };
 
   return (
