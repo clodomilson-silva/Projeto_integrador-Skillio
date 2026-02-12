@@ -26,7 +26,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
-  const { level, xp, xpForNextLevel, progressPercentage, streak, hearts, nextRefillInSeconds, refillHearts, refetchGamificationData } = useGamification();
+  const { level, xp, xpForNextLevel, progressPercentage, streak, hearts, nextRefillInSeconds, refillHearts, refetchGamificationData, isLoading } = useGamification();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [userProfile, setUserProfile] = useState<{ first_name: string; foto: string | null } | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -53,8 +53,12 @@ const Header = () => {
     const handleDataUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
       const detail = customEvent.detail;
-      if (detail && (detail.type === 'hearts' || detail.type === 'gamification')) {
-        // Força atualização dos dados quando vidas ou gamificação mudarem
+      if (detail && detail.type === 'hearts' && typeof detail.hearts === 'number') {
+        // Atualização otimizada: não faz refetch, apenas usa o valor do evento
+        console.log('🔔 Header: Vidas atualizadas via evento:', detail.hearts);
+      }
+      if (detail && detail.type === 'gamification') {
+        // Apenas para mudanças gerais de gamificação fazemos refetch
         refetchGamificationData();
       }
     };
@@ -68,16 +72,11 @@ const Header = () => {
   // Atualiza countdown local a partir de nextRefillInSeconds
   useEffect(() => {
     let interval: number | undefined;
-    if (nextRefillInSeconds && hearts <= 0) {
+    if (nextRefillInSeconds && nextRefillInSeconds > 0 && hearts < 5) {
       setCountdown(nextRefillInSeconds);
       interval = window.setInterval(() => {
         setCountdown(prev => {
-          if (prev === null) return null;
-          if (prev <= 1) {
-            // tempo zerou — tenta recarregar
-            refillHearts();
-            return null;
-          }
+          if (prev === null || prev <= 0) return null;
           return prev - 1;
         });
       }, 1000);
@@ -85,7 +84,7 @@ const Header = () => {
       setCountdown(null);
     }
     return () => { if (interval) window.clearInterval(interval); };
-  }, [nextRefillInSeconds, hearts, refillHearts]);
+  }, [nextRefillInSeconds, hearts]);
 
   const handleLogout = () => {
     navigate('/');
@@ -123,51 +122,59 @@ const Header = () => {
               <>
                 {/* Stats - Visíveis apenas em desktop */}
                 <div className="hidden lg:flex items-center gap-4 mr-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className={`flex items-center gap-2 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                        <Heart className="w-4 h-4" />
-                        <span>{hearts}</span>
-                        {hearts <= 0 && countdown !== null && (
-                          <button onClick={() => refillHearts()} className="text-xs text-muted-foreground underline">
-                            {Math.floor(countdown / 60).toString().padStart(2, '0')}:{(countdown % 60).toString().padStart(2, '0')}
-                          </button>
-                        )}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div>
-                        <p>{hearts} vidas restantes</p>
-                        {hearts <= 0 && countdown !== null && <p>Próxima vida em {Math.floor(countdown / 60)}m {countdown % 60}s</p>}
-                        {hearts <= 0 && countdown === null && <p>Verificando recarga...</p>}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
+                  {isLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                      <div className="h-4 w-16 bg-muted rounded" />
+                    </div>
+                  ) : (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className={`flex items-center gap-2 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                            <Heart className="w-4 h-4" />
+                            <span>{hearts}</span>
+                            {hearts <= 0 && countdown !== null && (
+                              <button onClick={() => refillHearts()} className="text-xs text-muted-foreground underline">
+                                {Math.floor(countdown / 60).toString().padStart(2, '0')}:{(countdown % 60).toString().padStart(2, '0')}
+                              </button>
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div>
+                            <p>{hearts} vidas restantes</p>
+                            {hearts <= 0 && countdown !== null && <p>Próxima vida em {Math.floor(countdown / 60)}m {countdown % 60}s</p>}
+                            {hearts <= 0 && countdown === null && <p>Verificando recarga...</p>}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
 
-                  {streak > 0 && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1 text-sm font-bold text-secondary">
-                          <Flame className="w-4 h-4" />
-                          <span>{streak}</span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent><p>{streak} dias em sequência!</p></TooltipContent>
-                    </Tooltip>
+                      {streak > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1 text-sm font-bold text-secondary">
+                              <Flame className="w-4 h-4" />
+                              <span>{streak}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent><p>{streak} dias em sequência!</p></TooltipContent>
+                        </Tooltip>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1 text-sm font-bold text-amber-400">
+                              <Star className="w-4 h-4" />
+                              <span>{level}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent><p>{xp.toFixed(0)} / {xpForNextLevel} XP</p></TooltipContent>
+                        </Tooltip>
+                        <div className="w-20"><Progress value={progressPercentage} className="h-2" /></div>
+                      </div>
+                    </>
                   )}
-
-                  <div className="flex items-center gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1 text-sm font-bold text-amber-400">
-                          <Star className="w-4 h-4" />
-                          <span>{level}</span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent><p>{xp.toFixed(0)} / {xpForNextLevel} XP</p></TooltipContent>
-                    </Tooltip>
-                    <div className="w-20"><Progress value={progressPercentage} className="h-2" /></div>
-                  </div>
                 </div>
 
                 {/* Avatar - Visível em todas as telas */}
@@ -222,39 +229,49 @@ const Header = () => {
                         
                         {/* Estatísticas Mobile */}
                         <div className="pt-4 border-t space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">Vidas</span>
-                            <div className={`flex items-center gap-2 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                              <Heart className="w-4 h-4" />
-                              <span>{hearts}</span>
+                          {isLoading ? (
+                            <div className="space-y-3 animate-pulse">
+                              <div className="h-4 bg-muted rounded w-full" />
+                              <div className="h-4 bg-muted rounded w-3/4" />
+                              <div className="h-4 bg-muted rounded w-full" />
                             </div>
-                          </div>
-                          
-                          {streak > 0 && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Sequência</span>
-                              <div className="flex items-center gap-2 text-sm font-bold text-secondary">
-                                <Flame className="w-4 h-4" />
-                                <span>{streak} dias</span>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Vidas</span>
+                                <div className={`flex items-center gap-2 text-sm font-bold ${hearts > 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                  <Heart className="w-4 h-4" />
+                                  <span>{hearts}</span>
+                                </div>
                               </div>
-                            </div>
+                              
+                              {streak > 0 && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm text-muted-foreground">Sequência</span>
+                                  <div className="flex items-center gap-2 text-sm font-bold text-secondary">
+                                    <Flame className="w-4 h-4" />
+                                    <span>{streak} dias</span>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Nível</span>
+                                <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
+                                  <Star className="w-4 h-4" />
+                                  <span>{level}</span>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                  <span>XP</span>
+                                  <span>{xp.toFixed(0)} / {xpForNextLevel}</span>
+                                </div>
+                                <Progress value={progressPercentage} className="h-2" />
+                              </div>
+                            </>
                           )}
-                          
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">Nível</span>
-                            <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
-                              <Star className="w-4 h-4" />
-                              <span>{level}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>XP</span>
-                              <span>{xp.toFixed(0)} / {xpForNextLevel}</span>
-                            </div>
-                            <Progress value={progressPercentage} className="h-2" />
-                          </div>
                         </div>
                         
                         {/* Botão Sair - Mobile */}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/api/axios';
@@ -53,37 +53,82 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     const { toast } = useToast();
     const { isAuthenticated } = useAuth();
 
-    const [stats, setStats] = useState<UserGamificationStats>({ level: 1, xp: 0, streak: 0 });
-    const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
-    const [dailyQuests, setDailyQuests] = useState<Quest[]>([]);
-    const [blocosCompletos, setBlocosCompletos] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [hearts, setHearts] = useState<number>(5);
-    const [nextRefillInSeconds, setNextRefillInSeconds] = useState<number | null>(null);
-    const [userFocus, setUserFocus] = useState<string>('Conhecimentos Gerais');
+    // Inicializa com valores do cache se existirem (carregamento instantâneo)
+    const getCachedValue = (key: string, defaultValue: any) => {
+        try {
+            const cached = localStorage.getItem(`gamification_${key}`);
+            return cached ? JSON.parse(cached) : defaultValue;
+        } catch {
+            return defaultValue;
+        }
+    };
 
-    const fetchGamificationData = useCallback(async () => {
+    const [stats, setStats] = useState<UserGamificationStats>(() => 
+        getCachedValue('stats', { level: 1, xp: 0, streak: 0 })
+    );
+    const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>(() => 
+        getCachedValue('achievements', [])
+    );
+    const [dailyQuests, setDailyQuests] = useState<Quest[]>(() => 
+        getCachedValue('quests', [])
+    );
+    const [blocosCompletos, setBlocosCompletos] = useState<string[]>(() => 
+        getCachedValue('blocos', [])
+    );
+    const [isLoading, setIsLoading] = useState(true);
+    const [hearts, setHearts] = useState<number>(() => 
+        getCachedValue('hearts', 0)
+    );
+    const [nextRefillInSeconds, setNextRefillInSeconds] = useState<number | null>(null);
+    const [userFocus, setUserFocus] = useState<string>(() => 
+        getCachedValue('focus', 'Conhecimentos Gerais')
+    );
+    const hasInitialized = useRef(false);
+
+    const fetchGamificationData = useCallback(async (skipLoadingState = false) => {
         if (!isAuthenticated) {
             setIsLoading(false);
             return;
         }
-        setIsLoading(true);
+        if (!skipLoadingState) {
+            setIsLoading(true);
+        }
         try {
             const response = await apiClient.get('/users/me/');
             const { data } = response;
             if (data.profile) {
-                setStats(data.profile.gamification || { level: 1, xp: 0, streak: 0 });
-                setUnlockedAchievements((data.profile.achievements || []).map((ua: UserAchievement) => ua.achievement.id));
-                setDailyQuests(data.profile.daily_quests || []);
-                setBlocosCompletos(data.profile.blocos_completos || []);
-                // Extrai hearts e o timestamp retornados pelo backend
+                const newStats = data.profile.gamification || { level: 1, xp: 0, streak: 0 };
+                const newAchievements = (data.profile.achievements || []).map((ua: UserAchievement) => ua.achievement.id);
+                const newQuests = data.profile.daily_quests || [];
+                const newBlocos = data.profile.blocos_completos || [];
                 const gam = data.profile.gamification || {};
                 const serverHearts = typeof gam.hearts === 'number' ? gam.hearts : 5;
+                const newFocus = data.profile.focus || 'Conhecimentos Gerais';
+
+                // Atualiza estados
+                setStats(newStats);
+                setUnlockedAchievements(newAchievements);
+                setDailyQuests(newQuests);
+                setBlocosCompletos(newBlocos);
                 setHearts(serverHearts);
-                // user focus vindo do profile (o tópico que o usuário escolheu durante registro)
+                setUserFocus(newFocus);
+
+                // Salva no cache para próxima inicialização
+                try {
+                    localStorage.setItem('gamification_stats', JSON.stringify(newStats));
+                    localStorage.setItem('gamification_achievements', JSON.stringify(newAchievements));
+                    localStorage.setItem('gamification_quests', JSON.stringify(newQuests));
+                    localStorage.setItem('gamification_blocos', JSON.stringify(newBlocos));
+                    localStorage.setItem('gamification_hearts', JSON.stringify(serverHearts));
+                    localStorage.setItem('gamification_focus', JSON.stringify(newFocus));
+                } catch (e) {
+                    console.warn('Failed to cache gamification data', e);
+                }
+
+                console.log('✅ useGamification: Dados carregados e em cache - Hearts:', serverHearts);
+                
                 if (data.profile.focus) {
                     console.log('🎯 DEBUG useGamification - Focus carregado do perfil:', data.profile.focus);
-                    setUserFocus(data.profile.focus);
                 } else {
                     console.log('⚠️ DEBUG useGamification - Profile.focus está vazio, usando default');
                 }
@@ -109,21 +154,39 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
             console.error("Failed to fetch gamification data", error);
             toast({ title: "Erro de Gamificação", description: "Não foi possível buscar seus dados de progresso.", variant: "destructive" });
         } finally {
-            setIsLoading(false);
+            if (!skipLoadingState) {
+                setIsLoading(false);
+            }
         }
     }, [isAuthenticated, toast]);
 
     useEffect(() => {
+        // Evita múltiplas chamadas iniciais
+        if (hasInitialized.current) return;
+        
         if (isAuthenticated) {
-            fetchGamificationData();
+            hasInitialized.current = true;
+            // Se já tem cache, marca como não-loading imediatamente para UX rápida
+            const hasCache = localStorage.getItem('gamification_hearts') !== null;
+            if (hasCache) {
+                setIsLoading(false);
+                // Fetch em background sem bloquear UI
+                fetchGamificationData(true); // skipLoadingState = true
+            } else {
+                // Sem cache, mostra loading normal
+                fetchGamificationData(false);
+            }
         } else {
             setIsLoading(false);
             setStats({ level: 1, xp: 0, streak: 0 });
             setUnlockedAchievements([]);
             setDailyQuests([]);
             setBlocosCompletos([]);
+            setHearts(0);
+            hasInitialized.current = false; // Reset para permitir nova inicialização
         }
-    }, [isAuthenticated, fetchGamificationData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated]); // Removido fetchGamificationData das dependências
 
     // Cálculo de nível baseado em blocos completados: a cada 15 blocos, sobe 1 nível
     const calculatedLevel = Math.floor(blocosCompletos.length / 15) + 1;
@@ -181,6 +244,12 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         try {
             const resp = await apiClient.post('/study/gamification/lose-heart/');
             setHearts(resp.data.hearts);
+            // Atualiza cache
+            try {
+                localStorage.setItem('gamification_hearts', JSON.stringify(resp.data.hearts));
+            } catch (e) {
+                console.warn('Failed to cache hearts', e);
+            }
             // Notifica outros componentes que as vidas mudaram
             // Despacha o evento após um pequeno delay para garantir que o estado foi atualizado
             setTimeout(() => {
@@ -274,28 +343,73 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [blocosCompletos]);
 
-    // Agendar recarga local baseada em nextRefillInSeconds para reduzir polling
+    // Agendar recarga automática de vidas baseada em timestamp do servidor
     useEffect(() => {
-        let timeoutId: number | undefined;
-        if (isAuthenticated && nextRefillInSeconds && nextRefillInSeconds > 0) {
-            // agenda para chamar o refill exatamente quando a próxima vida estiver disponível
-            timeoutId = window.setTimeout(() => {
-                refillHearts();
-            }, nextRefillInSeconds * 1000);
-        }
-        // Se o usuário estiver sem vidas (hearts === 0) e não houver nextRefill informado, fazemos um fallback de polling leve
+        if (!isAuthenticated || hearts >= 5) return; // Não precisa verificar se já tem 5 vidas
+
         let intervalId: number | undefined;
-        if (isAuthenticated && hearts <= 0 && !nextRefillInSeconds) {
-            // fallback polling a cada 30s
-            intervalId = window.setInterval(() => {
-                refillHearts();
-            }, 30000);
-        }
+        
+        // Verifica a cada 10 segundos se é hora de adicionar uma vida
+        intervalId = window.setInterval(async () => {
+            console.log('🔄 Verificando recarga de vidas...', { hearts, nextRefillInSeconds });
+            
+            // Busca dados atualizados do servidor para verificar se ganhou vidas
+            try {
+                const response = await apiClient.get('/users/me/');
+                const gam = response.data?.profile?.gamification || {};
+                const serverHearts = typeof gam.hearts === 'number' ? gam.hearts : hearts;
+                
+                if (serverHearts !== hearts) {
+                    console.log('✅ Vidas atualizadas automaticamente:', hearts, '→', serverHearts);
+                    setHearts(serverHearts);
+                    
+                    // Atualiza cache
+                    try {
+                        localStorage.setItem('gamification_hearts', JSON.stringify(serverHearts));
+                    } catch (e) {
+                        console.warn('Failed to cache hearts', e);
+                    }
+                    
+                    // Notifica componentes
+                    window.dispatchEvent(new CustomEvent('app:data:updated', { 
+                        detail: { type: 'hearts', hearts: serverHearts } 
+                    }));
+                    
+                    // Toast amigável quando ganhar vidas
+                    if (serverHearts > hearts) {
+                        toast({ 
+                            title: '❤️ Vida Recuperada!', 
+                            description: `Você agora tem ${serverHearts} ${serverHearts === 1 ? 'vida' : 'vidas'}!`, 
+                            className: 'bg-red-500/10 border-red-500/50'
+                        });
+                    }
+                    
+                    // Recalcula próximo refill
+                    if (gam.hearts_last_refill && serverHearts < 5) {
+                        try {
+                            const lastRefill = new Date(gam.hearts_last_refill);
+                            const now = new Date();
+                            const elapsedSeconds = Math.floor((now.getTime() - lastRefill.getTime()) / 1000);
+                            const REFILL_SECONDS = 3 * 60;
+                            const secondsSinceLastTick = elapsedSeconds % REFILL_SECONDS;
+                            const secondsToNext = REFILL_SECONDS - secondsSinceLastTick;
+                            setNextRefillInSeconds(secondsToNext);
+                        } catch (e) {
+                            setNextRefillInSeconds(null);
+                        }
+                    } else {
+                        setNextRefillInSeconds(null);
+                    }
+                }
+            } catch (e) {
+                console.error('Falha ao verificar recarga de vidas', e);
+            }
+        }, 10000); // Verifica a cada 10 segundos
+
         return () => {
-            if (timeoutId) window.clearTimeout(timeoutId);
             if (intervalId) window.clearInterval(intervalId);
         };
-    }, [isAuthenticated, nextRefillInSeconds, hearts, refillHearts]);
+    }, [isAuthenticated, hearts]);
 
     const value = {
         level: currentLevel,
