@@ -1182,9 +1182,9 @@ def reset_password(request):
     from django.core.cache import cache
     from django.contrib.auth.models import User
     
-    email = request.data.get('email')
-    code = request.data.get('code')
-    new_password = request.data.get('new_password')
+    email = request.data.get('email', '').strip()
+    code = request.data.get('code', '').strip()
+    new_password = request.data.get('new_password', '')
     
     if not all([email, code, new_password]):
         return Response({

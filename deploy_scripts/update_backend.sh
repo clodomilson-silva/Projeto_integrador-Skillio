@@ -34,6 +34,7 @@ cd backend
 # Atualizar dependências (se mudaram)
 echo "📦 Atualizando dependências..."
 pip install --upgrade pip
+pip install --upgrade --force-reinstall setuptools
 pip install -r requirements_prod.txt
 
 # Verificar se dependências foram instaladas

@@ -222,7 +222,16 @@ const ResetPassword = () => {
                 id="code"
                 type="text"
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={(e) => {
+                  const cleanedCode = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setCode(cleanedCode);
+                }}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pastedText = e.clipboardData.getData('text');
+                  const cleanedCode = pastedText.replace(/\D/g, '').slice(0, 6);
+                  setCode(cleanedCode);
+                }}
                 placeholder="000000"
                 className="bg-background/50 border-border/50 focus:border-primary text-center text-2xl tracking-widest"
                 disabled={isLoading}
