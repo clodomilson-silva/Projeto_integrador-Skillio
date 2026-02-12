@@ -64,6 +64,7 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/suporte" element={<Suporte />} />
+                  <Route path="/profile/:userId" element={<PublicProfile />} /> {/* Perfil público - acessível a todos */}
                   
                   {/* Rotas Protegidas - Requerem Autenticação */}
                   <Route element={<PrivateRoute />}>
@@ -71,7 +72,6 @@ const App = () => (
                     <Route path="/trilha" element={<Trilha />} />
                     <Route path="/lesson/:subjectId" element={<Lesson />} />
                     <Route path="/profile" element={<Profile />} />
-                    <Route path="/profile/:userId" element={<PublicProfile />} />
                     <Route path="/edit-profile" element={<EditProfile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/quiz-nivelamento" element={<QuizNivelamento />} />

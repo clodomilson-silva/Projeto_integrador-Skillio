@@ -136,13 +136,22 @@ const Profile = () => {
   }, []);
 
   const handleShare = async () => {
-    const publicUrl = userInfo.id ? `${window.location.origin}/api/v1/users/${userInfo.id}/public/` : window.location.href;
-    const profileText = `Meu Perfil Skillio:\nNome: ${userInfo.name}\nNível: ${level}\nXP: ${xp}\nBlocos Completos: ${blocosCompletos?.length || 0}\n${publicUrl}`;
+    // URL correto do perfil público no frontend
+    const publicUrl = userInfo.id 
+      ? `${window.location.origin}/profile/${userInfo.id}` 
+      : window.location.href;
+    
+    const profileText = `Confira meu perfil no Skillio! 🎮\n\nNome: ${userInfo.name}\nNível: ${level}\nXP: ${xp}\nBlocos Completos: ${blocosCompletos?.length || 0}\n\nVeja mais em: ${publicUrl}`;
+    
     // Tenta usar Web Share API primeiro (mobile/native)
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Meu Perfil Skillio', text: profileText, url: publicUrl });
-        toast({ title: 'Perfil compartilhado!' });
+        await navigator.share({ 
+          title: `Perfil de ${userInfo.name} - Skillio`, 
+          text: profileText, 
+          url: publicUrl 
+        });
+        toast({ title: '✅ Perfil compartilhado com sucesso!' });
         return;
       } catch (error) {
         // Se o usuário fechou o diálogo ou houve erro, continuamos para tentar copiar
@@ -177,11 +186,18 @@ const Profile = () => {
     };
 
     try {
-      await copyToClipboard(profileText);
-      toast({ title: 'Link público copiado para a área de transferência!' });
+      await copyToClipboard(publicUrl);
+      toast({ 
+        title: '✅ Link copiado!', 
+        description: 'Cole o link para compartilhar seu perfil' 
+      });
     } catch (err) {
       console.error('Erro ao copiar perfil:', err);
-      toast({ title: 'Falha ao copiar link público', variant: 'destructive' });
+      toast({ 
+        title: '❌ Erro ao copiar', 
+        description: 'Não foi possível copiar o link',
+        variant: 'destructive' 
+      });
     }
   };
 
