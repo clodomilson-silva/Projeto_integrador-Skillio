@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'drf_yasg',
+    # 'drf_yasg',  # Temporariamente desabilitado - causa erro ModuleNotFoundError: No module named 'pkg_resources'
     'api',
 
 ]
