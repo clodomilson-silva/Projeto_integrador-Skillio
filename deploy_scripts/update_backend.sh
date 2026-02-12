@@ -33,7 +33,14 @@ cd backend
 
 # Atualizar dependências (se mudaram)
 echo "📦 Atualizando dependências..."
-pip install -r requirements_prod.txt --quiet
+pip install --upgrade pip
+pip install -r requirements_prod.txt
+
+# Verificar se dependências foram instaladas
+if ! python -c "import dj_database_url" 2>/dev/null; then
+    echo "❌ Erro ao instalar dependências!"
+    exit 1
+fi
 
 # Rodar migrações
 echo "🔄 Aplicando migrações..."
