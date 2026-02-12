@@ -65,6 +65,7 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/suporte" element={<Suporte />} />
                   <Route path="/profile/:userId" element={<PublicProfile />} /> {/* Perfil público - acessível a todos */}
+                  <Route path="/quiz-rapido" element={<QuickQuiz />} /> {/* Quiz de demonstração - público */}
                   
                   {/* Rotas Protegidas - Requerem Autenticação */}
                   <Route element={<PrivateRoute />}>
@@ -75,7 +76,6 @@ const App = () => (
                     <Route path="/edit-profile" element={<EditProfile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/quiz-nivelamento" element={<QuizNivelamento />} />
-                    <Route path="/quiz-rapido" element={<QuickQuiz />} />
                     <Route path="/study-plan" element={<StudyPlan />} />
                     <Route path="/game/:blocoId" element={<Game />} />
                   </Route>
