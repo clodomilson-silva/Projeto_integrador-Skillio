@@ -232,7 +232,18 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         // Atualiza localmente imediatamente para boa UX
         if (!blocosCompletos.includes(blockId)) {
             setBlocosCompletos(prev => [...prev, blockId]);
+            
+            // Dispara evento IMEDIATAMENTE após atualizar estado local (UX instantânea)
+            setTimeout(() => {
+                try {
+                    window.dispatchEvent(new CustomEvent('app:data:updated', { detail: { type: 'blocos_completos' } }));
+                    console.log('✅ completeBlock: Evento disparado imediatamente após atualização local');
+                } catch (e) {
+                    console.error('Failed to dispatch immediate event', e);
+                }
+            }, 0);
         }
+        
         // Notifica o backend para persistir; se retornar a lista atualizada, usamos ela para sincronizar
         try {
             const resp = await apiClient.post(`/study/gamification/complete-block/`, { block_id: blockId });
@@ -249,9 +260,10 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
                 } else if (Array.isArray(serverList)) {
                     setBlocosCompletos(serverList);
                 }
-                // Notify other parts of the app that gamification/block state changed
+                // Notify other parts of the app that gamification/block state changed (confirmação do servidor)
                 try {
                     window.dispatchEvent(new CustomEvent('app:data:updated', { detail: { type: 'blocos_completos' } }));
+                    console.log('✅ completeBlock: Evento disparado após confirmação do servidor');
                 } catch (e) {
                     // ignore
                 }

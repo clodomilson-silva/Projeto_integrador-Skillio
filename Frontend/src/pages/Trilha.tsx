@@ -13,11 +13,12 @@ import { motion, useScroll, useSpring } from "framer-motion";
 
 const Trilha = () => {
   const navigate = useNavigate();
-  const { blocosCompletos, hearts, addXp } = useGamification();
+  const { blocosCompletos, hearts, addXp, refetchGamificationData } = useGamification();
   const { toast } = useToast();
   useTimeTracker();
 
   const [checkingPlan, setCheckingPlan] = useState(true);
+  const [forceUpdate, setForceUpdate] = useState(0); // Estado para forçar re-render
 
   const [recompensasColetadas, setRecompensasColetadas] = useState<number[]>(() => {
       const saved = localStorage.getItem('recompensasColetadas');
@@ -63,6 +64,40 @@ const Trilha = () => {
             }
         })();
     }, [navigate, toast]);
+
+    // Listener para atualizar IMEDIATAMENTE quando blocos forem completados
+    useEffect(() => {
+        const handleDataUpdate = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            if (customEvent.detail?.type === 'blocos_completos' || customEvent.detail?.type === 'gamification') {
+                console.log('🔄 Trilha: Detectou atualização de blocos, atualizando...');
+                refetchGamificationData(); // Busca dados atualizados do backend
+                setForceUpdate(prev => prev + 1); // Força re-render
+            }
+        };
+
+        window.addEventListener('app:data:updated', handleDataUpdate);
+        return () => window.removeEventListener('app:data:updated', handleDataUpdate);
+    }, [refetchGamificationData]);
+
+    // Refetch ao voltar para a página (quando usuário completa quiz e volta)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                console.log('🔄 Trilha: Página ficou visível, atualizando dados...');
+                refetchGamificationData();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [refetchGamificationData]);
+
+    // Refetch ao montar o componente para garantir dados atualizados
+    useEffect(() => {
+        console.log('🔄 Trilha: Componente montado, buscando dados frescos...');
+        refetchGamificationData();
+    }, [refetchGamificationData]);
 
             if (checkingPlan) {
                 return <LoadingAnimation text="Verificando progresso..." subtext="Aguarde um momento" />;
