@@ -74,3 +74,16 @@ logs/
 # OS
 Thumbs.db
 .DS_Store
+
+# Docker
+.env
+*.sql
+backup/*.sql
+!backup/.gitkeep
+postgres_data/
+redis_data/
+
+# Docker Logs
+nginx/logs/
+backend/logs/
+

@@ -1,23 +1,24 @@
 @echo off
 chcp 65001 >nul
 echo ════════════════════════════════════════════════════
-echo    🛑 SKILLIO - Parando Containers Docker
+echo    📊 SKILLIO - Status dos Containers
 echo ════════════════════════════════════════════════════
 echo.
 
-docker-compose stop
-if errorlevel 1 (
-    echo ❌ Erro ao parar containers!
-    pause
-    exit /b 1
-)
+echo 🐳 Containers:
+docker-compose ps
+echo.
 
+echo 💾 Volumes:
+docker volume ls | findstr skillio
 echo.
-echo ✅ Containers parados com sucesso!
+
+echo 🌐 Networks:
+docker network ls | findstr skillio
 echo.
-echo 💡 Para removê-los completamente, use:
-echo    docker-compose down
-echo    docker-compose down -v (remove também os volumes)
+
+echo 💿 Uso de disco:
+docker system df
 echo.
+
 pause
-

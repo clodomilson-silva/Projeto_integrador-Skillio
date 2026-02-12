@@ -1,23 +1,21 @@
 @echo off
 chcp 65001 >nul
 echo ════════════════════════════════════════════════════
-echo    🛑 SKILLIO - Parando Containers Docker
+echo    🔄 SKILLIO - Restart dos Containers
 echo ════════════════════════════════════════════════════
 echo.
 
-docker-compose stop
+docker-compose restart
 if errorlevel 1 (
-    echo ❌ Erro ao parar containers!
+    echo ❌ Erro ao reiniciar containers!
     pause
     exit /b 1
 )
 
 echo.
-echo ✅ Containers parados com sucesso!
+echo ✅ Containers reiniciados com sucesso!
 echo.
-echo 💡 Para removê-los completamente, use:
-echo    docker-compose down
-echo    docker-compose down -v (remove também os volumes)
+
+docker-compose ps
 echo.
 pause
-

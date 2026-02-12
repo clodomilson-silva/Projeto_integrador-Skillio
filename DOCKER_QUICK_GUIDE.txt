@@ -1,0 +1,122 @@
+╔════════════════════════════════════════════════════════════════╗
+║                  🐳 SKILLIO DOCKER - GUIA RÁPIDO              ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 COMANDOS ESSENCIAIS
+══════════════════════════════════════════════════════════════════
+
+🚀 PRIMEIRA VEZ
+──────────────────────────────────────────────────────────────────
+1. Copiar e configurar .env:
+   copy .env.example .env
+   notepad .env
+
+2. Iniciar tudo:
+   docker-init.bat           (Windows)
+   ./docker-init.sh          (Linux/Mac)
+
+
+⚡ USO DIÁRIO
+──────────────────────────────────────────────────────────────────
+Iniciar:        docker-compose up -d
+Parar:          docker-compose stop
+Reiniciar:      docker-compose restart
+Logs:           docker-compose logs -f
+Status:         docker-compose ps
+
+
+🔧 MANUTENÇÃO
+──────────────────────────────────────────────────────────────────
+Backup DB:      docker-backup.bat
+Rebuild:        docker-compose build --no-cache
+Limpar tudo:    docker-clean.bat
+
+
+🌐 ACESSOS
+══════════════════════════════════════════════════════════════════
+Frontend:       http://localhost
+Frontend (dev): http://localhost:5173
+Backend API:    http://localhost:8000
+Admin Django:   http://localhost:8000/admin
+PostgreSQL:     localhost:5432
+Redis:          localhost:6379
+
+
+📊 CONTAINERS
+══════════════════════════════════════════════════════════════════
+• skillio_db         → PostgreSQL 15
+• skillio_backend    → Django + Python 3.11
+• skillio_frontend   → React + Vite + Node 18
+• skillio_nginx      → Nginx (proxy reverso)
+• skillio_redis      → Redis 7 (cache)
+
+
+💾 VOLUMES PERSISTENTES
+══════════════════════════════════════════════════════════════════
+• skillio_postgres_data      → Dados do banco
+• skillio_backend_media      → Uploads
+• skillio_backend_static     → Estáticos
+• skillio_redis_data         → Cache
+
+
+🐛 TROUBLESHOOTING
+══════════════════════════════════════════════════════════════════
+Porta em uso:
+   netstat -ano | findstr :8000
+   taskkill /PID <numero> /F
+
+Container não inicia:
+   docker-compose logs <nome-container>
+
+Rebuild completo:
+   docker-compose down -v
+   docker-compose build --no-cache
+   docker-compose up -d
+
+Verificar ambiente:
+   docker-check.bat
+
+
+📝 COMANDOS ÚTEIS
+══════════════════════════════════════════════════════════════════
+# Entrar no container
+docker-compose exec backend bash
+docker-compose exec frontend sh
+docker-compose exec db psql -U postgres -d skillio_db
+
+# Django commands
+docker-compose exec backend python manage.py migrate
+docker-compose exec backend python manage.py createsuperuser
+docker-compose exec backend python manage.py collectstatic
+
+# Ver uso de recursos
+docker stats
+
+# Limpar imagens não usadas
+docker system prune -a
+
+
+🔐 SEGURANÇA
+══════════════════════════════════════════════════════════════════
+⚠️  NUNCA commite o arquivo .env
+⚠️  Use DEBUG=0 em produção
+⚠️  Gere nova SECRET_KEY para produção
+⚠️  Configure ALLOWED_HOSTS corretamente
+
+
+💡 DICAS
+══════════════════════════════════════════════════════════════════
+✅ Use docker-check.bat antes de iniciar
+✅ Faça backups regulares do banco
+✅ Use a porta 5173 durante desenvolvimento (HMR ativo)
+✅ Monitore os logs com docker-compose logs -f
+✅ Em produção, use volumes externos ou serviços gerenciados
+
+
+📚 DOCUMENTAÇÃO COMPLETA
+══════════════════════════════════════════════════════════════════
+Ver: DOCKER_README.md
+
+
+════════════════════════════════════════════════════════════════════
+Desenvolvido com ❤️ pela equipe Skillio

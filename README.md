@@ -91,12 +91,76 @@ stop.bat      # Windows: Para ambos os servidores
 
 ---
 
+### 🐳 Modo Docker (Recomendado para Produção)
+
+**Ideal para:** Deploy, ambientes isolados, configuração simplificada
+
+#### 🚀 Início Rápido
+
+```cmd
+# 1. Configure as variáveis de ambiente
+copy .env.example .env
+notepad .env
+
+# 2. Inicie tudo com Docker
+docker-init.bat          # Windows
+./docker-init.sh         # Linux/Mac
+```
+
+#### 📦 O que inclui
+
+- ✅ **PostgreSQL 15**: Banco de dados local persistente
+- ✅ **Django Backend**: API REST com Gunicorn
+- ✅ **React Frontend**: Interface com Vite
+- ✅ **Nginx**: Proxy reverso e servir arquivos estáticos
+- ✅ **Redis**: Sistema de cache (opcional)
+- ✅ **Volumes**: Dados persistentes mesmo após restart
+
+#### 🌐 Acessos
+
+| Serviço | URL | Descrição |
+|---------|-----|-----------|
+| Frontend | http://localhost | Via Nginx (produção) |
+| Frontend Dev | http://localhost:5173 | Vite com HMR |
+| Backend API | http://localhost:8000 | Django REST |
+| Admin | http://localhost:8000/admin | Painel Django |
+| PostgreSQL | localhost:5432 | Banco de dados |
+
+#### ⚡ Comandos Docker
+
+```bash
+docker-init.bat          # Inicialização completa
+docker-stop.bat          # Parar containers
+docker-restart.bat       # Reiniciar containers
+docker-logs.bat          # Ver logs em tempo real
+docker-status.bat        # Status dos serviços
+docker-backup.bat        # Backup do banco de dados
+docker-check.bat         # Verificar ambiente
+docker-clean.bat         # Limpeza completa
+```
+
+#### 📚 Documentação Docker
+
+- **[DOCKER_README.md](./DOCKER_README.md)** - Guia completo e detalhado
+- **[DOCKER_QUICK_GUIDE.txt](./DOCKER_QUICK_GUIDE.txt)** - Referência rápida
+
+#### 🚀 Deploy em Produção
+
+```bash
+# Usar docker-compose de produção (otimizado)
+docker-deploy-prod.bat
+# ou
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+---
+
 ### Pré-requisitos
 
 - **Node.js** (v18 ou superior) - para desenvolvimento local do frontend
 - **Python** (3.x) - para desenvolvimento local do backend
 - **PostgreSQL** - banco de dados (ou use o RDS da AWS já configurado)
-- **Docker e Docker Compose** (opcional)
+- **Docker e Docker Compose** (opcional, mas recomendado) - [Instalar Docker Desktop](https://www.docker.com/products/docker-desktop)
 
 ### 📥 Clonando e Baixando o Projeto
 
