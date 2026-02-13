@@ -113,6 +113,7 @@ const Header = () => {
             {isAuthenticated && location.pathname !== "/dashboard" && <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">Meu Desempenho</Link>}
             {location.pathname !== "/subjects" && <Link to="/subjects" className="text-foreground hover:text-primary transition-colors">Explorar</Link>}
             {location.pathname !== "/ranking" && <Link to="/ranking" className="text-foreground hover:text-primary transition-colors">Ranking</Link>}
+            {location.pathname !== "/faq" && <Link to="/faq" className="text-foreground hover:text-primary transition-colors">FAQ</Link>}
             {location.pathname !== "/about" && <Link to="/about" className="text-foreground hover:text-primary transition-colors">Sobre Nós</Link>}
           </nav>
           
@@ -219,6 +220,11 @@ const Header = () => {
                         {location.pathname !== "/ranking" && (
                           <Link to="/ranking" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
                             Ranking
+                          </Link>
+                        )}
+                        {location.pathname !== "/faq" && (
+                          <Link to="/faq" onClick={closeMenu} className="text-foreground hover:text-primary transition-colors py-2">
+                            FAQ
                           </Link>
                         )}
                         {location.pathname !== "/about" && (

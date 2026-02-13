@@ -102,9 +102,15 @@ echo 🌐 URLs:
 echo    S3: http://%BUCKET_NAME%.s3-website-us-east-2.amazonaws.com
 echo    CloudFront: (se configurado)
 echo.
+REM ID fixo da distribuição CloudFront
+set CF_DIST_ID=E2YV8BLYATEHPW
+if not "%CF_DIST_ID%"=="" (
+    echo 🔄 Invalidando cache do CloudFront (ID: %CF_DIST_ID%) ...
+    aws cloudfront create-invalidation --distribution-id %CF_DIST_ID% --paths "/*"
+    echo ✅ Invalidação enviada!
+)
 echo 💡 Dicas:
 echo    - Limpe o cache do navegador (Ctrl+Shift+R)
-echo    - Se usar CloudFront, crie invalidação:
-echo      aws cloudfront create-invalidation --distribution-id ID --paths "/*"
+echo    - Se usar CloudFront, crie invalidação se necessário.
 echo.
 pause
