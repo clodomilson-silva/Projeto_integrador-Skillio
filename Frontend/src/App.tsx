@@ -1,5 +1,6 @@
 import FloatingTrilhaButton from "@/components/FloatingTrilhaButton";
 import Footer from "@/components/Footer";
+import FAQ from "@/components/FAQ";
 import Header from "@/components/Header";
 import { PWAPrompt } from "@/components/PWAPrompt";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -64,6 +65,7 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/suporte" element={<Suporte />} />
+                  <Route path="/faq" element={<FAQ />} />
                   <Route path="/profile/:userId" element={<PublicProfile />} /> {/* Perfil público - acessível a todos */}
                   <Route path="/quiz-rapido" element={<QuickQuiz />} /> {/* Quiz de demonstração - público */}
                   

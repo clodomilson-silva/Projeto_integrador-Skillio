@@ -87,7 +87,10 @@ const Footer = () => {
               <li><Link to="/ranking" className="hover:text-primary transition-colors">Ranking</Link></li>
 {/*               <li><Link to="/profile" className="hover:text-primary transition-colors">Perfil</Link></li> */}
               <li><Link to="/dashboard" className="hover:text-primary transition-colors">Estatísticas</Link></li>
-              <li><Link to="/suporte" className="hover:text-primary transition-colors">Suporte</Link></li>
+              <li className="flex gap-2">
+                <Link to="/suporte" className="hover:text-primary transition-colors">Suporte</Link>
+              </li>
+              <li><Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
             </ul>
           </div>
         </div>

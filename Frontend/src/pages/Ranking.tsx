@@ -31,7 +31,13 @@ const RankingCard = ({ player, isCurrentUser }: { player: RankedUser, isCurrentU
           </div>
           <Avatar className="w-12 h-12">
             <AvatarImage 
-              src={player.avatar ? `https://d3lxa11agu4uln.cloudfront.net/media/${player.avatar}` : undefined}
+              src={
+                player.avatar
+                  ? player.avatar.startsWith('http')
+                    ? player.avatar
+                    : `${import.meta.env.VITE_AVATAR_URL || 'https://d3lxa11agu4uln.cloudfront.net/media/'}${player.avatar}`
+                  : undefined
+              }
               alt={player.name} 
               className="object-cover" 
             />
@@ -104,7 +110,13 @@ const RankingList = ({
                 <div className="mb-3">{getPositionIcon(player.rank)}</div>
                 <Avatar className="w-20 h-20 mx-auto mb-3">
                   <AvatarImage 
-                    src={player.avatar ? `https://d3lxa11agu4uln.cloudfront.net/media/${player.avatar}` : undefined}
+                    src={
+                      player.avatar
+                        ? player.avatar.startsWith('http')
+                          ? player.avatar
+                          : `${import.meta.env.VITE_AVATAR_URL || 'https://d3lxa11agu4uln.cloudfront.net/media/'}${player.avatar}`
+                        : undefined
+                    }
                     alt={player.name} 
                     className="object-cover" 
                   />
