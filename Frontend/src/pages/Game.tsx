@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/ui/game-card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, Trophy, X, RotateCcw, CheckCircle, HeartCrack, SkipForward } from "lucide-react";
+import { ArrowLeft, Clock, Trophy, X, RotateCcw, CheckCircle, HeartCrack, SkipForward, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGenerativeAI } from "@/hooks/useGenerativeAI";
 import { trilhaPrincipal } from "@/data/trilhaPrincipal";
@@ -581,6 +581,11 @@ const Game = () => {
             </Button>
           </Link>
           <div className="flex items-center space-x-4">
+            {/* Mobile-only lives indicator: visible on small screens, hidden on sm+ to avoid changing desktop header */}
+            <div className="flex items-center space-x-2 sm:hidden mr-2">
+              <Heart className="h-5 w-5 text-red-500" aria-hidden="true" />
+              <span className="text-sm font-medium">{hearts}</span>
+            </div>
             <Button variant="ghost" onClick={() => handleAnswer(null)}><SkipForward className="h-4 w-4" /></Button>
             <Link to={isTrailGame ? "/trilha" : "/subjects"}><Button variant="ghost" size="icon"><X className="h-4 w-4" /></Button></Link>
           </div>

@@ -430,7 +430,7 @@ const Dashboard = () => {
                         </Button>
                     )}
                     <CardTitle>
-                        {currentView === 'Visão Geral' ? 'Desempenho por Área da BNCC' : `Desempenho em ${currentView}`}
+                        {currentView === 'Visão Geral' ? 'Desempenho por  Base Nacional Comum Curricular - BNCC' : `Desempenho em ${currentView}`}
                     </CardTitle>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => setChartType(prev => prev === 'bar' ? 'radar' : 'bar')}>

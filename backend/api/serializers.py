@@ -166,9 +166,9 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
         fields = ('birth_date', 'educational_level', 'profession', 'focus', 'foto', 'gamification', 'achievements', 'daily_quests', 'blocos_completos', 'study_plan')
 
     def get_foto(self, obj):
+        
         if obj.foto:
-            # Se for um FileField/ImageField, retorna apenas o caminho relativo (nome do arquivo)
-            return obj.foto.name
+            return f"data:image/png;base64,{base64.b64encode(obj.foto).decode('utf-8')}"
         return None
 
     def get_daily_quests(self, obj):

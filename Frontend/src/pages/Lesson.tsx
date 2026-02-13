@@ -211,6 +211,23 @@ const Lesson = () => {
     foco: userFocus,
     progressoTopics: `${currentTopicIndex + 1}/${relevantTopics.length}`
   });
+
+  // Se o subjectId ou displayTitle indicar BNCC, substitui a sigla por descrição por extenso
+  const isBncc = (subjectId || '').toLowerCase().includes('bncc') || (displayTitle || '').toLowerCase().includes('bncc');
+  const uiSubjectName = isBncc ? 'Base Nacional Comum Curricular' : displayTitle;
+  const uiCardTitle = currentTopic ? currentTopic.title : `Aula da ${uiSubjectName}`;
+
+  // Texto descritivo para aulas da Base Nacional Comum Curricular (evita siglas e explica as áreas)
+  const bnccSubjectsText = `Esta aula aborda conteúdos da Base Nacional Comum Curricular, que organiza as aprendizagens essenciais em áreas como:
+- Linguagens (por exemplo: Língua Portuguesa e Línguas Estrangeiras),
+- Matemática,
+- Ciências da Natureza,
+- Ciências Humanas,
+- Arte,
+- Educação Física,
+- Ensino Religioso.
+
+Serão apresentados conceitos fundamentais, exemplos práticos e exercícios para ajudar você a compreender e aplicar os conteúdos dessas áreas.`;
   
   // Contextualiza o assunto para garantir que aula e vídeos sejam do mesmo tema
   let contextualizedSubject = specificTopic; // Usa o tópico específico
@@ -503,11 +520,11 @@ const Lesson = () => {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-3xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
-                {currentTopic ? currentTopic.title : `Aula de ${displayTitle}`}
+                {uiCardTitle}
               </CardTitle>
               {currentTopic && (
                 <p className="text-center text-sm text-muted-foreground mt-2">
-                  {displayTitle} • {educationalLevel} • {relevantTopics.length > 0 ? `Nível ${currentTopicIndex + 1}` : 'Básico'}
+                  {uiSubjectName} • {educationalLevel} • {relevantTopics.length > 0 ? `Nível ${currentTopicIndex + 1}` : 'Básico'}
                 </p>
               )}
             </CardHeader>
@@ -517,19 +534,26 @@ const Lesson = () => {
                   {error}
                 </div>
               )}
-              {generatedLesson?.lesson ? (
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {generatedLesson.lesson}
-                </p>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    Não foi possível gerar a aula automaticamente.
+              {(
+                // Se for aula da Base Nacional Comum Curricular, mostra texto explicativo fixo
+                isBncc ? (
+                  <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {bnccSubjectsText}
                   </p>
-                  <Button variant="outline" onClick={refetch}>
-                    Tentar Gerar Novamente
-                  </Button>
-                </div>
+                ) : generatedLesson?.lesson ? (
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    {generatedLesson.lesson}
+                  </p>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">
+                      Não foi possível gerar a aula automaticamente.
+                    </p>
+                    <Button variant="outline" onClick={refetch}>
+                      Tentar Gerar Novamente
+                    </Button>
+                  </div>
+                )
               )}
             </CardContent>
           </Card>

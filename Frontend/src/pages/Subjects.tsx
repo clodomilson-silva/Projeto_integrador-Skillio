@@ -25,7 +25,7 @@ const Subjects = () => {
       toast({
         title: 'Sem vidas disponíveis',
         description: 'Você está sem vidas. As vidas recarregam automaticamente a cada 3 minutos.',
-        className: 'bg-yellow-500/10 border-yellow-500/50'
+        className: 'bg-red-500 border-red-500'
       });
       try {
         await refillHearts();
