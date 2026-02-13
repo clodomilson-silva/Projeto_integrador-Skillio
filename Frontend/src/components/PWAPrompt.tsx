@@ -83,8 +83,8 @@ export function PWAPrompt() {
   useEffect(() => {
     if (offlineReady) {
       toast({
-        title: "📱 App pronto para uso offline!",
-        description: "Você pode usar o Skillio mesmo sem internet.",
+        title: "📱 App pronto para uso!",
+        description: "Você pode usar o Skillio como aplicativo.",
         duration: 5000,
       });
       setOfflineReady(false);
@@ -207,8 +207,8 @@ export function PWAPrompt() {
             </h3>
             <p className="text-white/90 text-sm mb-3">
               {isIOS 
-                ? 'Adicione à tela inicial para acesso offline!'
-                : 'Instale o app para acesso rápido e offline!'}
+                ? 'Adicione à tela inicial para acesso rápido!'
+                : 'Instale o app para acesso rápido!'}
             </p>
             
             <div className="flex gap-2">
