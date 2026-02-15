@@ -118,10 +118,10 @@ const Suporte = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5">
       <div className="container mx-auto max-w-4xl py-12 px-4">
-        <Link to="/dashboard">
+        <Link to="/">
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Dashboard
+            Voltar ao Início
           </Button>
         </Link>
 
