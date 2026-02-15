@@ -39,7 +39,7 @@ const faqData: FAQItem[] = [
     answer: "Acesse seu perfil, clique em 'Editar Perfil' e envie uma nova imagem. O sistema aceita arquivos JPG, PNG e GIF.",
   },
   {
-    question: "Como posso instalar o Skillio como aplicativo (PWA)?",
+    question: "Como posso instalar o Skillio como aplicativo?",
     answer: "No navegador, clique em 'Instalar' ou use o menu para adicionar à tela inicial. O app funcionará como um aplicativo nativo.",
   },
   {

@@ -1,3 +1,4 @@
+import React from "react";
 import FloatingTrilhaButton from "@/components/FloatingTrilhaButton";
 import Footer from "@/components/Footer";
 import FAQ from "@/components/FAQ";
@@ -9,7 +10,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { GamificationProvider } from "@/hooks/useGamification";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
 import RecaptchaLegalNotice from "./components/RecaptchaLegalNotice";
 import TermosCondicoesDetalhado from "./components/TermosCondicoesDetalhado";
@@ -48,6 +49,8 @@ const App = () => (
         <Sonner />
         <PWAPrompt />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          {/* ScrollToTop: garante que cada mudança de rota leve ao topo da página */}
+          <ScrollToTop />
           <GamificationProvider>
             <Header />
             <FloatingTrilhaButton />
@@ -97,3 +100,12 @@ const App = () => (
 );
 
 export default App;
+
+function ScrollToTop() {
+  const location = useLocation();
+  React.useLayoutEffect(() => {
+    // Use comportamento instantâneo para evitar rolamento inesperado após mount
+    window.scrollTo({ top: 0, left: 0 });
+  }, [location.pathname]);
+  return null;
+}
