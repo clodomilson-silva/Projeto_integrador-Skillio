@@ -25,6 +25,11 @@ const Trilha = () => {
       return saved ? JSON.parse(saved) : [];
   });
 
+    const [userFocus, setUserFocus] = useState<string>(() => {
+        const saved = localStorage.getItem('userFocus');
+        return saved || 'Foco';
+    });
+
   const todosOsBlocos = useMemo(() => trilhaPrincipal.flatMap(n => n.blocos), []);
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, {
@@ -98,6 +103,35 @@ const Trilha = () => {
         console.log('🔄 Trilha: Componente montado, buscando dados frescos...');
         refetchGamificationData();
     }, [refetchGamificationData]);
+
+    // Busca o foco do usuário (leve) para exibir rótulos personalizados
+    useEffect(() => {
+        (async () => {
+            try {
+                const resp = await apiClient.get('/users/me/basic/');
+                const foco = resp.data?.profile?.focus;
+                if (foco) {
+                    setUserFocus(foco);
+                    try { localStorage.setItem('userFocus', foco); } catch (e) { /* noop */ }
+                }
+            } catch (e) {
+                console.warn('Não foi possível obter foco do usuário, usando fallback.', e);
+            }
+        })();
+    }, []);
+
+    const getDisplayedTitle = (bloco: { tipo: string; titulo: string }) => {
+        // extrai o número do título (1,2,3...)
+        const match = bloco.titulo.match(/(\d+)/);
+        const numero = match ? match[1] : '';
+        if (bloco.tipo === 'foco') {
+            return `${userFocus} ${numero}`.trim();
+        }
+        if (bloco.tipo === 'bncc') {
+            return `Conhecimentos Gerais ${numero}`.trim();
+        }
+        return bloco.titulo;
+    };
 
             if (checkingPlan) {
                 return <LoadingAnimation text="Verificando progresso..." subtext="Aguarde um momento" />;
@@ -204,18 +238,18 @@ const Trilha = () => {
                                                     <div className="relative w-24 h-24">
                                                         <img
                                                             src={`/Group ${indiceImagem}.svg`}
-                                                            alt={bloco.titulo}
+                                                            alt={getDisplayedTitle(bloco)}
                                                             className="w-full h-full rounded-xl object-cover"
                                                         />
                                                     </div>
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                <p className="font-bold">{bloco.titulo}</p>
-                                                {status === 'completo' && <p>Review</p>}
-                                                {status === 'desbloqueado' && !hasNoHearts && <p>Start</p>}
-                                                {status === 'desbloqueado' && hasNoHearts && <p>You are out of lives!</p>}
-                                                {status === 'bloqueado' && <p>Locked</p>}
+                                                <p className="font-bold">{getDisplayedTitle(bloco)}</p>
+                                                {status === 'completo' && <p></p>}
+                                                {status === 'desbloqueado' && !hasNoHearts && <p>Começar agora</p>}
+                                                {status === 'desbloqueado' && hasNoHearts && <p>Você está sem vidas!</p>}
+                                                {status === 'bloqueado' && <p>Bloqueado</p>}
                                             </TooltipContent>
                                         </Tooltip>
                                     </motion.div>
@@ -243,14 +277,14 @@ const Trilha = () => {
                                                 onClick={() => handleClaimReward(nivel.nivel)}
                                             >
                                                 <Gift className={`h-12 w-12 transition-colors ${isLevelComplete && !isRewardClaimed ? 'text-warning' : isRewardClaimed ? 'text-secondary' : 'text-gray-500'}`} />
-                                                <span className="text-xs font-bold text-gray-300">Reward</span>
+                                                <span className="text-xs font-bold text-gray-300"></span>
                                             </Button>
                                         </motion.div>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        {isLevelComplete && !isRewardClaimed && <p>Click to collect 100 XP!</p>}
-                                        {isLevelComplete && isRewardClaimed && <p>Reward already collected.</p>}
-                                        {!isLevelComplete && <p>Complete all blocks in the level to unlock.</p>}
+                                        {isLevelComplete && !isRewardClaimed && <p>Clique para coletar 100 XP!</p>}
+                                        {isLevelComplete && isRewardClaimed && <p>Recompensa já coletada.</p>}
+                                        {!isLevelComplete && <p>Complete todos os blocos do nível para desbloquear.</p>}
                                     </TooltipContent>
                                 </Tooltip>
                             </motion.div>
