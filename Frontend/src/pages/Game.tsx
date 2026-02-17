@@ -211,6 +211,10 @@ const Game = () => {
           console.log('⏰ Timeout executado - Setando gameOver = true');
           setGameOver(true);
           setShowResult(false); // Remove showResult para evitar conflitos
+          if (typeof document !== 'undefined') {
+            const el = document.activeElement as HTMLElement | null;
+            if (el && typeof el.blur === 'function') el.blur();
+          }
         }, 1500);
         return; // CRITICAL: Impede execução do código abaixo
       }
@@ -222,6 +226,10 @@ const Game = () => {
           setTimeLeft(30);
           setSelectedAnswer(null);
           setShowResult(false);
+          if (typeof document !== 'undefined') {
+            const el = document.activeElement as HTMLElement | null;
+            if (el && typeof el.blur === 'function') el.blur();
+          }
         } else {
           // Toca som de vitória IMEDIATAMENTE antes de mostrar tela
           playSound('victory');
@@ -350,7 +358,19 @@ const Game = () => {
       setSessionAnswers({ correct: 0, incorrect: 0 });
       setGameOverProcessed(false);
       setLossReason(null); // Reseta o motivo da derrota
+      if (typeof document !== 'undefined') {
+        const el = document.activeElement as HTMLElement | null;
+        if (el && typeof el.blur === 'function') el.blur();
+      }
   };
+
+  // Remove focus/hover visual residual ao trocar de pergunta
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const el = document.activeElement as HTMLElement | null;
+      if (el && typeof el.blur === 'function') el.blur();
+    }
+  }, [currentQuestion]);
 
   console.log('📊 Estado atual do jogo:', { 
     gameOver, 
