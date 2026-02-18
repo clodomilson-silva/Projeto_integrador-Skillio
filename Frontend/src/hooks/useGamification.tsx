@@ -365,35 +365,31 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         if (!isAuthenticated || hearts >= 5) return; // Não precisa verificar se já tem 5 vidas
 
+        // Não recarrega vidas se estiver em uma tela de quiz (rota /game ou /quiz)
+        const isQuizPage = typeof window !== 'undefined' &&
+          (/\/game(\/|$)/.test(window.location.pathname) || /\/quiz(\/|$)/.test(window.location.pathname));
+        if (isQuizPage) return;
+
         let intervalId: number | undefined;
-        
         // Verifica a cada 10 segundos se é hora de adicionar uma vida
         intervalId = window.setInterval(async () => {
             console.log('🔄 Verificando recarga de vidas...', { hearts, nextRefillInSeconds });
-            
             // Busca dados atualizados do servidor para verificar se ganhou vidas
             try {
                 const response = await apiClient.get('/users/me/');
                 const gam = response.data?.profile?.gamification || {};
                 const serverHearts = typeof gam.hearts === 'number' ? gam.hearts : hearts;
-                
                 if (serverHearts !== hearts) {
                     console.log('✅ Vidas atualizadas automaticamente:', hearts, '→', serverHearts);
                     setHearts(serverHearts);
-                    
-                    // Atualiza cache
                     try {
                         localStorage.setItem('gamification_hearts', JSON.stringify(serverHearts));
                     } catch (e) {
                         console.warn('Failed to cache hearts', e);
                     }
-                    
-                    // Notifica componentes
                     window.dispatchEvent(new CustomEvent('app:data:updated', { 
                         detail: { type: 'hearts', hearts: serverHearts } 
                     }));
-                    
-                    // Toast amigável quando ganhar vidas (fundo sólido verde)
                     if (serverHearts > hearts) {
                         toast({ 
                             title: '❤️ Vida Recuperada!', 
@@ -401,8 +397,6 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
                             className: 'bg-green-500 border-green-500 text-white'
                         });
                     }
-                    
-                    // Recalcula próximo refill. Se não houver timestamp, consulta o endpoint de refill
                     if (serverHearts < 5) {
                         if (gam.hearts_last_refill) {
                             try {

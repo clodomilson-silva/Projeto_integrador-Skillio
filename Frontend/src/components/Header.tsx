@@ -23,13 +23,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
-  const { level, xp, xpForNextLevel, progressPercentage, streak, hearts, nextRefillInSeconds, refillHearts, refetchGamificationData, isLoading } = useGamification();
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [userProfile, setUserProfile] = useState<{ first_name: string; foto: string | null } | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { isAuthenticated, logout } = useAuth();
+    const { level, xp, xpForNextLevel, progressPercentage, streak, hearts, nextRefillInSeconds, refillHearts, refetchGamificationData, isLoading } = useGamification();
+    const [countdown, setCountdown] = useState<number | null>(null);
+    const [userProfile, setUserProfile] = useState<{ first_name: string; foto: string | null } | null>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    // Refetch gamification ao sair de /game ou /quiz
+    useEffect(() => {
+      // Detecta se saiu de uma tela de quiz
+      const isQuizPage = /\/game(\/|$)/.test(location.pathname) || /\/quiz(\/|$)/.test(location.pathname);
+      // Sempre que a rota muda, se NÃO está mais em quiz, força refetch
+      if (!isQuizPage) {
+        refetchGamificationData();
+      }
+    }, [location.pathname, refetchGamificationData]);
+  // ...existing code...
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -141,9 +151,12 @@ const Header = () => {
     const REFILL_MS = 15 * 1000;
     if (!isAuthenticated || hearts >= 5) return;
 
-    let intervalId: number | undefined;
-    intervalId = window.setInterval(() => {
-      // chamada periódica ao endpoint de refill; o servidor é a fonte da verdade
+    // Não recarrega vidas se estiver em uma tela de quiz (rota /game ou /quiz)
+    const isQuizPage = typeof window !== 'undefined' &&
+      (/\/game(\/|$)/.test(window.location.pathname) || /\/quiz(\/|$)/.test(window.location.pathname));
+    if (isQuizPage) return;
+
+    const intervalId = window.setInterval(() => {
       refillHearts().catch(err => console.error('Background refill failed', err));
     }, REFILL_MS);
 
