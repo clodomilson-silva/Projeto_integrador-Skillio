@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowRight, BookOpenCheck, WifiOff, CloudOff, Info } from 'lucide-react';
+import { ArrowRight, BookOpenCheck, WifiOff, CloudOff, Info, ArrowLeft } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { Separator } from '@/components/ui/separator';
 import LoadingAnimation from '@/components/ui/LoadingAnimation';
@@ -567,8 +567,9 @@ const StudyPlan = () => {
       <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-5xl">
         <Link to="/dashboard">
           <Button variant="ghost" size="sm" className="mb-4">
+            <ArrowLeft className="h-4 w-4 ml-2" />
             Voltar
-            <ArrowRight className="h-4 w-4 ml-2" />
+            
           </Button>
         </Link>
 
