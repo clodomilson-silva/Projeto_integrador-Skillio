@@ -28,14 +28,14 @@ export function gerarTrilhaPrincipal(): NivelTrilha[] {
         nivelAtual.blocos.push({
           id: `nivel-${i}-bncc-${contadorBncc}`,
           tipo: 'bncc',
-          titulo: `BNCC Review ${contadorBncc}`,
+          titulo: `Revisão ${contadorBncc}`,
         });
         contadorBncc++;
       } else {
         nivelAtual.blocos.push({
           id: `nivel-${i}-foco-${contadorFoco}`,
           tipo: 'foco',
-          titulo: `Focus ${contadorFoco}`,
+          titulo: `Quiz ${contadorFoco}`,
         });
         contadorFoco++;
       }

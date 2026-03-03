@@ -52,52 +52,62 @@ const RankingList = ({ ranking, loading, error, currentUser, totalUsers }: { ran
       <p className="text-sm text-muted-foreground text-center">Total de jogadores: {totalUsers}</p>
 
       {podium.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 items-end">
-          {/* 2º lugar - esquerda */}
-          {podium[1] ? (
-            <div className="flex justify-center">
-              <Link to={`/profile/${podium[1].id}`} className="w-full max-w-xs">
-                <GameCard className="p-6 text-center border-2 border-gray-300 hover:scale-105 transition-transform cursor-pointer podium-2 md:h-56 h-48">
-                  <div className="mb-2">{getPositionIcon(2)}</div>
-                  <Avatar className="w-16 h-16 mx-auto mb-2"><AvatarImage src={resolveAvatarSrc(podium[1].avatar)} alt={podium[1].name} className="object-cover" /><AvatarFallback className="text-xl">{podium[1].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
-                  <h3 className="font-bold text-base">{podium[1].name}</h3>
-                  <p className="text-xs text-muted-foreground">Nível {podium[1].level}</p>
-                  <p className="text-lg font-bold mt-1">{podium[1].xp.toLocaleString()} XP</p>
-                </GameCard>
-              </Link>
-            </div>
-          ) : <div />}
+        <>
+          {/* Desktop: pódio visual com alturas diferentes */}
+          <div className="hidden md:grid md:grid-cols-3 gap-4 mb-8 items-end">
+            {/* 2º lugar - esquerda */}
+            {podium[1] ? (
+              <div className="flex justify-center">
+                <Link to={`/profile/${podium[1].id}`} className="w-full max-w-xs">
+                  <GameCard className="p-6 text-center border-2 border-gray-300 hover:scale-105 transition-transform cursor-pointer podium-2 h-56">
+                    <div className="mb-2">{getPositionIcon(2)}</div>
+                    <Avatar className="w-16 h-16 mx-auto mb-2"><AvatarImage src={resolveAvatarSrc(podium[1].avatar)} alt={podium[1].name} className="object-cover" /><AvatarFallback className="text-xl">{podium[1].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                    <h3 className="font-bold text-base">{podium[1].name}</h3>
+                    <p className="text-xs text-muted-foreground">Nível {podium[1].level}</p>
+                    <p className="text-lg font-bold mt-1">{podium[1].xp.toLocaleString()} XP</p>
+                  </GameCard>
+                </Link>
+              </div>
+            ) : <div />}
 
-          {/* 1º lugar - centro (maior) */}
-          {podium[0] ? (
-            <div className="flex justify-center">
-              <Link to={`/profile/${podium[0].id}`} className="w-full max-w-xl">
-                <GameCard className="p-8 text-center border-2 border-yellow-400 hover:scale-105 transition-transform cursor-pointer podium-1 md:h-72 h-64">
-                  <div className="mb-3">{getPositionIcon(1)}</div>
-                  <Avatar className="w-24 h-24 mx-auto mb-3"><AvatarImage src={resolveAvatarSrc(podium[0].avatar)} alt={podium[0].name} className="object-cover" /><AvatarFallback className="text-2xl">{podium[0].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
-                  <h3 className="font-bold text-lg">{podium[0].name}</h3>
-                  <p className="text-sm text-muted-foreground">Nível {podium[0].level}</p>
-                  <p className="text-xl font-bold mt-1">{podium[0].xp.toLocaleString()} XP</p>
-                </GameCard>
-              </Link>
-            </div>
-          ) : <div />}
+            {/* 1º lugar - centro (maior) */}
+            {podium[0] ? (
+              <div className="flex justify-center">
+                <Link to={`/profile/${podium[0].id}`} className="w-full max-w-xl">
+                  <GameCard className="p-8 text-center border-2 border-yellow-400 hover:scale-105 transition-transform cursor-pointer podium-1 h-72">
+                    <div className="mb-3">{getPositionIcon(1)}</div>
+                    <Avatar className="w-24 h-24 mx-auto mb-3"><AvatarImage src={resolveAvatarSrc(podium[0].avatar)} alt={podium[0].name} className="object-cover" /><AvatarFallback className="text-2xl">{podium[0].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                    <h3 className="font-bold text-lg">{podium[0].name}</h3>
+                    <p className="text-sm text-muted-foreground">Nível {podium[0].level}</p>
+                    <p className="text-xl font-bold mt-1">{podium[0].xp.toLocaleString()} XP</p>
+                  </GameCard>
+                </Link>
+              </div>
+            ) : <div />}
 
-          {/* 3º lugar - direita */}
-          {podium[2] ? (
-            <div className="flex justify-center">
-              <Link to={`/profile/${podium[2].id}`} className="w-full max-w-xs">
-                <GameCard className="p-5 text-center border-2 border-amber-500 hover:scale-105 transition-transform cursor-pointer podium-3 md:h-52 h-44">
-                  <div className="mb-1">{getPositionIcon(3)}</div>
-                  <Avatar className="w-14 h-14 mx-auto mb-1"><AvatarImage src={resolveAvatarSrc(podium[2].avatar)} alt={podium[2].name} className="object-cover" /><AvatarFallback className="text-lg">{podium[2].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
-                  <h3 className="font-bold text-sm">{podium[2].name}</h3>
-                  <p className="text-xs text-muted-foreground">Nível {podium[2].level}</p>
-                  <p className="text-base font-bold mt-1">{podium[2].xp.toLocaleString()} XP</p>
-                </GameCard>
-              </Link>
-            </div>
-          ) : <div />}
-        </div>
+            {/* 3º lugar - direita */}
+            {podium[2] ? (
+              <div className="flex justify-center">
+                <Link to={`/profile/${podium[2].id}`} className="w-full max-w-xs">
+                  <GameCard className="p-5 text-center border-2 border-amber-500 hover:scale-105 transition-transform cursor-pointer podium-3 h-52">
+                    <div className="mb-1">{getPositionIcon(3)}</div>
+                    <Avatar className="w-14 h-14 mx-auto mb-1"><AvatarImage src={resolveAvatarSrc(podium[2].avatar)} alt={podium[2].name} className="object-cover" /><AvatarFallback className="text-lg">{podium[2].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                    <h3 className="font-bold text-sm">{podium[2].name}</h3>
+                    <p className="text-xs text-muted-foreground">Nível {podium[2].level}</p>
+                    <p className="text-base font-bold mt-1">{podium[2].xp.toLocaleString()} XP</p>
+                  </GameCard>
+                </Link>
+              </div>
+            ) : <div />}
+          </div>
+
+          {/* Mobile: lista vertical do 1º ao 3º */}
+          <div className="flex flex-col gap-3 mb-6 md:hidden">
+            {podium.map((player) => (
+              <RankingCard key={player.id} player={player} isCurrentUser={currentUser === player.name || currentUser === player.username} />
+            ))}
+          </div>
+        </>
       )}
 
       <div className="space-y-3">

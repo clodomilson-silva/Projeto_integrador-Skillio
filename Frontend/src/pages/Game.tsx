@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/ui/game-card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, Trophy, X, RotateCcw, CheckCircle, HeartCrack, SkipForward, Heart } from "lucide-react";
+import { ArrowLeft, Clock, Trophy, X, RotateCcw, CheckCircle, HeartCrack, SkipForward, Heart, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGenerativeAI } from "@/hooks/useGenerativeAI";
 import { trilhaPrincipal } from "@/data/trilhaPrincipal";
@@ -83,11 +83,23 @@ const Game = () => {
   const [sessionAnswers, setSessionAnswers] = useState({ correct: 0, incorrect: 0 });
   const [gameOverProcessed, setGameOverProcessed] = useState(false);
   const [lossReason, setLossReason] = useState<'mistakes' | 'hearts' | null>(null); // Armazena o motivo da derrota
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    try { return localStorage.getItem('game_audio_muted') === 'true'; } catch { return false; }
+  });
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      const next = !prev;
+      try { localStorage.setItem('game_audio_muted', String(next)); } catch {}
+      return next;
+    });
+  }, []);
 
   const educationalLevel = localStorage.getItem('userEducationalLevel') || 'medio';
 
   // Sistema de sons do jogo
   const playSound = useCallback((soundType: 'correct' | 'wrong' | 'victory' | 'defeat') => {
+    if (isMuted) return;
     try {
       const soundPaths = {
         correct: '/sounds/correct.mp3',
@@ -106,7 +118,7 @@ const Game = () => {
       // Ignora erros de som para não quebrar o jogo
       console.log('Sound error:', error);
     }
-  }, []);
+  }, [isMuted]);
 
   const { generatedQuestions, loading, error, refetch } = useGenerativeAI(
     subject,
@@ -619,8 +631,16 @@ const Game = () => {
             <div className="flex items-center space-x-2 sm:hidden mr-2">
               <Heart className="h-5 w-5 text-red-500" aria-hidden="true" />
               <span className="text-sm font-medium">{hearts}</span>
-            </div>
-            <Button variant="ghost" onClick={() => handleAnswer(null)}><SkipForward className="h-4 w-4" /></Button>
+            </div>            {/* Mute toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMute}
+              aria-label={isMuted ? 'Ativar som' : 'Silenciar'}
+              title={isMuted ? 'Ativar som' : 'Silenciar'}
+            >
+              {isMuted ? <VolumeX className="h-4 w-4 text-muted-foreground" /> : <Volume2 className="h-4 w-4" />}
+            </Button>            <Button variant="ghost" onClick={() => handleAnswer(null)}><SkipForward className="h-4 w-4" /></Button>
             <Link to={isTrailGame ? "/trilha" : "/subjects"}><Button variant="ghost" size="icon"><X className="h-4 w-4" /></Button></Link>
           </div>
         </div>
