@@ -382,50 +382,34 @@ const Header = () => {
      </header>
       {/* Bottom navigation for small screens (visible below 768px) and detected tablets */}
       <nav className={`fixed bottom-0 left-0 right-0 z-50 bg-card/95 border-t backdrop-blur-sm ${showBottomNav ? '' : 'hidden'}`}>
-        <div className="container mx-auto px-2 py-1">
+        <div className="container mx-auto px-1 py-1">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-foreground hover:text-primary">
-              <img src="/home.svg" alt="Início" className="w-6 h-6 mb-0.5" />
-              <span className="mt-1">Início</span>
+            <Link to="/" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+              <img src="/home.svg" alt="Início" className="w-5 h-5 mb-0.5" />
+              <span className="mt-0.5">Início</span>
             </Link>
 
-            {isAuthenticated ? (
-              <Link to="/dashboard" className="flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-foreground hover:text-primary">
-                <img src="/desempenho.svg" alt="Desempenho" className="w-6 h-6 mb-0.5" />
-                <span className="mt-1">Desempenho</span>
-              </Link>
-            ) : (
-              <Link to="/ranking" className="flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-foreground hover:text-primary">
-                <img src="/ranking.svg" alt="Ranking" className="w-6 h-6 mb-0.5" />
-                <span className="mt-1">Ranking</span>
-              </Link>
-            )}
-
-            {isAuthenticated ? (
-              <Link to="/trilha" className="flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-foreground hover:text-primary">
-                <img src="/foguet1.svg" alt="Trilha" className="w-6 h-6 mb-0.5" />
-                <span className="mt-1">Trilha</span>
-              </Link>
-            ) : showRegisterOption ? (
-              <Link to="/register" onClick={() => { try { localStorage.removeItem('clicked_login'); } catch(e){}; setShowRegisterOption(false); }} className="flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-foreground hover:text-primary">
-                <img src="/register.svg" alt="Cadastrar" className="w-6 h-6 mb-0.5" />
-                <span className="mt-1">Cadastrar</span>
-              </Link>
-            ) : (
-              <Link to="/login" onClick={() => { try { localStorage.setItem('clicked_login','1'); } catch(e){}; setShowRegisterOption(true); }} className="flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-foreground hover:text-primary">
-                <img src="/login.svg" alt="Entrar" className="w-6 h-6 mb-0.5" />
-                <span className="mt-1">Entrar</span>
-              </Link>
-            )}
-
-            <Link to="/subjects" className="flex-1 flex flex-col items-center justify-center py-2 text-[11px] text-foreground hover:text-primary">
-              <img src="/explorar.svg" alt="Explorar" className="w-6 h-6 mb-0.5" />
-              <span className="mt-1">Explorar</span>
+            <Link to={isAuthenticated ? "/dashboard" : "/login"} className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+              <img src="/desempenho.svg" alt="Desempenho" className="w-5 h-5 mb-0.5" />
+              <span className="mt-0.5">Desempenho</span>
             </Link>
 
-           
+            <Link to="/ranking" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+              <img src="/ranking.svg" alt="Ranking" className="w-5 h-5 mb-0.5" />
+              <span className="mt-0.5">Ranking</span>
+            </Link>
 
-            {/* Hamburger menu - opens the sheet (mobile) */}
+            <Link to={isAuthenticated ? "/trilha" : "/login"} className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+              <img src="/foguet1.svg" alt="Trilha" className="w-5 h-5 mb-0.5" />
+              <span className="mt-0.5">Trilha</span>
+            </Link>
+
+            <Link to="/subjects" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+              <img src="/explorar.svg" alt="Explorar" className="w-5 h-5 mb-0.5" />
+              <span className="mt-0.5">Explorar</span>
+            </Link>
+
+            {/* Hamburger menu */}
             <div className="flex-1 flex items-center justify-center">
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild>
@@ -438,6 +422,12 @@ const Header = () => {
                     <SheetTitle>Menu</SheetTitle>
                   </SheetHeader>
                   <nav className="flex flex-col space-y-4 mt-6">
+                   {/*  {isAuthenticated && (
+                      <Link to="/dashboard" onClick={closeMenu} className="flex items-center gap-3 text-foreground hover:text-primary transition-colors py-2">
+                        <img src="/desempenho.svg" alt="Desempenho" className="w-5 h-5" />
+                        <span>Meu Desempenho</span>
+                      </Link>
+                    )} */}
                     {isAuthenticated && (
                       <Link to="/profile" onClick={closeMenu} className="flex items-center gap-3 text-foreground hover:text-primary transition-colors py-2">
                         <Avatar className="w-5 h-5">

@@ -16,6 +16,11 @@ dj-database-url==2.1.0
 # Web Server
 gunicorn==23.0.0
 whitenoise==6.8.2
+daphne==4.1.2
+
+# WebSocket / Django Channels
+channels==4.2.0
+channels-redis==4.2.0
 
 # Utilities
 python-dotenv==1.0.1

@@ -9,14 +9,11 @@ Group=ubuntu
 WorkingDirectory=/home/ubuntu/Projeto_integrador/backend
 Environment="PATH=/home/ubuntu/venv/bin"
 EnvironmentFile=/home/ubuntu/.env
-ExecStart=/home/ubuntu/venv/bin/gunicorn \
-    --workers 3 \
-    --bind 0.0.0.0:8000 \
-    --timeout 300 \
-    --log-level info \
-    --access-logfile - \
-    --error-logfile - \
-    core.wsgi:application
+ExecStart=/home/ubuntu/venv/bin/daphne \
+    -b 0.0.0.0 \
+    -p 8000 \
+    --proxy-headers \
+    core.asgi:application
 Restart=always
 RestartSec=10
 

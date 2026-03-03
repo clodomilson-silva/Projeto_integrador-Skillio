@@ -4,7 +4,7 @@ import { Play, Trophy, Users, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import mascot from "@/assets/mascot.png";
 import TypedTextWithHighlight from './TypedTextWithHighlight';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import apiClient from '@/api/axios';
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -72,28 +72,60 @@ const Hero = () => {
     }
   };
 
+  // Busca inicial do recorde via REST
   useEffect(() => {
-    const fetchHeroStats = async () => {
+    const fetchRecord = async () => {
       try {
         const response = await apiClient.get<HeroStats>('/hero-stats/');
         setStats(response.data);
       } catch (error) {
         console.error('Erro ao buscar estatísticas:', error);
-        // Define valores padrão em caso de erro
-        setStats({
-          record: { holder: null, xp: 0 },
-          online_players: 0
-        });
+        setStats({ record: { holder: null, xp: 0 }, online_players: 0 });
       } finally {
         setLoading(false);
       }
     };
+    fetchRecord();
+  }, []);
 
-    fetchHeroStats();
-    
-    // Atualiza a cada 30 segundos
-    const interval = setInterval(fetchHeroStats, 30000);
-    return () => clearInterval(interval);
+  // WebSocket para atualizar jogadores online em tempo real
+  useEffect(() => {
+    const getWsUrl = () => {
+      const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
+      if (apiUrl) {
+        // ex: "https://api.skillio.com/api/v1" → "wss://api.skillio.com/ws/online-players/"
+        const origin = apiUrl.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
+        return origin
+          .replace(/^https:\/\//, 'wss://')
+          .replace(/^http:\/\//, 'ws://')
+          + '/ws/online-players/';
+      }
+      // Desenvolvimento local
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${window.location.hostname}:8000/ws/online-players/`;
+    };
+
+    const ws = new WebSocket(getWsUrl());
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (typeof data.online_players === 'number') {
+          setStats((prev) => ({
+            ...(prev ?? { record: { holder: null, xp: 0 } }),
+            online_players: data.online_players,
+          }));
+        }
+      } catch {
+        // ignora mensagens inválidas
+      }
+    };
+
+    ws.onerror = () => {
+      console.warn('WebSocket de jogadores online indisponível');
+    };
+
+    return () => ws.close();
   }, []);
 
   return (

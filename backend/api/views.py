@@ -658,99 +658,112 @@ class RankingView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         category = request.query_params.get('category', 'global')
         limit = int(request.query_params.get('limit', 100))
-        
-        if category == 'semanal':
-            # Ranking da última semana (baseado em activity logs)
-            one_week_ago = timezone.now() - timezone.timedelta(days=7)
-            
-            # OTIMIZADO: Filtra usuários com atividades na semana ANTES de processar
-            active_users = User.objects.filter(
-                activity_logs__date__gte=one_week_ago.date()
-            ).select_related('profile', 'gamification').distinct()
-            
-            # Calcula XP ganho na última semana para cada usuário
-            user_weekly_xp = []
-            for user in active_users:
-                # Verifica se o usuário tem gamification
-                if not hasattr(user, 'gamification'):
-                    continue
-                    
-                # Conta atividades da semana
-                weekly_activities = ActivityLog.objects.filter(
-                    user=user,
-                    date__gte=one_week_ago.date()
-                ).count()
-                
-                # Assume 10 XP por atividade (ajuste conforme sua lógica)
-                weekly_xp = weekly_activities * 10
-                
-                if weekly_xp > 0:
-                    user_weekly_xp.append({
-                        'id': user.id,
-                        'name': user.first_name or user.username,
-                        'username': user.username,
-                        'avatar': self.get_avatar_url(user, request),
-                        'xp': weekly_xp,
-                        'level': user.gamification.level,
-                        'total_xp': user.gamification.xp
-                    })
-            
-            # Ordena por XP semanal
-            ranking = sorted(user_weekly_xp, key=lambda x: x['xp'], reverse=True)[:limit]
-            
-        elif category != 'global':
-            # Ranking por matéria específica
-            try:
-                subject = Subject.objects.get(name__iexact=category)
-                
-                # OTIMIZADO: Filtra usuários com performance na matéria ANTES de processar
-                performances = UserPerformance.objects.filter(
-                    subject=subject,
-                    correct_answers__gt=0
-                ).select_related('user', 'user__profile', 'user__gamification').order_by('-correct_answers')[:limit]
-                
-                ranking = []
-                for idx, performance in enumerate(performances, start=1):
-                    user = performance.user
-                    # XP baseado em acertos (10 XP por acerto)
-                    subject_xp = performance.correct_answers * 10
-                    
-                    ranking.append({
-                        'id': user.id,
-                        'rank': idx,
-                        'name': user.first_name or user.username,
-                        'username': user.username,
-                        'avatar': self.get_avatar_url(user, request),
-                        'xp': subject_xp,
-                        'level': user.gamification.level if hasattr(user, 'gamification') else 1,
-                        'correct_answers': performance.correct_answers,
-                        'incorrect_answers': performance.incorrect_answers
-                    })
-                
-            except Subject.DoesNotExist:
-                # Matéria não encontrada, retorna ranking vazio
-                ranking = []
-        
-        else:
-            # Ranking global (por XP total)
-            # OTIMIZADO: Ordena no banco e limita ANTES de processar
+        now = timezone.now()
+
+        if category == 'global':
+            # Ranking global: soma de todos os XP dos quizzes concluídos
             top_users = User.objects.filter(
                 gamification__xp__gt=0
             ).select_related('profile', 'gamification').order_by('-gamification__xp')[:limit]
-            
             ranking = []
             for idx, user in enumerate(top_users, start=1):
+                gam = getattr(user, 'gamification', None)
                 ranking.append({
                     'id': user.id,
                     'rank': idx,
                     'name': user.first_name or user.username,
                     'username': user.username,
                     'avatar': self.get_avatar_url(user, request),
-                    'xp': user.gamification.xp,
-                    'level': user.gamification.level,
-                    'streak': user.gamification.streak
+                    'xp': gam.xp if gam else 0,
+                    'level': gam.level if gam else 1,
+                    'streak': getattr(gam, 'streak', 0) if gam else 0
                 })
-        
+
+        elif category == 'mensal':
+            # Ranking mensal: soma de XP dos quizzes finalizados no mês atual
+            first_day = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            last_day = (first_day + timezone.timedelta(days=32)).replace(day=1) - timezone.timedelta(seconds=1)
+            logs = ActivityLog.objects.filter(
+                type='pratica',
+                date__gte=first_day.date(),
+                date__lte=last_day.date()
+            )
+            user_xp = {}
+            for log in logs:
+                if log.user_id not in user_xp:
+                    user_xp[log.user_id] = 0
+            # Para cada usuário, somar acertos dos quizzes finalizados no período
+            for user_id in user_xp.keys():
+                # Verifica se UserPerformance tem campo 'date'
+                try:
+                    performances = UserPerformance.objects.filter(user_id=user_id, date__gte=first_day.date(), date__lte=last_day.date())
+                except Exception:
+                    performances = UserPerformance.objects.filter(user_id=user_id)
+                correct_total = sum([getattr(perf, 'correct_answers', 0) for perf in performances])
+                user_xp[user_id] = correct_total * 10
+
+            users = User.objects.filter(id__in=user_xp.keys()).select_related('profile', 'gamification')
+            ranking = []
+            for idx, user in enumerate(sorted(users, key=lambda u: user_xp.get(u.id, 0), reverse=True)[:limit], start=1):
+                gam = getattr(user, 'gamification', None)
+                ranking.append({
+                    'id': user.id,
+                    'rank': idx,
+                    'name': user.first_name or user.username,
+                    'username': user.username,
+                    'avatar': self.get_avatar_url(user, request),
+                    'xp': user_xp.get(user.id, 0),
+                    'level': gam.level if gam else 1,
+                    'total_xp': gam.xp if gam else 0
+                })
+
+        elif category == 'semanal':
+            # Ranking semanal: soma de XP dos quizzes finalizados na semana atual
+            weekday = now.weekday()  # 0=segunda, 6=domingo
+            sunday = now - timezone.timedelta(days=weekday)
+            sunday = sunday.replace(hour=0, minute=0, second=0, microsecond=0)
+            saturday = sunday + timezone.timedelta(days=6)
+            saturday = saturday.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+            logs = ActivityLog.objects.filter(
+                type='pratica',
+                date__gte=sunday.date(),
+                date__lte=saturday.date()
+            )
+            user_xp = {}
+            for log in logs:
+                if log.user_id not in user_xp:
+                    user_xp[log.user_id] = 0
+            # Para cada usuário, somar acertos dos quizzes finalizados no período
+            for user_id in user_xp.keys():
+                # Filtra apenas quizzes finalizados na semana
+                performances = UserPerformance.objects.filter(user_id=user_id)
+                correct_total = 0
+                for perf in performances:
+                    perf_date = getattr(perf, 'date', None)
+                    if perf_date:
+                        if sunday.date() <= perf_date <= saturday.date():
+                            correct_total += getattr(perf, 'correct_answers', 0)
+                user_xp[user_id] = correct_total * 10
+
+            users = User.objects.filter(id__in=user_xp.keys()).select_related('profile', 'gamification')
+            ranking = []
+            for idx, user in enumerate(sorted(users, key=lambda u: user_xp.get(u.id, 0), reverse=True)[:limit], start=1):
+                gam = getattr(user, 'gamification', None)
+                ranking.append({
+                    'id': user.id,
+                    'rank': idx,
+                    'name': user.first_name or user.username,
+                    'username': user.username,
+                    'avatar': self.get_avatar_url(user, request),
+                    'xp': user_xp.get(user.id, 0),
+                    'level': gam.level if gam else 1,
+                    'total_xp': gam.xp if gam else 0
+                })
+
+        else:
+            ranking = []
+
         return Response({
             'category': category,
             'ranking': ranking,
