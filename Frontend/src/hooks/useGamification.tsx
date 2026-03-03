@@ -29,6 +29,8 @@ interface GamificationContextType {
     streak: number;
     unlockedAchievements: string[];
     dailyQuests: Quest[];
+    weeklyQuests: Quest[];
+    monthlyQuests: Quest[];
     blocosCompletos: string[];
     isLoading: boolean;
     xpForNextLevel: number;
@@ -72,6 +74,12 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
     const [dailyQuests, setDailyQuests] = useState<Quest[]>(() => 
         getCachedValue('quests', [])
     );
+    const [weeklyQuests, setWeeklyQuests] = useState<Quest[]>(() => 
+        getCachedValue('weekly_quests', [])
+    );
+    const [monthlyQuests, setMonthlyQuests] = useState<Quest[]>(() => 
+        getCachedValue('monthly_quests', [])
+    );
     const [blocosCompletos, setBlocosCompletos] = useState<string[]>(() => 
         getCachedValue('blocos', [])
     );
@@ -100,6 +108,8 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
                 const newStats = data.profile.gamification || { level: 1, xp: 0, streak: 0 };
                 const newAchievements = (data.profile.achievements || []).map((ua: UserAchievement) => ua.achievement.id);
                 const newQuests = data.profile.daily_quests || [];
+                const newWeeklyQuests = data.profile.weekly_quests || [];
+                const newMonthlyQuests = data.profile.monthly_quests || [];
                 const newBlocos = data.profile.blocos_completos || [];
                 const gam = data.profile.gamification || {};
                 const serverHearts = typeof gam.hearts === 'number' ? gam.hearts : 5;
@@ -109,6 +119,8 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
                 setStats(newStats);
                 setUnlockedAchievements(newAchievements);
                 setDailyQuests(newQuests);
+                setWeeklyQuests(newWeeklyQuests);
+                setMonthlyQuests(newMonthlyQuests);
                 setBlocosCompletos(newBlocos);
                 setHearts(serverHearts);
                 setUserFocus(newFocus);
@@ -118,6 +130,8 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
                     localStorage.setItem('gamification_stats', JSON.stringify(newStats));
                     localStorage.setItem('gamification_achievements', JSON.stringify(newAchievements));
                     localStorage.setItem('gamification_quests', JSON.stringify(newQuests));
+                    localStorage.setItem('gamification_weekly_quests', JSON.stringify(newWeeklyQuests));
+                    localStorage.setItem('gamification_monthly_quests', JSON.stringify(newMonthlyQuests));
                     localStorage.setItem('gamification_blocos', JSON.stringify(newBlocos));
                     localStorage.setItem('gamification_hearts', JSON.stringify(serverHearts));
                     localStorage.setItem('gamification_focus', JSON.stringify(newFocus));
@@ -197,6 +211,8 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
             setStats({ level: 1, xp: 0, streak: 0 });
             setUnlockedAchievements([]);
             setDailyQuests([]);
+            setWeeklyQuests([]);
+            setMonthlyQuests([]);
             setBlocosCompletos([]);
             setHearts(0);
             hasInitialized.current = false; // Reset para permitir nova inicialização
@@ -445,6 +461,8 @@ export const GamificationProvider = ({ children }: { children: ReactNode }) => {
         allAchievements,
         unlockedAchievements,
         dailyQuests,
+        weeklyQuests,
+        monthlyQuests,
         blocosCompletos,
         isLoading,
         xpForNextLevel,

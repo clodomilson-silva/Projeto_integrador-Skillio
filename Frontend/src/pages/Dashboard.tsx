@@ -102,7 +102,7 @@ const Dashboard = () => {
   const chartRef = useRef<any>(null);
 
   const { userData, performanceData, activities: apiActivities, isLoading, refetchData, error } = useDashboardData();
-  const { level, xp, streak, dailyQuests, blocosCompletos, hearts, nextRefillInSeconds } = useGamification();
+  const { level, xp, streak, dailyQuests, weeklyQuests, monthlyQuests, blocosCompletos, hearts, nextRefillInSeconds, completeQuest } = useGamification();
 
   // determine if user has a study plan
   const studyPlan = (userData?.profile as any)?.study_plan ?? null;
@@ -163,6 +163,15 @@ const Dashboard = () => {
       }, 1000);
     }
   }, [refetchData]);
+
+  // Auto-completa a missão de login diário ao abrir o dashboard
+  useEffect(() => {
+    if (!dailyQuests || dailyQuests.length === 0) return;
+    const loginQuest = dailyQuests.find(q => q.quest.id === 'login_streak' && !q.is_completed);
+    if (loginQuest) {
+      completeQuest('login_streak');
+    }
+  }, [dailyQuests]);
 
   const handleNextExercise = () => {
     if (initialQuizDone) {
@@ -478,20 +487,117 @@ const Dashboard = () => {
                 </CardContent>
             </Card>
 
+            {/* ── Missões Diárias ────────────────────────────────────────── */}
             <Card>
-                <CardHeader>
-                    <CardTitle>Missões Diárias</CardTitle>
+                <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                        <span className="text-lg">&#128197;</span> Missões Diárias
+                        <span className="ml-auto text-xs font-normal text-muted-foreground">Reinicia à meia-noite</span>
+                    </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    {dailyQuests && dailyQuests.map(quest => (
-                    <div key={quest.quest.id} className={`flex items-center gap-4 p-3 rounded-lg transition-all ${quest.is_completed ? 'bg-secondary/10' : 'bg-muted/50'}`}>
-                        <Checkbox id={quest.quest.id} checked={quest.is_completed} disabled className="data-[state=checked]:border-secondary data-[state=checked]:bg-secondary" />
-                        <label htmlFor={quest.quest.id} className={`flex-1 text-sm ${quest.is_completed ? 'line-through text-muted-foreground' : ''}`}>
-                        {quest.quest.description}
+                <CardContent className="space-y-3">
+                    {dailyQuests && dailyQuests.length > 0 ? dailyQuests.map(quest => (
+                    <div
+                        key={quest.quest.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                            quest.is_completed
+                                ? 'bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800'
+                                : 'bg-muted/50 hover:bg-muted cursor-pointer'
+                        }`}
+                        onClick={() => !quest.is_completed && completeQuest(quest.quest.id)}
+                    >
+                        <Checkbox
+                            id={quest.quest.id}
+                            checked={quest.is_completed}
+                            disabled={quest.is_completed}
+                            onCheckedChange={(checked) => { if (checked && !quest.is_completed) completeQuest(quest.quest.id); }}
+                            className="data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500 pointer-events-none"
+                        />
+                        <label htmlFor={quest.quest.id} className={`flex-1 text-sm cursor-pointer ${quest.is_completed ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground'}`}>
+                            {quest.quest.description}
                         </label>
-                        {!quest.is_completed && <span className="text-sm text-muted-foreground">+{quest.quest.xp_reward} XP</span>}
+                        {!quest.is_completed && <span className="text-xs font-semibold text-emerald-600">+{quest.quest.xp_reward} XP</span>}
+                        {quest.is_completed && <span className="text-xs font-semibold text-emerald-600">✓ Feita</span>}
                     </div>
-                    ))}
+                    )) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhuma missão disponível hoje.</p>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* ── Missões Semanais ──────────────────────────────────────────── */}
+            <Card>
+                <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                        <span className="text-lg">&#9889;</span> Missões Semanais
+                        <span className="ml-auto text-xs font-normal text-muted-foreground">Reinicia toda segunda</span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {weeklyQuests && weeklyQuests.length > 0 ? weeklyQuests.map(quest => (
+                    <div
+                        key={quest.quest.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                            quest.is_completed
+                                ? 'bg-violet-100 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800'
+                                : 'bg-muted/50 hover:bg-muted cursor-pointer'
+                        }`}
+                        onClick={() => !quest.is_completed && completeQuest(quest.quest.id)}
+                    >
+                        <Checkbox
+                            id={quest.quest.id}
+                            checked={quest.is_completed}
+                            disabled={quest.is_completed}
+                            onCheckedChange={(checked) => { if (checked && !quest.is_completed) completeQuest(quest.quest.id); }}
+                            className="data-[state=checked]:border-violet-500 data-[state=checked]:bg-violet-500 pointer-events-none"
+                        />
+                        <label htmlFor={quest.quest.id} className={`flex-1 text-sm cursor-pointer ${quest.is_completed ? 'text-violet-700 dark:text-violet-400' : 'text-foreground'}`}>
+                            {quest.quest.description}
+                        </label>
+                        {!quest.is_completed && <span className="text-xs font-semibold text-violet-600">+{quest.quest.xp_reward} XP</span>}
+                        {quest.is_completed && <span className="text-xs font-semibold text-violet-600">✓ Feita</span>}
+                    </div>
+                    )) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhuma missão semanal disponível.</p>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* ── Missões Mensais ───────────────────────────────────────────── */}
+            <Card>
+                <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                        <span className="text-lg">&#127942;</span> Missões Mensais
+                        <span className="ml-auto text-xs font-normal text-muted-foreground">Reinicia no dia 1º</span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {monthlyQuests && monthlyQuests.length > 0 ? monthlyQuests.map(quest => (
+                    <div
+                        key={quest.quest.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                            quest.is_completed
+                                ? 'bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800'
+                                : 'bg-muted/50 hover:bg-muted cursor-pointer'
+                        }`}
+                        onClick={() => !quest.is_completed && completeQuest(quest.quest.id)}
+                    >
+                        <Checkbox
+                            id={quest.quest.id}
+                            checked={quest.is_completed}
+                            disabled={quest.is_completed}
+                            onCheckedChange={(checked) => { if (checked && !quest.is_completed) completeQuest(quest.quest.id); }}
+                            className="data-[state=checked]:border-amber-500 data-[state=checked]:bg-amber-500 pointer-events-none"
+                        />
+                        <label htmlFor={quest.quest.id} className={`flex-1 text-sm cursor-pointer ${quest.is_completed ? 'text-amber-700 dark:text-amber-400' : 'text-foreground'}`}>
+                            {quest.quest.description}
+                        </label>
+                        {!quest.is_completed && <span className="text-xs font-semibold text-amber-600">+{quest.quest.xp_reward} XP</span>}
+                        {quest.is_completed && <span className="text-xs font-semibold text-amber-600">✓ Feita</span>}
+                    </div>
+                    )) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhuma missão mensal disponível.</p>
+                    )}
                 </CardContent>
             </Card>
         </div>

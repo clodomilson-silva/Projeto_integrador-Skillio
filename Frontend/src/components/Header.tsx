@@ -384,30 +384,61 @@ const Header = () => {
       <nav className={`fixed bottom-0 left-0 right-0 z-50 bg-card/95 border-t backdrop-blur-sm ${showBottomNav ? '' : 'hidden'}`}>
         <div className="container mx-auto px-1 py-1">
           <div className="flex items-center justify-between">
+            {/* Item: Início — sempre visível */}
             <Link to="/" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
               <img src="/home.svg" alt="Início" className="w-5 h-5 mb-0.5" />
               <span className="mt-0.5">Início</span>
             </Link>
 
-            <Link to={isAuthenticated ? "/dashboard" : "/login"} className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
-              <img src="/desempenho.svg" alt="Desempenho" className="w-5 h-5 mb-0.5" />
-              <span className="mt-0.5">Desempenho</span>
-            </Link>
+            {isAuthenticated ? (
+              // ── Sessão ativa: Início | Desempenho | Trilha | Ranking | Explorar | Menu ──
+              <>
+                <Link to="/dashboard" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+                  <img src="/desempenho.svg" alt="Desempenho" className="w-5 h-5 mb-0.5" />
+                  <span className="mt-0.5">Desempenho</span>
+                </Link>
 
-            <Link to="/ranking" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
-              <img src="/ranking.svg" alt="Ranking" className="w-5 h-5 mb-0.5" />
-              <span className="mt-0.5">Ranking</span>
-            </Link>
+                <Link to="/trilha" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+                  <img src="/foguet1.svg" alt="Trilha" className="w-5 h-5 mb-0.5" />
+                  <span className="mt-0.5">Trilha</span>
+                </Link>
 
-            <Link to={isAuthenticated ? "/trilha" : "/login"} className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
-              <img src="/foguet1.svg" alt="Trilha" className="w-5 h-5 mb-0.5" />
-              <span className="mt-0.5">Trilha</span>
-            </Link>
+                <Link to="/ranking" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+                  <img src="/ranking.svg" alt="Ranking" className="w-5 h-5 mb-0.5" />
+                  <span className="mt-0.5">Ranking</span>
+                </Link>
 
-            <Link to="/subjects" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
-              <img src="/explorar.svg" alt="Explorar" className="w-5 h-5 mb-0.5" />
-              <span className="mt-0.5">Explorar</span>
-            </Link>
+                <Link to="/subjects" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+                  <img src="/explorar.svg" alt="Explorar" className="w-5 h-5 mb-0.5" />
+                  <span className="mt-0.5">Explorar</span>
+                </Link>
+              </>
+            ) : (
+              // ── Sem sessão: Início | Ranking | Login | Explorar | Menu ──
+              <>
+                <Link to="/ranking" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+                  <img src="/ranking.svg" alt="Ranking" className="w-5 h-5 mb-0.5" />
+                  <span className="mt-0.5">Ranking</span>
+                </Link>
+
+                {location.pathname === '/login' ? (
+                  <Link to="/register" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+                    <img src="/register.svg" alt="Cadastro" className="w-5 h-5 mb-0.5" />
+                    <span className="mt-0.5">Cadastro</span>
+                  </Link>
+                ) : (
+                  <Link to="/login" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+                    <img src="/login.svg" alt="Login" className="w-5 h-5 mb-0.5" />
+                    <span className="mt-0.5">Login</span>
+                  </Link>
+                )}
+
+                <Link to="/subjects" className="flex-1 flex flex-col items-center justify-center py-2 text-[10px] text-foreground hover:text-primary">
+                  <img src="/explorar.svg" alt="Explorar" className="w-5 h-5 mb-0.5" />
+                  <span className="mt-0.5">Explorar</span>
+                </Link>
+              </>
+            )}
 
             {/* Hamburger menu */}
             <div className="flex-1 flex items-center justify-center">
@@ -422,13 +453,7 @@ const Header = () => {
                     <SheetTitle>Menu</SheetTitle>
                   </SheetHeader>
                   <nav className="flex flex-col space-y-4 mt-6">
-                   {/*  {isAuthenticated && (
-                      <Link to="/dashboard" onClick={closeMenu} className="flex items-center gap-3 text-foreground hover:text-primary transition-colors py-2">
-                        <img src="/desempenho.svg" alt="Desempenho" className="w-5 h-5" />
-                        <span>Meu Desempenho</span>
-                      </Link>
-                    )} */}
-                    {isAuthenticated && (
+                   {isAuthenticated && (
                       <Link to="/profile" onClick={closeMenu} className="flex items-center gap-3 text-foreground hover:text-primary transition-colors py-2">
                         <Avatar className="w-5 h-5">
                           <AvatarImage src={userProfile?.foto || undefined} className="object-cover" />
@@ -516,9 +541,6 @@ const Header = () => {
                     <div className="pt-4 border-t">
                       {isAuthenticated ? (
                         <>
-                          <Link to="/profile" onClick={closeMenu} className="block mb-2">
-                            <Button className="w-full">Perfil</Button>
-                          </Link>
                           <Button variant="outline" className="w-full border-primary/50" onClick={handleLogout}>Sair</Button>
                         </>
                       ) : (

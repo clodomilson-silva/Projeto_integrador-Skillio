@@ -7,6 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.utils import timezone
+from datetime import timedelta
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 import base64
@@ -499,8 +500,16 @@ class CompleteQuestView(generics.GenericAPIView):
         user = request.user
         quest = get_object_or_404(Quest, id=quest_id)
         today = timezone.now().date()
-        
-        user_quest, created = UserQuest.objects.get_or_create(user=user, quest=quest, quest_date=today)
+
+        # Determina quest_date conforme o tipo da missão
+        if quest.type == 'weekly':
+            quest_date = today - timedelta(days=today.weekday())  # segunda-feira atual
+        elif quest.type == 'monthly':
+            quest_date = today.replace(day=1)  # primeiro dia do mês
+        else:
+            quest_date = today  # diária
+
+        user_quest, created = UserQuest.objects.get_or_create(user=user, quest=quest, quest_date=quest_date)
         
         if not user_quest.is_completed:
             user_quest.is_completed = True

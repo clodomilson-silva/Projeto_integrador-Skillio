@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.validators import UniqueValidator
 from django.utils import timezone
+from datetime import timedelta
 from .validators import validate_safe_content
 import base64
 
@@ -159,11 +160,13 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
     gamification = GamificationSerializer(read_only=True, source='user.gamification')
     achievements = UserAchievementSerializer(many=True, read_only=True, source='user.achievements')
     daily_quests = serializers.SerializerMethodField()
+    weekly_quests = serializers.SerializerMethodField()
+    monthly_quests = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
         # O campo 'foto' será serializado como uma URL completa.
-        fields = ('birth_date', 'educational_level', 'profession', 'focus', 'foto', 'gamification', 'achievements', 'daily_quests', 'blocos_completos', 'study_plan')
+        fields = ('birth_date', 'educational_level', 'profession', 'focus', 'foto', 'gamification', 'achievements', 'daily_quests', 'weekly_quests', 'monthly_quests', 'blocos_completos', 'study_plan')
 
     def get_foto(self, obj):
         
@@ -171,43 +174,44 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
             return f"data:image/png;base64,{base64.b64encode(obj.foto).decode('utf-8')}"
         return None
 
-    def get_daily_quests(self, obj):
-        """
-        OTIMIZADO: Reduz queries de N por quest para 2 queries totais:
-        1 query para buscar quests daily
-        1 query para buscar UserQuests do usuário
-        """
+    def _get_user_quests_for_type(self, obj, quest_type, quest_date):
+        """Helper reutilizável: busca/cria UserQuests de um tipo e data específicos."""
         user = obj.user
-        today = timezone.now().date()
-        
-        # Busca todas as quests daily em UMA query
-        quests = Quest.objects.filter(type='daily')
-        
-        # Busca UserQuests existentes do usuário para hoje em UMA query
+        quests = Quest.objects.filter(type=quest_type)
         existing_user_quests = {
-            uq.quest_id: uq 
-            for uq in UserQuest.objects.filter(user=user, quest_date=today).select_related('quest')
+            uq.quest_id: uq
+            for uq in UserQuest.objects.filter(
+                user=user, quest_date=quest_date, quest__type=quest_type
+            ).select_related('quest')
         }
-        
-        # Cria lista de UserQuests (reutiliza existentes ou cria em memória)
         user_quests = []
         quests_to_create = []
-        
         for quest in quests:
             if quest.id in existing_user_quests:
                 user_quests.append(existing_user_quests[quest.id])
             else:
-                # Cria em memória mas não salva ainda (evita query por quest)
-                new_uq = UserQuest(user=user, quest=quest, quest_date=today, is_completed=False)
+                new_uq = UserQuest(user=user, quest=quest, quest_date=quest_date, is_completed=False)
                 quests_to_create.append(new_uq)
                 user_quests.append(new_uq)
-        
-        # Salva todas as novas quests de uma vez (bulk insert)
         if quests_to_create:
             UserQuest.objects.bulk_create(quests_to_create, ignore_conflicts=True)
-        
-        serializer = UserQuestSerializer(user_quests, many=True)
-        return serializer.data
+        return UserQuestSerializer(user_quests, many=True).data
+
+    def get_daily_quests(self, obj):
+        """Missões do dia (quest_date = hoje)."""
+        return self._get_user_quests_for_type(obj, 'daily', timezone.now().date())
+
+    def get_weekly_quests(self, obj):
+        """Missões da semana (quest_date = segunda-feira da semana atual)."""
+        today = timezone.now().date()
+        week_start = today - timedelta(days=today.weekday())
+        return self._get_user_quests_for_type(obj, 'weekly', week_start)
+
+    def get_monthly_quests(self, obj):
+        """Missões do mês (quest_date = primeiro dia do mês atual)."""
+        today = timezone.now().date()
+        month_start = today.replace(day=1)
+        return self._get_user_quests_for_type(obj, 'monthly', month_start)
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
