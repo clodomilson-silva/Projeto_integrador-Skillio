@@ -34,7 +34,14 @@ const RankingCard = ({ player, isCurrentUser }: { player: RankedUser, isCurrentU
             <div className="flex items-center gap-2 text-sm text-muted-foreground"><Star className="w-4 h-4 text-amber-400" /><span>Nível {player.level}</span></div>
           </div>
         </div>
-        <div className="text-right"><div className="font-bold text-lg">{player.xp.toLocaleString()} XP</div></div>
+        <div className="text-right">
+          <div className="font-bold text-lg">{player.xp.toLocaleString()} XP</div>
+          {player.rank <= 3 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {player.rank === 1 ? '1º lugar' : player.rank === 2 ? '2º lugar' : '3º lugar'}
+            </div>
+          )}
+        </div>
       </div>
     </GameCard>
   </Link>
@@ -59,9 +66,14 @@ const RankingList = ({ ranking, loading, error, currentUser, totalUsers }: { ran
             {podium[1] ? (
               <div className="flex justify-center">
                 <Link to={`/profile/${podium[1].id}`} className="w-full max-w-xs">
-                  <GameCard className="p-6 text-center border-2 border-gray-300 hover:scale-105 transition-transform cursor-pointer podium-2 h-56">
+                  <GameCard className="p-6 text-center border-2 border-gray-300 hover:scale-105 transition-transform cursor-pointer podium-2 h-64">
                     <div className="mb-2">{getPositionIcon(2)}</div>
-                    <Avatar className="w-16 h-16 mx-auto mb-2"><AvatarImage src={resolveAvatarSrc(podium[1].avatar)} alt={podium[1].name} className="object-cover" /><AvatarFallback className="text-xl">{podium[1].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                    <div className="relative inline-block mb-2">
+                      <Avatar className="w-16 h-16"><AvatarImage src={resolveAvatarSrc(podium[1].avatar)} alt={podium[1].name} className="object-cover" /><AvatarFallback className="text-xl">{podium[1].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                      <div className="absolute -top-2 -right-2 bg-gray-400 text-white rounded-full w-10 h-10 flex items-center justify-center border-2 border-white shadow-lg">
+                        <span className="text-lg font-black">2º</span>
+                      </div>
+                    </div>
                     <h3 className="font-bold text-base">{podium[1].name}</h3>
                     <p className="text-xs text-muted-foreground">Nível {podium[1].level}</p>
                     <p className="text-lg font-bold mt-1">{podium[1].xp.toLocaleString()} XP</p>
@@ -74,9 +86,14 @@ const RankingList = ({ ranking, loading, error, currentUser, totalUsers }: { ran
             {podium[0] ? (
               <div className="flex justify-center">
                 <Link to={`/profile/${podium[0].id}`} className="w-full max-w-xl">
-                  <GameCard className="p-8 text-center border-2 border-yellow-400 hover:scale-105 transition-transform cursor-pointer podium-1 h-72">
+                  <GameCard className="p-8 text-center border-2 border-yellow-400 hover:scale-105 transition-transform cursor-pointer podium-1 h-80">
                     <div className="mb-3">{getPositionIcon(1)}</div>
-                    <Avatar className="w-24 h-24 mx-auto mb-3"><AvatarImage src={resolveAvatarSrc(podium[0].avatar)} alt={podium[0].name} className="object-cover" /><AvatarFallback className="text-2xl">{podium[0].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                    <div className="relative inline-block mb-3">
+                      <Avatar className="w-24 h-24"><AvatarImage src={resolveAvatarSrc(podium[0].avatar)} alt={podium[0].name} className="object-cover" /><AvatarFallback className="text-2xl">{podium[0].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                      <div className="absolute -top-3 -right-3 bg-yellow-500 text-white rounded-full w-12 h-12 flex items-center justify-center border-2 border-white shadow-lg">
+                        <span className="text-2xl font-black">1º</span>
+                      </div>
+                    </div>
                     <h3 className="font-bold text-lg">{podium[0].name}</h3>
                     <p className="text-sm text-muted-foreground">Nível {podium[0].level}</p>
                     <p className="text-xl font-bold mt-1">{podium[0].xp.toLocaleString()} XP</p>
@@ -89,9 +106,14 @@ const RankingList = ({ ranking, loading, error, currentUser, totalUsers }: { ran
             {podium[2] ? (
               <div className="flex justify-center">
                 <Link to={`/profile/${podium[2].id}`} className="w-full max-w-xs">
-                  <GameCard className="p-5 text-center border-2 border-amber-500 hover:scale-105 transition-transform cursor-pointer podium-3 h-52">
-                    <div className="mb-1">{getPositionIcon(3)}</div>
-                    <Avatar className="w-14 h-14 mx-auto mb-1"><AvatarImage src={resolveAvatarSrc(podium[2].avatar)} alt={podium[2].name} className="object-cover" /><AvatarFallback className="text-lg">{podium[2].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                  <GameCard className="p-6 text-center border-2 border-amber-500 hover:scale-105 transition-transform cursor-pointer podium-3 h-60">
+                    <div className="mb-2">{getPositionIcon(3)}</div>
+                    <div className="relative inline-block mb-2">
+                      <Avatar className="w-14 h-14"><AvatarImage src={resolveAvatarSrc(podium[2].avatar)} alt={podium[2].name} className="object-cover" /><AvatarFallback className="text-lg">{podium[2].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                      <div className="absolute -top-2 -right-2 bg-amber-600 text-white rounded-full w-10 h-10 flex items-center justify-center border-2 border-white shadow-lg">
+                        <span className="text-base font-black">3º</span>
+                      </div>
+                    </div>
                     <h3 className="font-bold text-sm">{podium[2].name}</h3>
                     <p className="text-xs text-muted-foreground">Nível {podium[2].level}</p>
                     <p className="text-base font-bold mt-1">{podium[2].xp.toLocaleString()} XP</p>

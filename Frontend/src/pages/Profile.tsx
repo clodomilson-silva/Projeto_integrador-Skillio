@@ -394,27 +394,37 @@ const Profile = () => {
                 return (
                   <GameCard 
                     key={achievement.id} 
-                    className={`p-4 transition-all hover:scale-105 ${
+                    className={`p-4 transition-all ${
                       isEarned 
-                        ? 'border-secondary/50 bg-secondary/5 shadow-lg shadow-secondary/10' 
-                        : 'opacity-50 hover:opacity-75'
+                        ? 'border-emerald-500/70 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/50 dark:to-emerald-900/30 shadow-lg shadow-emerald-500/20' 
+                        : 'opacity-50 hover:opacity-75 grayscale'
                     }`}
                   >
                     <div className="flex items-start gap-4">
                       <div className={`h-14 w-14 flex-shrink-0 flex items-center justify-center rounded-xl transition-all ${
                         isEarned 
-                          ? 'bg-gradient-to-br from-secondary/20 to-secondary/30 text-secondary' 
-                          : 'bg-muted/50'
+                          ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/30 text-emerald-600 dark:text-emerald-400 shadow-md' 
+                          : 'bg-muted/50 text-muted-foreground'
                       }`}>
                         <Icon name={achievement.icon} className="h-7 w-7" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold mb-1 truncate">{achievement.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <h3 className={`font-bold mb-1 truncate ${
+                          isEarned 
+                            ? 'text-emerald-700 dark:text-emerald-300' 
+                            : 'text-muted-foreground'
+                        }`}>
+                          {achievement.name}
+                        </h3>
+                        <p className={`text-sm line-clamp-2 ${
+                          isEarned 
+                            ? 'text-emerald-600 dark:text-emerald-400' 
+                            : 'text-muted-foreground'
+                        }`}>
                           {achievement.description}
                         </p>
                         {isEarned && (
-                          <Badge variant="secondary" className="mt-2">
+                          <Badge className="mt-2 bg-emerald-500 hover:bg-emerald-600 text-white border-0">
                             <LucideIcons.Check className="h-3 w-3 mr-1" />
                             Conquistado
                           </Badge>

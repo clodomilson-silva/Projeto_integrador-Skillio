@@ -396,8 +396,16 @@ class AddXpView(generics.GenericAPIView):
 
             gamification.save()
             
-            print(f"AddXpView: After save - Level: {gamification.level}, XP: {gamification.xp}")
-            print(f"AddXpView: Gamification ID: {gamification.id}")
+            print(f"✅ AddXpView: User {user.username} - After save - Level: {gamification.level}, XP: {gamification.xp}")
+            print(f"   Gamification ID: {gamification.id}")
+            
+            # Verifica e desbloqueia conquistas automaticamente
+            from .achievements_manager import check_and_unlock_achievements
+            newly_unlocked = check_and_unlock_achievements(user)
+            if newly_unlocked:
+                print(f"🏆 AddXpView: Novas conquistas desbloqueadas: {newly_unlocked}")
+            else:
+                print(f"   AddXpView: Nenhuma conquista nova após adicionar XP")
         
         return Response({
             'level_up': False,  # Level sobe apenas quando completa 15 blocos, não por XP
@@ -515,17 +523,13 @@ class CompleteQuestView(generics.GenericAPIView):
             user_quest.is_completed = True
             user_quest.save()
             
-            # Add XP
+            # Add XP (apenas acumula, não afeta level)
             gamification = user.gamification
             gamification.xp += quest.xp_reward
             gamification.save()
             
-            # Check for level up after getting XP
-            xp_for_next_level = 100 * (gamification.level ** 1.5)
-            if gamification.xp >= xp_for_next_level:
-                gamification.level += 1
-                gamification.xp = int(gamification.xp - xp_for_next_level)
-                gamification.save()
+            # Level é calculado APENAS por blocos completados (15 blocos = 1 nível)
+            # Não calculamos level aqui - isso acontece apenas em CompleteBlockView
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -571,8 +575,17 @@ class CompleteBlockView(generics.GenericAPIView):
             gamification.level = new_level
             gamification.save()
             
-            print(f"CompleteBlockView: User {user.username} completed block {block_id}")
-            print(f"CompleteBlockView: Total blocks: {len(current)}, Level: {old_level} -> {new_level}")
+            print(f"✅ CompleteBlockView: User {user.username} completed block {block_id}")
+            print(f"   Total blocks: {len(current)}, Level: {old_level} -> {new_level}")
+            print(f"   Complete blocks list: {current}")
+            
+            # Verifica e desbloqueia conquistas automaticamente
+            from .achievements_manager import check_and_unlock_achievements
+            newly_unlocked = check_and_unlock_achievements(user)
+            if newly_unlocked:
+                print(f"🏆 CompleteBlockView: Novas conquistas desbloqueadas: {newly_unlocked}")
+            else:
+                print(f"   CompleteBlockView: Nenhuma conquista nova após completar bloco")
 
         return Response({'blocos_completos': current}, status=status.HTTP_200_OK)
 
