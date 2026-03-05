@@ -396,8 +396,23 @@ class AddXpView(generics.GenericAPIView):
 
             gamification.save()
             
+            # Registra XP ganho no histórico para rankings semanal/mensal
+            from api.models import XPHistory
+            from django.utils import timezone
+            today = timezone.now().date()
+            xp_history, created = XPHistory.objects.get_or_create(
+                user=user,
+                date=today,
+                defaults={'xp_earned': amount}
+            )
+            if not created:
+                # Se já existe entrada para hoje, soma o XP
+                xp_history.xp_earned += amount
+                xp_history.save()
+            
             print(f"✅ AddXpView: User {user.username} - After save - Level: {gamification.level}, XP: {gamification.xp}")
             print(f"   Gamification ID: {gamification.id}")
+            print(f"   XP registrado no histórico: {amount} XP para {today}")
             
             # Verifica e desbloqueia conquistas automaticamente
             from .achievements_manager import check_and_unlock_achievements
@@ -702,28 +717,25 @@ class RankingView(generics.GenericAPIView):
                 })
 
         elif category == 'mensal':
-            # Ranking mensal: soma de XP dos quizzes finalizados no mês atual
+            # Ranking mensal: soma de XP ganho no mês atual (usando XPHistory)
             first_day = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             last_day = (first_day + timezone.timedelta(days=32)).replace(day=1) - timezone.timedelta(seconds=1)
-            logs = ActivityLog.objects.filter(
-                type='pratica',
+            
+            # Busca todo XP ganho no mês usando XPHistory
+            from api.models import XPHistory
+            xp_records = XPHistory.objects.filter(
                 date__gte=first_day.date(),
                 date__lte=last_day.date()
             )
+            
+            # Agrupa XP por usuário
             user_xp = {}
-            for log in logs:
-                if log.user_id not in user_xp:
-                    user_xp[log.user_id] = 0
-            # Para cada usuário, somar acertos dos quizzes finalizados no período
-            for user_id in user_xp.keys():
-                # Verifica se UserPerformance tem campo 'date'
-                try:
-                    performances = UserPerformance.objects.filter(user_id=user_id, date__gte=first_day.date(), date__lte=last_day.date())
-                except Exception:
-                    performances = UserPerformance.objects.filter(user_id=user_id)
-                correct_total = sum([getattr(perf, 'correct_answers', 0) for perf in performances])
-                user_xp[user_id] = correct_total * 10
-
+            for record in xp_records:
+                if record.user_id not in user_xp:
+                    user_xp[record.user_id] = 0
+                user_xp[record.user_id] += record.xp_earned
+            
+            # Busca dados dos usuários com XP no mês
             users = User.objects.filter(id__in=user_xp.keys()).select_related('profile', 'gamification')
             ranking = []
             for idx, user in enumerate(sorted(users, key=lambda u: user_xp.get(u.id, 0), reverse=True)[:limit], start=1):
@@ -740,34 +752,28 @@ class RankingView(generics.GenericAPIView):
                 })
 
         elif category == 'semanal':
-            # Ranking semanal: soma de XP dos quizzes finalizados na semana atual
+            # Ranking semanal: soma de XP ganho na semana atual (usando XPHistory)
             weekday = now.weekday()  # 0=segunda, 6=domingo
             sunday = now - timezone.timedelta(days=weekday)
             sunday = sunday.replace(hour=0, minute=0, second=0, microsecond=0)
             saturday = sunday + timezone.timedelta(days=6)
             saturday = saturday.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-            logs = ActivityLog.objects.filter(
-                type='pratica',
+            # Busca todo XP ganho na semana usando XPHistory
+            from api.models import XPHistory
+            xp_records = XPHistory.objects.filter(
                 date__gte=sunday.date(),
                 date__lte=saturday.date()
             )
+            
+            # Agrupa XP por usuário
             user_xp = {}
-            for log in logs:
-                if log.user_id not in user_xp:
-                    user_xp[log.user_id] = 0
-            # Para cada usuário, somar acertos dos quizzes finalizados no período
-            for user_id in user_xp.keys():
-                # Filtra apenas quizzes finalizados na semana
-                performances = UserPerformance.objects.filter(user_id=user_id)
-                correct_total = 0
-                for perf in performances:
-                    perf_date = getattr(perf, 'date', None)
-                    if perf_date:
-                        if sunday.date() <= perf_date <= saturday.date():
-                            correct_total += getattr(perf, 'correct_answers', 0)
-                user_xp[user_id] = correct_total * 10
+            for record in xp_records:
+                if record.user_id not in user_xp:
+                    user_xp[record.user_id] = 0
+                user_xp[record.user_id] += record.xp_earned
 
+            # Busca dados dos usuários com XP na semana
             users = User.objects.filter(id__in=user_xp.keys()).select_related('profile', 'gamification')
             ranking = []
             for idx, user in enumerate(sorted(users, key=lambda u: user_xp.get(u.id, 0), reverse=True)[:limit], start=1):
@@ -923,6 +929,9 @@ def public_profile_page(request, user_id):
 
         # Frase de convite customizável
         invite_text = getattr(settings, 'PROFILE_INVITE_PHRASE', 'Junte-se a mim no Skillio e comece a aprender de forma divertida e gamificada!')
+        
+        # Footer text
+        footer_text = getattr(settings, 'SITE_NAME', 'Skillio')
 
         og_description = f"{display_name} — Nível {level} • {xp} XP • {streak} dias em sequência"
 

@@ -67,6 +67,25 @@ class ActivityLog(models.Model):
     def __str__(self):
         return f'{self.user.username} - {self.date} - {self.type}'
 
+class XPHistory(models.Model):
+    """
+    Modelo para rastrear XP ganho por usuário em cada data.
+    Usado para calcular rankings semanal e mensal.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='xp_history')
+    date = models.DateField()
+    xp_earned = models.PositiveIntegerField(default=0)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'date']),
+            models.Index(fields=['date']),
+        ]
+
+    def __str__(self):
+        return f'{self.user.username} - {self.date} - {self.xp_earned} XP'
+
 class Gamification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='gamification')
     level = models.PositiveIntegerField(default=1)
