@@ -1,0 +1,96 @@
+═══════════════════════════════════════════════════════════
+    SKILLIO - INFORMAÇÕES DO DEPLOY AWS
+═══════════════════════════════════════════════════════════
+
+📅 Data: 11 de fevereiro de 2026
+🌎 Região: us-east-2 (Ohio)
+👤 Conta AWS: 087736691624
+
+═══════════════════════════════════════════════════════════
+    🗄️  RDS POSTGRESQL (JÁ EXISTENTE)
+═══════════════════════════════════════════════════════════
+
+Instance ID:     database-1
+Endpoint:        database-1.ctg0eyqokqwa.us-east-2.rds.amazonaws.com
+Porta:           5432
+Database:        skillio_db
+Usuário:         postgres
+Senha:           Skillio*7
+Status:          available ✅
+Engine:          PostgreSQL 17.6
+VPC:             vpc-0e0ad9ac8d2485126
+Security Groups: sg-08e9c4039ee2a4ec0, sg-08686732bc86f71c9
+
+═══════════════════════════════════════════════════════════
+    🖥️  EC2 INSTANCE (BACKEND)
+═══════════════════════════════════════════════════════════
+
+Instance ID:     i-0832ea4e8f50447ec
+IP Público:      54.227.194.67
+DNS Público:     ec2-3-142-80-221.us-east-2.compute.amazonaws.com
+IP Privado:      172.31.32.16
+Status:          running ✅
+Tipo:            t3.micro (Free Tier)
+SO:              Ubuntu 24.04 LTS
+Storage:         30 GB (gp3)
+VPC:             vpc-0e0ad9ac8d2485126
+Security Group:  sg-0b8586426aa17e19e (skillio-backend-sg)
+Key Pair:        skillio-key (arquivo: skillio-key.pem)
+
+Portas Abertas:
+  - 22 (SSH)     - 0.0.0.0/0
+  - 80 (HTTP)    - 0.0.0.0/0
+  - 443 (HTTPS)  - 0.0.0.0/0
+
+═══════════════════════════════════════════════════════════
+    🔑 COMANDOS ÚTEIS
+═══════════════════════════════════════════════════════════
+
+Conectar via SSH:
+  ssh -i skillio-key.pem ubuntu@54.227.194.67
+
+Testar Backend:
+  http://54.227.194.67/api/v1/
+
+Admin Django:
+  http://54.227.194.67/admin/
+
+═══════════════════════════════════════════════════════════
+    📝 PRÓXIMOS PASSOS
+═══════════════════════════════════════════════════════════
+
+1. ✅ AWS CLI configurado
+2. ✅ RDS PostgreSQL verificado (já existente)
+3. ✅ Security Groups configurados
+4. ✅ EC2 Instance criado e rodando
+5. ✅ Configurar backend no EC2
+6. ✅ Deploy frontend S3
+7. ✅ Testar aplicação completa
+
+═══════════════════════════════════════════════════════════
+    🌐 S3 FRONTEND
+═══════════════════════════════════════════════════════════
+
+Bucket:          skillio-frontend-087736691624
+Região:          us-east-2 (Ohio)
+URL Pública:     http://skillio-frontend-087736691624.s3-website.us-east-2.amazonaws.com
+Status:          Online ✅
+API Backend:     http://54.227.194.67/api/v1
+Arquivos:        46 arquivos (3.78 MB)
+
+═══════════════════════════════════════════════════════════
+    🎉 DEPLOY COMPLETO!
+═══════════════════════════════════════════════════════════
+
+✅ Backend Django rodando em: http://54.227.194.67/
+✅ Frontend React rodando em: http://skillio-frontend-087736691624.s3-website.us-east-2.amazonaws.com
+✅ Banco de dados RDS PostgreSQL conectado
+✅ PWA configurado (funciona offline)
+
+Teste agora:
+1. Acesse o frontend no navegador
+2. Crie uma conta
+3. Faça login
+4. Teste as funcionalidades!
+
+═══════════════════════════════════════════════════════════

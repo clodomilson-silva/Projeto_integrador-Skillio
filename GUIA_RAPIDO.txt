@@ -1,0 +1,149 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║   🌐 COMO COMPARTILHAR SKILLIO COM OUTRO PC - GUIA RÁPIDO     ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────┐
+│  📍 SEU IP: 192.168.15.7                                       │
+│  🌐 URL:    http://192.168.15.7:5173                          │
+│  📶 WiFi:   Vivofribra                                         │
+└────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════
+  PASSO 1: CONFIGURAR FIREWALL (SEU PC - SÓ UMA VEZ)
+═══════════════════════════════════════════════════════════════
+
+  1. Clique com BOTÃO DIREITO em:
+     📁 configurar_firewall.bat
+
+  2. Selecione:
+     ⚡ "Executar como administrador"
+
+  3. Clique "Sim" quando perguntar
+
+  4. Aguarde as mensagens de confirmação
+
+  ✅ Pronto! Firewall configurado!
+
+
+═══════════════════════════════════════════════════════════════
+  PASSO 2: VERIFICAR SE DOCKER ESTÁ RODANDO
+═══════════════════════════════════════════════════════════════
+
+  Execute no terminal:
+
+    docker-compose ps
+
+  ✅ Deve mostrar: "Up" nos dois containers
+
+  ❌ Se não estiver rodando:
+
+    docker-start.bat
+
+
+═══════════════════════════════════════════════════════════════
+  PASSO 3: NO OUTRO PC
+═══════════════════════════════════════════════════════════════
+
+  1. Conectar na MESMA WiFi
+     📶 Nome: Vivofribra
+
+  2. Abrir navegador (Chrome, Edge, Firefox)
+
+  3. Digitar na barra de endereço:
+
+     http://192.168.15.7:5173
+
+  4. Pressionar ENTER
+
+  ✅ Sistema deve carregar normalmente!
+
+
+═══════════════════════════════════════════════════════════════
+  TESTE RÁPIDO
+═══════════════════════════════════════════════════════════════
+
+  No OUTRO PC, teste a API primeiro:
+
+    http://192.168.15.7:8000/api/v1/health/
+
+  ✅ Deve retornar: {"status":"healthy"...}
+
+
+═══════════════════════════════════════════════════════════════
+  TROUBLESHOOTING (SE NÃO FUNCIONAR)
+═══════════════════════════════════════════════════════════════
+
+  ❌ Não conecta / Timeout
+     → Execute: configurar_firewall.bat como Admin
+     → Verifique se ambos estão na mesma WiFi
+
+  ❌ Connection refused
+     → Execute: docker-start.bat
+     → Aguarde 1 minuto e tente novamente
+
+  ❌ Outro PC não vê
+     → Confirme WiFi: ipconfig (deve ser 192.168.15.xxx)
+     → Teste no SEU celular primeiro
+
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS ÚTEIS
+═══════════════════════════════════════════════════════════════
+
+  Ver status:
+    docker-compose ps
+
+  Ver logs:
+    docker-compose logs -f
+
+  Reiniciar:
+    docker-compose restart
+
+  Parar:
+    docker-compose down
+
+  Diagnóstico completo:
+    docker-diagnostico.bat
+
+
+═══════════════════════════════════════════════════════════════
+  CHECKLIST ANTES DE CHAMAR OUTROS
+═══════════════════════════════════════════════════════════════
+
+  [ ] Docker rodando (docker-compose ps)
+  [ ] Firewall configurado (configurar_firewall.bat executado)
+  [ ] Testou no navegador do próprio PC (http://localhost:5173)
+  [ ] Testou no celular (http://192.168.15.7:5173)
+  [ ] Anotou o endereço para compartilhar
+
+
+═══════════════════════════════════════════════════════════════
+  PARA DISPOSITIVOS MÓVEIS (CELULAR/TABLET)
+═══════════════════════════════════════════════════════════════
+
+  Mesmos passos:
+
+  1. Conectar WiFi: Vivofribra
+  2. Abrir navegador
+  3. Acessar: http://192.168.15.7:5173
+
+  💡 Dica: Adicione aos favoritos ou tela inicial!
+
+
+═══════════════════════════════════════════════════════════════
+  DOCUMENTAÇÃO COMPLETA
+═══════════════════════════════════════════════════════════════
+
+  📄 Guia Detalhado: COMPARTILHAR_OUTRO_PC.md
+  📄 Guia Docker:     DOCKER_README.md
+  📄 Guia de Rede:    NETWORK_ACCESS_GUIDE.md
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║  ✅ SISTEMA PRONTO PARA COMPARTILHAMENTO NA REDE LOCAL! 🚀    ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝

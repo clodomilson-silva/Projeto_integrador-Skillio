@@ -1,207 +1,434 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import EducacaoParticles from "@/components/EducacaoParticles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, Eye, EyeOff, User } from "lucide-react";
+import { Eye, EyeOff, User, ArrowLeft, Loader2, Camera, Image as ImageIcon, UserCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatedDatePicker } from "@/components/ui/AnimatedDatePicker";
+import { useAuth } from "@/contexts/AuthContext";
+import { ContentFilter } from '@/utils/contentFilter';
+import apiClient from "@/api/axios";
+
+export const TermosCondicoes = () => (
+  <div className="mb-4">
+    <p className="text-sm text-muted-foreground">
+      Ao criar uma conta, você concorda com nossos
+      <Link to="/termos-condicoes" className="text-primary hover:underline ml-1">Termos e Condições</Link>.
+    </p>
+  </div>
+);
 
 const Register = () => {
+  const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [aceitouTermos, setAceitouTermos] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [escolaridade, setEscolaridade] = useState("");
+  const [dataNascimento, setDataNascimento] = useState<Date>();
+  const [profissao, setProfissao] = useState("");
+  const [foco, setFoco] = useState("");
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraTraseiraRef = useRef<HTMLInputElement>(null);
+  const cameraFrontalRef = useRef<HTMLInputElement>(null);
+
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Detecta se está rodando como PWA ou em dispositivo móvel
+  const isPWAorMobile = () => {
+    // Verifica se está instalado como PWA
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                  ('standalone' in window.navigator && (window.navigator as { standalone?: boolean }).standalone === true);
+    
+    // Verifica se é dispositivo móvel
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                     (navigator.maxTouchPoints > 0 && window.innerWidth < 768);
+    
+    return isPWA || isMobile;
+  };
+
+  const opcoesFoco = ["ENEM", "Lógica", "Direito", "Português", "Matemática", "Programação", "História"];
+
+  const handleAvancar = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name || !email || !password || !confirmPassword) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
-      return;
+    if (step === 1) {
+      if (!aceitouTermos || !name || !email || !password || !confirmPassword) {
+        toast({ title: "Preencha todos os campos e aceite os termos.", variant: "destructive" });
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast({ title: "Senhas não coincidem", variant: "destructive" });
+        return;
+      }
+      if (password.length < 8) {
+        toast({ title: "Senha muito curta", description: "A senha deve ter pelo menos 8 caracteres.", variant: "destructive" });
+        return;
+      }
+    }
+    if (step === 2) {
+      if (!escolaridade || !dataNascimento) {
+        toast({ title: "Preencha sua escolaridade e data de nascimento.", variant: "destructive" });
+        return;
+      }
+    }
+    setStep(step + 1);
+  };
+
+  const handleVoltar = () => setStep(step - 1);
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validação de tamanho (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "A foto deve ter no máximo 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Validação de tipo
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Por favor, selecione uma imagem",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setFotoFile(file);
+      setFotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const abrirGaleria = () => {
+    fileInputRef.current?.click();
+  };
+
+  const abrirCameraTraseira = () => {
+    cameraTraseiraRef.current?.click();
+  };
+
+  const abrirCameraFrontal = () => {
+    cameraFrontalRef.current?.click();
+  };
+
+  const removerFoto = () => {
+    setFotoFile(null);
+    setFotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraTraseiraRef.current) cameraTraseiraRef.current.value = '';
+    if (cameraFrontalRef.current) cameraFrontalRef.current.value = '';
+  };
+
+  const handleCadastro = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // ===== VALIDAÇÃO DE CONTEÚDO SEGURO =====
+    const fieldsToValidate = [
+      { value: name, name: 'Nome' },
+      { value: profissao, name: 'Profissão' },
+      { value: foco, name: 'Foco' }
+    ];
+
+    for (const field of fieldsToValidate) {
+      if (field.value) {
+        const validation = ContentFilter.isSafe(field.value);
+        if (!validation.safe) {
+          toast({
+            title: `${field.name} inválido`,
+            description: validation.reason || "Conteúdo inapropriado detectado",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
     }
 
-    if (password !== confirmPassword) {
+    // Sanitiza os valores antes de enviar
+    const sanitizedName = ContentFilter.sanitize(name);
+    const sanitizedProfissao = profissao ? ContentFilter.sanitize(profissao) : '';
+    const sanitizedFoco = foco ? ContentFilter.sanitize(foco) : '';
+
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('first_name', sanitizedName);
+    // Agrupando os dados do perfil para o serializer aninhado
+    formData.append('terms_accepted', String(aceitouTermos));
+    if (dataNascimento) formData.append('birth_date', dataNascimento.toISOString().split('T')[0]);
+    if (escolaridade) formData.append('educational_level', escolaridade);
+    if (sanitizedProfissao) formData.append('profession', sanitizedProfissao);
+    if (sanitizedFoco) formData.append('focus', sanitizedFoco);
+    if (fotoFile) formData.append('foto', fotoFile);
+
+    try {
+      const response = await apiClient.post('/users/register/', formData, {
+        headers: {
+          // Força o Content-Type para multipart/form-data para sobrescrever qualquer padrão global do axios.
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const { access, refresh } = response.data;
+      login(access, refresh);
+      
+      // Marca que o usuário acabou de se cadastrar para limpar caches antigos
+      sessionStorage.setItem('justRegistered', 'true');
+
       toast({
-        title: "Senhas não coincidem",
-        description: "As senhas digitadas não são iguais.",
+        title: "Conta criada com sucesso!",
+        description: "Bem-vindo ao Skillio!",
+      });
+      navigate("/quiz-nivelamento");
+
+    } catch (error) {
+      let description = "Ocorreu um erro inesperado. Tente novamente.";
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
+        if (axiosError.response?.data) {
+          try {
+            // Tenta extrair a mensagem de erro do DRF
+            const errors = axiosError.response.data;
+            const errorKey = Object.keys(errors)[0];
+            const errorMessages = errors[errorKey];
+            // Se for um erro de validação, será um array.
+            // Se for um erro de unicidade (como email duplicado), pode ser uma string.
+            const message = Array.isArray(errorMessages) ? errorMessages[0] : errorMessages;
+            // O DRF retorna "user with this email already exists."
+            description = message.replace("user with this email already exists.", "Já existe uma conta com este e-mail.");
+          } catch {
+            description = "Não foi possível processar o erro retornado pelo servidor."
+          }
+        }
+      }
+      toast({
+        title: "Erro no cadastro",
+        description: description,
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    if (password.length < 6) {
-      toast({
-        title: "Senha muito curta",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Simulação de cadastro
-    toast({
-      title: "Conta criada com sucesso!",
-      description: "Bem-vindo ao EdGame! Sua conta foi criada.",
-    });
-    
-    navigate("/");
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none"><EducacaoParticles /></div>
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-gradient-growth rounded-full shadow-green-glow">
-              <User className="h-8 w-8 text-white" />
-            </div>
+            <div className="p-3 bg-gradient-wisdom rounded-full shadow-orange-glow"><User className="h-8 w-8 text-white" /></div>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Criar Conta
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Junte-se ao EdGame e comece a aprender
-          </p>
+          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">Criar Conta</h1>
+          <p className="text-muted-foreground mt-2">Junte-se ao Skillio e comece a aprender</p>
         </div>
-
-        <Card className="p-6 shadow-elevated bg-card/80 backdrop-blur-sm border-border/50">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-foreground">
-                Nome completo
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Seu nome completo"
-                className="bg-background/50 border-border/50 focus:border-primary"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                className="bg-background/50 border-border/50 focus:border-primary"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">
-                Senha
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
-                  className="bg-background/50 border-border/50 focus:border-primary pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-foreground">
-                Confirmar senha
-              </Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirme sua senha"
-                  className="bg-background/50 border-border/50 focus:border-primary pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-growth hover:opacity-90 transition-opacity shadow-green-glow"
-            >
-              Criar Conta
+        <Card className="p-6 shadow-elevated bg-card/80 backdrop-blur-sm border-border/50 relative">
+          {step > 1 && (
+            <Button variant="outline" size="icon" onClick={handleVoltar} className="absolute top-4 left-4 z-50 bg-background/80 hover:bg-background/90" disabled={isLoading}>
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border/50" />
+          )}
+          
+          {step === 1 && (
+            <form className="space-y-6 pt-10" onSubmit={handleAvancar}>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome</Label>
+                <Input id="name" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome completo" disabled={isLoading} />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Ou
-                </span>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu_email@email.com" disabled={isLoading} />
               </div>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <div className="relative">
+                  <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" disabled={isLoading} />
+                  <Button type="button" variant="ghost" size="sm" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0" onClick={() => setShowPassword(!showPassword)} disabled={isLoading}><EyeOff className="h-4 w-4" /></Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar senha</Label>
+                <div className="relative">
+                  <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirme sua senha" disabled={isLoading} />
+                  <Button type="button" variant="ghost" size="sm" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0" onClick={() => setShowConfirmPassword(!showConfirmPassword)} disabled={isLoading}><EyeOff className="h-4 w-4" /></Button>
+                </div>
+              </div>
+              <TermosCondicoes />
+              <div className="flex items-center mb-2">
+                <input type="checkbox" id="aceitouTermos" checked={aceitouTermos} onChange={e => setAceitouTermos(e.target.checked)} className="form-checkbox h-5 w-5 text-primary rounded border-border/50 focus:ring-2 focus:ring-primary mr-2" disabled={isLoading} />
+                <Label htmlFor="aceitouTermos">Aceito os termos e condições</Label>
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading || !(aceitouTermos && name && email && password && confirmPassword)}>Avançar</Button>
+              <div className="text-center mt-4"><p className="text-sm text-muted-foreground">Já possui conta? <Link to="/login" className="text-primary hover:underline">Login</Link></p></div>
+            </form>
+          )}
 
-            <div className="text-center mt-4">
-              <p className="text-sm text-muted-foreground">
-                Já tem uma conta?{" "}
-                <Link
-                  to="/login"
-                  className="text-primary hover:underline font-medium"
-                >
-                  Fazer login
-                </Link>
-              </p>
-            </div>
-          </div>
+          {step === 2 && (
+            <form className="space-y-6 pt-10" onSubmit={handleAvancar}>
+              <div className="space-y-2">
+                <Label htmlFor="escolaridade">Escolaridade</Label>
+                <select id="escolaridade" value={escolaridade} onChange={e => setEscolaridade(e.target.value)} className="bg-background/50 border border-border/50 focus:border-primary rounded-md px-3 py-2 w-full text-foreground" disabled={isLoading}>
+                  <option value="">Selecione</option>
+                  <option value="basico">Básico</option>
+                  <option value="fundamental">Ensino Fundamental</option>
+                  <option value="medio">Ensino Médio</option>
+                  <option value="superior">Superior</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Data de Nascimento</Label>
+                <AnimatedDatePicker date={dataNascimento} onSelect={setDataNascimento} minYear={1950} maxYear={new Date().getFullYear()} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profissao">Profissão <span className="text-muted-foreground">(Opcional)</span></Label>
+                <Input id="profissao" type="text" value={profissao} onChange={e => setProfissao(e.target.value)} placeholder="Sua profissão" disabled={isLoading} />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>Avançar</Button>
+            </form>
+          )}
+
+          {step === 3 && (
+            <form className="space-y-6 pt-10" onSubmit={handleAvancar}>
+              <div className="space-y-2">
+                <Label htmlFor="foco">Qual seu foco?</Label>
+                <Input id="foco" type="text" value={foco} onChange={e => setFoco(e.target.value)} placeholder="Digite seu foco principal (ex: ENEM, Lógica...)" list="opcoesFoco" disabled={isLoading} />
+                <datalist id="opcoesFoco">{opcoesFoco.map((s, i) => <option key={i} value={s} />)}</datalist>
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>Avançar</Button>
+            </form>
+          )}
+
+          {step === 4 && (
+            <form className="space-y-6 pt-10" onSubmit={handleCadastro}>
+              <div className="space-y-4">
+                <Label className="text-base">Foto de perfil <span className="text-muted-foreground text-sm">(Opcional)</span></Label>
+                
+                {/* Inputs ocultos */}
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFotoChange}
+                  className="hidden"
+                  disabled={isLoading}
+                />
+                <input 
+                  ref={cameraTraseiraRef}
+                  type="file" 
+                  accept="image/*" 
+                  capture="environment"
+                  onChange={handleFotoChange}
+                  className="hidden"
+                  disabled={isLoading}
+                />
+                <input 
+                  ref={cameraFrontalRef}
+                  type="file" 
+                  accept="image/*" 
+                  capture="user"
+                  onChange={handleFotoChange}
+                  className="hidden"
+                  disabled={isLoading}
+                />
+                
+                {/* Preview da foto */}
+                {fotoPreview ? (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                      <img 
+                        src={fotoPreview} 
+                        alt="Preview" 
+                        className="w-32 h-32 rounded-full object-cover border-4 border-primary/20 shadow-lg" 
+                      />
+                      <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-1 border border-border">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                    </div>
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      size="sm"
+                      onClick={removerFoto}
+                      disabled={isLoading}
+                    >
+                      Remover foto
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Interface para PWA/Mobile: Selfie e Galeria */}
+                    {isPWAorMobile() ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-24 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/50 transition-all"
+                          onClick={abrirCameraFrontal}
+                          disabled={isLoading}
+                        >
+                          <UserCircle className="h-6 w-6 text-primary" />
+                          <span className="text-sm font-medium">Selfie</span>
+                        </Button>
+                        
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-24 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/50 transition-all"
+                          onClick={abrirGaleria}
+                          disabled={isLoading}
+                        >
+                          <ImageIcon className="h-6 w-6 text-primary" />
+                          <span className="text-sm font-medium">Galeria</span>
+                        </Button>
+                      </div>
+                    ) : (
+                      /* Interface para Web Desktop: Apenas escolher foto */
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-24 flex flex-col gap-3 hover:bg-primary/5 hover:border-primary/50 transition-all"
+                        onClick={abrirGaleria}
+                        disabled={isLoading}
+                      >
+                        <ImageIcon className="h-8 w-8 text-primary" />
+                        <span className="font-medium">Escolher Foto</span>
+                        <span className="text-xs text-muted-foreground">Selecione uma imagem do seu computador</span>
+                      </Button>
+                    )}
+                  </>
+                )}
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  Adicione uma foto para personalizar seu perfil
+                </p>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}
+              </Button>
+            </form>
+          )}
         </Card>
-
         <div className="text-center mt-6">
-          <Link
-            to="/"
-            className="text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            ← Voltar para o início
-          </Link>
+          <Link to="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">← Voltar para o início</Link>
         </div>
       </div>
     </div>

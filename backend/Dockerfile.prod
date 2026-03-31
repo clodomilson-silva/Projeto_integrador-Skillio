@@ -1,0 +1,62 @@
+# Dockerfile otimizado para produção
+# Multi-stage build para reduzir tamanho da imagem
+
+# Stage 1: Builder
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Instala dependências de build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia requirements e instala dependências Python
+COPY requirements.txt requirements_prod.txt ./
+RUN pip install --no-cache-dir --user -r requirements_prod.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH="/root/.local/bin:$PATH"
+
+WORKDIR /app
+
+# Instala apenas dependências de runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia dependências do stage builder
+COPY --from=builder /root/.local /root/.local
+
+# Copia código da aplicação
+COPY . .
+
+# Cria diretórios necessários
+RUN mkdir -p media staticfiles logs && \
+    chmod +x manage.py
+
+# Cria usuário não-root para segurança
+RUN useradd --create-home --shell /bin/bash app && \
+    chown -R app:app /app
+
+USER app
+
+# Expõe porta
+EXPOSE 8000
+
+# Coleta arquivos estáticos e roda migrações
+RUN python manage.py collectstatic --noinput
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health/ || exit 1
+
+# Comando padrão (pode ser sobrescrito no docker-compose)
+CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]

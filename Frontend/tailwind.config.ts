@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -101,7 +102,7 @@ export default {
         card: "var(--shadow-card)",
         elevated: "var(--shadow-elevated)",
         glow: "var(--shadow-glow)",
-        "purple-glow": "var(--shadow-purple-glow)",
+        "orange-glow": "var(--shadow-orange-glow)",
         "golden-glow": "var(--shadow-golden-glow)",
         "green-glow": "var(--shadow-green-glow)",
         "white-glow": "var(--shadow-white-glow)",
@@ -135,5 +136,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

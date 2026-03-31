@@ -1,231 +1,193 @@
-import { GameCard } from "@/components/ui/game-card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import resolveAvatarSrc from '@/lib/avatar';
+import { Button } from "@/components/ui/button";
+import { GameCard } from "@/components/ui/game-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Trophy, Medal, Award, Crown, TrendingUp } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { RankedUser, useRanking } from "@/hooks/useRanking";
+import { cn } from "@/lib/utils";
+import { ArrowLeft, Crown, Loader2, Medal, Star, Trophy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-
-const globalRanking = [
-  { id: 1, name: "Ana Costa", score: 15450, games: 89, accuracy: 92, avatar: "", position: 1 },
-  { id: 2, name: "Carlos Silva", score: 14200, games: 75, accuracy: 89, avatar: "", position: 2 },
-  { id: 3, name: "Maria Santos", score: 13800, games: 82, accuracy: 87, avatar: "", position: 3 },
-  { id: 4, name: "João Oliveira", score: 12950, games: 68, accuracy: 85, avatar: "", position: 4 },
-  { id: 5, name: "Pedro Lima", score: 12400, games: 71, accuracy: 83, avatar: "", position: 5 },
-  { id: 6, name: "Julia Ferreira", score: 11800, games: 65, accuracy: 88, avatar: "", position: 6 },
-  { id: 7, name: "Lucas Rocha", score: 11200, games: 59, accuracy: 81, avatar: "", position: 7 },
-  { id: 8, name: "Beatriz Alves", score: 10900, games: 63, accuracy: 84, avatar: "", position: 8 },
-  { id: 9, name: "Rafael Souza", score: 10500, games: 55, accuracy: 79, avatar: "", position: 9 },
-  { id: 10, name: "Camila Dias", score: 10200, games: 52, accuracy: 86, avatar: "", position: 10 },
-];
-
-const weeklyRanking = [
-  { id: 1, name: "Pedro Lima", score: 2850, games: 12, accuracy: 94, avatar: "", position: 1 },
-  { id: 2, name: "Ana Costa", score: 2650, games: 11, accuracy: 91, avatar: "", position: 2 },
-  { id: 3, name: "Julia Ferreira", score: 2400, games: 10, accuracy: 89, avatar: "", position: 3 },
-  { id: 4, name: "Carlos Silva", score: 2200, games: 9, accuracy: 87, avatar: "", position: 4 },
-  { id: 5, name: "Maria Santos", score: 2100, games: 8, accuracy: 92, avatar: "", position: 5 },
-];
-
-const subjectRankings = {
-  matematica: [
-    { id: 1, name: "Carlos Silva", score: 3200, position: 1 },
-    { id: 2, name: "Ana Costa", score: 2950, position: 2 },
-    { id: 3, name: "João Oliveira", score: 2750, position: 3 },
-  ],
-  portugues: [
-    { id: 1, name: "Maria Santos", score: 2850, position: 1 },
-    { id: 2, name: "Julia Ferreira", score: 2650, position: 2 },
-    { id: 3, name: "Ana Costa", score: 2400, position: 3 },
-  ],
-  ciencias: [
-    { id: 1, name: "Pedro Lima", score: 3450, position: 1 },
-    { id: 2, name: "Carlos Silva", score: 3200, position: 2 },
-    { id: 3, name: "Rafael Souza", score: 2980, position: 3 },
-  ]
-};
 
 const getPositionIcon = (position: number) => {
   switch (position) {
-    case 1: return <Crown className="h-6 w-6 text-yellow-500" />;
-    case 2: return <Medal className="h-6 w-6 text-gray-400" />;
-    case 3: return <Award className="h-6 w-6 text-amber-600" />;
-    default: return <span className="text-xl font-bold text-muted-foreground">#{position}</span>;
+    case 1: return <Crown className="h-8 w-8 text-yellow-400" />;
+    case 2: return <Medal className="h-7 w-7 text-gray-300" />;
+    case 3: return <Star className="h-6 w-6 text-amber-500" />;
+    default: return <span className="text-xl font-bold text-muted-foreground">{position}</span>;
   }
 };
 
-const getPositionColor = (position: number) => {
-  switch (position) {
-    case 1: return "bg-gradient-warning";
-    case 2: return "bg-gradient-secondary";  
-    case 3: return "bg-gradient-primary";
-    default: return "bg-muted";
-  }
-};
-
-const RankingCard = ({ player, showStats = true }: { player: any, showStats?: boolean }) => (
-  <GameCard className={`p-4 ${player.position <= 3 ? getPositionColor(player.position) : ''} ${player.position <= 3 ? 'text-primary-foreground' : ''}`}>
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center justify-center w-12 h-12">
-          {getPositionIcon(player.position)}
+const RankingCard = ({ player, isCurrentUser }: { player: RankedUser, isCurrentUser: boolean }) => (
+  <Link to={`/profile/${player.id}`}>
+    <GameCard className={`p-4 transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer ${isCurrentUser ? 'border-2 border-primary shadow-lg' : ''}`}>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center justify-center w-10 h-10">{getPositionIcon(player.rank)}</div>
+          <Avatar className="w-12 h-12">
+            <AvatarImage src={resolveAvatarSrc(player.avatar)} alt={player.name} className="object-cover" />
+            <AvatarFallback>{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className={`font-bold ${isCurrentUser ? 'text-primary' : ''}`}>{player.name}</h3>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground"><Star className="w-4 h-4 text-amber-400" /><span>Nível {player.level}</span></div>
+          </div>
         </div>
-        
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={player.avatar} />
-          <AvatarFallback>
-            {player.name.split(' ').map((n: string) => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div>
-          <h3 className="font-bold">{player.name}</h3>
-          {showStats && (
-            <p className={`text-sm ${player.position <= 3 ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-              {player.games} jogos • {player.accuracy}% precisão
-            </p>
+        <div className="text-right">
+          <div className="font-bold text-lg">{player.xp.toLocaleString()} XP</div>
+          {player.rank <= 3 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {player.rank === 1 ? '1º lugar' : player.rank === 2 ? '2º lugar' : '3º lugar'}
+            </div>
           )}
         </div>
       </div>
-      
-      <div className="text-right">
-        <div className="text-2xl font-bold">
-          {player.score.toLocaleString()}
-        </div>
-        <div className={`text-sm ${player.position <= 3 ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-          pontos
-        </div>
-      </div>
-    </div>
-  </GameCard>
+    </GameCard>
+  </Link>
 );
 
+const RankingList = ({ ranking, loading, error, currentUser, totalUsers }: { ranking: RankedUser[]; loading: boolean; error: string | null; currentUser: string; totalUsers: number }) => {
+  if (loading) return (<div className="flex justify-center items-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary"/></div>);
+  if (error) return (<div className="text-center py-8"><p className="text-red-500 mb-4">{error}</p><Button onClick={() => window.location.reload()}>Tentar Novamente</Button></div>);
+
+  const podium = ranking.slice(0, 3);
+  const rest = ranking.slice(3);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground text-center">Total de jogadores: {totalUsers}</p>
+
+      {podium.length > 0 && (
+        <>
+          {/* Desktop: pódio visual com alturas diferentes */}
+          <div className="hidden md:grid md:grid-cols-3 gap-4 mb-8 items-end">
+            {/* 2º lugar - esquerda */}
+            {podium[1] ? (
+              <div className="flex justify-center">
+                <Link to={`/profile/${podium[1].id}`} className="w-full max-w-xs">
+                  <GameCard className="p-6 text-center border-2 border-gray-300 hover:scale-105 transition-transform cursor-pointer podium-2 h-64">
+                    <div className="mb-2">{getPositionIcon(2)}</div>
+                    <div className="relative inline-block mb-2">
+                      <Avatar className="w-16 h-16"><AvatarImage src={resolveAvatarSrc(podium[1].avatar)} alt={podium[1].name} className="object-cover" /><AvatarFallback className="text-xl">{podium[1].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                      <div className="absolute -top-2 -right-2 bg-gray-400 text-white rounded-full w-10 h-10 flex items-center justify-center border-2 border-white shadow-lg">
+                        <span className="text-lg font-black">2º</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-base">{podium[1].name}</h3>
+                    <p className="text-xs text-muted-foreground">Nível {podium[1].level}</p>
+                    <p className="text-lg font-bold mt-1">{podium[1].xp.toLocaleString()} XP</p>
+                  </GameCard>
+                </Link>
+              </div>
+            ) : <div />}
+
+            {/* 1º lugar - centro (maior) */}
+            {podium[0] ? (
+              <div className="flex justify-center">
+                <Link to={`/profile/${podium[0].id}`} className="w-full max-w-xl">
+                  <GameCard className="p-8 text-center border-2 border-yellow-400 hover:scale-105 transition-transform cursor-pointer podium-1 h-80">
+                    <div className="mb-3">{getPositionIcon(1)}</div>
+                    <div className="relative inline-block mb-3">
+                      <Avatar className="w-24 h-24"><AvatarImage src={resolveAvatarSrc(podium[0].avatar)} alt={podium[0].name} className="object-cover" /><AvatarFallback className="text-2xl">{podium[0].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                      <div className="absolute -top-3 -right-3 bg-yellow-500 text-white rounded-full w-12 h-12 flex items-center justify-center border-2 border-white shadow-lg">
+                        <span className="text-2xl font-black">1º</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-lg">{podium[0].name}</h3>
+                    <p className="text-sm text-muted-foreground">Nível {podium[0].level}</p>
+                    <p className="text-xl font-bold mt-1">{podium[0].xp.toLocaleString()} XP</p>
+                  </GameCard>
+                </Link>
+              </div>
+            ) : <div />}
+
+            {/* 3º lugar - direita */}
+            {podium[2] ? (
+              <div className="flex justify-center">
+                <Link to={`/profile/${podium[2].id}`} className="w-full max-w-xs">
+                  <GameCard className="p-6 text-center border-2 border-amber-500 hover:scale-105 transition-transform cursor-pointer podium-3 h-60">
+                    <div className="mb-2">{getPositionIcon(3)}</div>
+                    <div className="relative inline-block mb-2">
+                      <Avatar className="w-14 h-14"><AvatarImage src={resolveAvatarSrc(podium[2].avatar)} alt={podium[2].name} className="object-cover" /><AvatarFallback className="text-lg">{podium[2].name.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>
+                      <div className="absolute -top-2 -right-2 bg-amber-600 text-white rounded-full w-10 h-10 flex items-center justify-center border-2 border-white shadow-lg">
+                        <span className="text-base font-black">3º</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-sm">{podium[2].name}</h3>
+                    <p className="text-xs text-muted-foreground">Nível {podium[2].level}</p>
+                    <p className="text-base font-bold mt-1">{podium[2].xp.toLocaleString()} XP</p>
+                  </GameCard>
+                </Link>
+              </div>
+            ) : <div />}
+          </div>
+
+          {/* Mobile: lista vertical do 1º ao 3º */}
+          <div className="flex flex-col gap-3 mb-6 md:hidden">
+            {podium.map((player) => (
+              <RankingCard key={player.id} player={player} isCurrentUser={currentUser === player.name || currentUser === player.username} />
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="space-y-3">
+        {rest.map((player) => (
+          <RankingCard key={player.id} player={player} isCurrentUser={currentUser === player.name || currentUser === player.username} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const Ranking = () => {
+  const [selectedTab, setSelectedTab] = useState("global");
+  const { user } = useAuth();
+  const { ranking, loading, error, totalUsers } = useRanking(selectedTab);
+  const tabs = [
+    { value: "global", label: "Global" },
+    { value: "mensal", label: "Mensal" },
+    { value: "semanal", label: "Semanal" },
+  ];
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    // função mantida para compatibilidade futura, atualmente sem uso
+    return;
+  };
+
+  const currentUser = user?.username || '';
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
-          <Link to="/">
-            <Button variant="ghost" className="mb-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar ao Início
-            </Button>
-          </Link>
-          
+          <Link to="/"><Button variant="ghost" className="mb-6"><ArrowLeft className="h-4 w-4 mr-2"/>Voltar ao Início</Button></Link>
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="bg-gradient-warning bg-clip-text text-transparent">
-                Ranking
-              </span>{" "}
-              Global
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Veja os melhores jogadores e compare seu desempenho com outros estudantes!
-            </p>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4"><Trophy className="inline-block h-10 w-10 text-amber-400 mb-2"/> Ranking de Jogadores</h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Veja os melhores jogadores e compare seu desempenho com outros estudantes!</p>
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <Tabs defaultValue="global" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="global" className="flex items-center space-x-2">
-                <Trophy className="h-4 w-4" />
-                <span>Global</span>
-              </TabsTrigger>
-              <TabsTrigger value="weekly" className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4" />
-                <span>Semanal</span>
-              </TabsTrigger>
-              <TabsTrigger value="subjects" className="flex items-center space-x-2">
-                <Medal className="h-4 w-4" />
-                <span>Disciplinas</span>
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="global" className="space-y-4">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-2">Ranking Geral</h2>
-                <p className="text-muted-foreground">Baseado na pontuação total de todos os jogos</p>
-              </div>
-              
-              {/* Pódium */}
-              <div className="grid md:grid-cols-3 gap-4 mb-8">
-                {globalRanking.slice(0, 3).map((player) => (
-                  <GameCard
-                    key={player.id}
-                    variant={player.position === 1 ? "warning" : player.position === 2 ? "game" : "subject"}
-                    className="p-6 text-center"
-                  >
-                    <div className="mb-4">
-                      {getPositionIcon(player.position)}
-                    </div>
-                    <Avatar className="w-16 h-16 mx-auto mb-4">
-                      <AvatarImage src={player.avatar} />
-                      <AvatarFallback className="text-xl">
-                        {player.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <h3 className="font-bold text-lg mb-2">{player.name}</h3>
-                    <div className="text-2xl font-bold mb-2">
-                      {player.score.toLocaleString()}
-                    </div>
-                    <p className="text-sm opacity-80">
-                      {player.games} jogos • {player.accuracy}%
-                    </p>
-                  </GameCard>
+          {!user && (
+            <div className="mb-6 text-center"><GameCard className="p-4 bg-primary/5 border-primary/20"><p className="text-sm text-muted-foreground">💡 <Link to="/register" className="text-primary font-semibold hover:underline">Crie sua conta</Link> para aparecer no ranking!</p></GameCard></div>
+          )}
+
+          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+            <div className="flex justify-center">
+              <TabsList className="inline-flex h-auto p-1">
+                {tabs.map(tab => (
+                  <TabsTrigger key={tab.value} value={tab.value} className={cn("text-lg py-2 px-4 transition-all duration-300", selectedTab === tab.value && "bg-primary text-primary-foreground shadow-md scale-105")}>{tab.label}</TabsTrigger>
                 ))}
-              </div>
-              
-              {/* Restante do ranking */}
-              <div className="space-y-3">
-                {globalRanking.slice(3).map((player) => (
-                  <RankingCard key={player.id} player={player} />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="weekly" className="space-y-4">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-2">Ranking Semanal</h2>
-                <p className="text-muted-foreground">
-                  Baseado nos pontos conquistados nos últimos 7 dias
-                </p>
-                <Badge variant="secondary" className="mt-2">
-                  Atualizado há 2 horas
-                </Badge>
-              </div>
-              
-              <div className="space-y-3">
-                {weeklyRanking.map((player) => (
-                  <RankingCard key={player.id} player={player} />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="subjects" className="space-y-8">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-2">Ranking por Disciplina</h2>
-                <p className="text-muted-foreground">
-                  Os melhores jogadores em cada matéria
-                </p>
-              </div>
-              
-              {Object.entries(subjectRankings).map(([subject, ranking]) => (
-                <div key={subject}>
-                  <h3 className="text-xl font-bold mb-4 capitalize">
-                    {subject === 'matematica' ? 'Matemática' : 
-                     subject === 'portugues' ? 'Português' : 
-                     subject === 'ciencias' ? 'Ciências' : subject}
-                  </h3>
-                  <div className="grid gap-3">
-                    {ranking.map((player) => (
-                      <RankingCard key={player.id} player={player} showStats={false} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </TabsContent>
+              </TabsList>
+            </div>
+
+            {tabs.map(tab => (
+              <TabsContent key={tab.value} value={tab.value} className="mt-6">
+                <RankingList ranking={ranking} loading={loading} error={error} currentUser={currentUser} totalUsers={totalUsers} />
+              </TabsContent>
+            ))}
           </Tabs>
         </div>
       </div>
